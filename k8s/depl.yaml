@@ -1,32 +1,32 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: starter-depl
+  name: loyalties-depl
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: efood
-      service: starter
+      service: loyalties
   template:
     metadata:
       labels:
         app: efood
-        service: starter
+        service: loyalties
         sidecar.istio.io/inject: "true"
         version: "1"
     spec:
       imagePullSecrets:
         - name: ghcr
       containers:
-      - name: starter
-        image: ghcr.io/wofood/efood_starter
+      - name: loyalties
+        image: ghcr.io/wofood/efood_loyalties
         # resources:
         #   limits:
         #     memory: "128Mi"
         #     cpu: "500m"
         ports:
-          - name: starter
+          - name: loyalties
             protocol: TCP
             containerPort: 3000
         envFrom:

@@ -1,14 +1,14 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: starter-svc
+  name: loyalties-svc
   labels:
     app: efood
-    service: starter
+    service: loyalties
 spec:
   selector:
     app: efood
-    service: starter
+    service: loyalties
   ports:
     - name: http-port
       port: 3000
