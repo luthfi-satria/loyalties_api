@@ -2,8 +2,8 @@ import { IsNotEmpty } from 'class-validator';
 
 export class HowtosDto {
   @IsNotEmpty()
-  howtos_id: string;
+  tnc_id: string;
 
   @IsNotEmpty()
-  howtos_en: string;
+  tnc_en: string;
 }

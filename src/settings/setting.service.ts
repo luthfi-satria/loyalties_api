@@ -8,9 +8,9 @@ import { MessageService } from 'src/message/message.service';
 import { ResponseService } from 'src/response/response.service';
 import { In } from 'typeorm';
 import { HowtosDto } from './dto/howtos.dto';
+import { TNCDto } from './dto/tnc.dto';
 import { SettingsDocument } from './entities/settings.entity';
 import { SettingsRepository } from './repository/settings.repository';
-import _ from 'lodash';
 
 @Injectable()
 export class SettingService {
@@ -26,19 +26,38 @@ export class SettingService {
       'howtos_id',
       'howtos_en',
     ]);
-    console.log(
-      '===========================Start Debug howtos=================================\n',
-      new Date(Date.now()).toLocaleString(),
-      '\n',
-      howtos,
-      '\n============================End Debug howtos==================================',
-    );
+    for (let i = 0; i < howtos.length; i++) {
+      howtos[i].value = param[howtos[i].name];
+    }
 
-    for (const key in param) {
-      if (Object.prototype.hasOwnProperty.call(param, key)) {
-        const index = _.FindIndex(howtos, { name: param[key] });
-        howtos[index].value = param[key];
-      }
+    try {
+      const result = await this.settingsRepository.save(howtos);
+      return result;
+    } catch (error) {
+      throw new BadRequestException(
+        this.responseService.error(
+          HttpStatus.BAD_REQUEST,
+          {
+            value: '',
+            property: '',
+            constraint: [
+              this.messageService.get('general.update.fail'),
+              error.message,
+            ],
+          },
+          'Bad Request',
+        ),
+      );
+    }
+  }
+
+  async updateTermAndCondition(param: TNCDto) {
+    const howtos = await this.getAndValidateSettingsByName([
+      'tnc_id',
+      'tnc_en',
+    ]);
+    for (let i = 0; i < howtos.length; i++) {
+      howtos[i].value = param[howtos[i].name];
     }
 
     try {

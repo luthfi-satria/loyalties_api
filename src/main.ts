@@ -1,5 +1,7 @@
+import { NatsTransportStrategy } from '@alexy4744/nestjs-nats-jetstream-transporter';
 import { BadRequestException, Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { CustomStrategy } from '@nestjs/microservices';
 import { AppModule } from './app.module';
 
 const logger = new Logger('main');
@@ -7,22 +9,62 @@ const logger = new Logger('main');
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.useGlobalPipes(
-    new ValidationPipe({
-      transform: true,
-      exceptionFactory: (errors) => {
-        return new BadRequestException(
-          errors.map((err) => {
-            const { value, property, constraints } = err;
-            return { value, property, constraints: Object.values(constraints) };
-          }),
-        );
+  // app.useGlobalPipes(new ValidationPipe());
+  // app.useGlobalPipes(
+  //   new ValidationPipe({
+  //     transform: true,
+  //     exceptionFactory: (errors) => {
+  //       console.log(
+  //       '===========================Start Debug errors=================================\n',
+  //       new Date(Date.now()).toLocaleString(),
+  //       '\n',
+  //       errors,
+  //       '\n============================End Debug errors==================================',
+  //       );
+  //       return new BadRequestException(
+  //         errors.map((err) => {
+  //           const { value, property, constraints } = err;
+  //           return {
+  //             value,
+  //             property,
+  //             constraint: Object.keys(constraints).map((key) => {
+  //               return {
+  //                 code: `VALIDATION_${key.toUpperCase()}`,
+  //                 message: constraints[key],
+  //               };
+  //             }),
+  //           };
+  //         }),
+  //       );
+  //     },
+  //   }),
+  // );
+
+  const microservice = app.connectMicroservice<CustomStrategy>({
+    strategy: new NatsTransportStrategy({
+      connection: {
+        servers: process.env.NATS_SERVERS.split(','),
+      },
+      streams: [
+        {
+          name: 'loyalties',
+          subjects: [],
+        },
+      ],
+      consumer: (opt) => {
+        // durable
+        opt.durable('loyalties');
+
+        // queue group
+        opt.queue('loyalties');
       },
     }),
-  );
+  });
 
-  app.listen(process.env.HTTP_PORT || 4005, () => {
-    logger.log(`Running on ${process.env.HTTP_PORT || 4005}`);
+  microservice.listen();
+
+  app.listen(process.env.HTTP_PORT || 4004, () => {
+    logger.log(`Running on ${process.env.HTTP_PORT || 4004}`);
   });
 }
 bootstrap();

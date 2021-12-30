@@ -75,7 +75,7 @@ export class JwtGuard extends AuthGuard('jwt') {
       );
     }
     if (
-      this.user_type_and_levels &&
+      this.user_type_and_levels.length &&
       !this.user_type_and_levels.includes(loggedInUser.user_type + '.*') &&
       !this.user_type_and_levels.includes(
         loggedInUser.user_type + '.' + loggedInUser.level,
