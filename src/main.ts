@@ -9,36 +9,28 @@ const logger = new Logger('main');
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // app.useGlobalPipes(new ValidationPipe());
-  // app.useGlobalPipes(
-  //   new ValidationPipe({
-  //     transform: true,
-  //     exceptionFactory: (errors) => {
-  //       console.log(
-  //       '===========================Start Debug errors=================================\n',
-  //       new Date(Date.now()).toLocaleString(),
-  //       '\n',
-  //       errors,
-  //       '\n============================End Debug errors==================================',
-  //       );
-  //       return new BadRequestException(
-  //         errors.map((err) => {
-  //           const { value, property, constraints } = err;
-  //           return {
-  //             value,
-  //             property,
-  //             constraint: Object.keys(constraints).map((key) => {
-  //               return {
-  //                 code: `VALIDATION_${key.toUpperCase()}`,
-  //                 message: constraints[key],
-  //               };
-  //             }),
-  //           };
-  //         }),
-  //       );
-  //     },
-  //   }),
-  // );
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      exceptionFactory: (errors) => {
+        return new BadRequestException(
+          errors.map((err) => {
+            const { value, property, constraints } = err;
+            return {
+              value,
+              property,
+              constraint: Object.keys(constraints).map((key) => {
+                return {
+                  code: `VALIDATION_${key.toUpperCase()}`,
+                  message: constraints[key],
+                };
+              }),
+            };
+          }),
+        );
+      },
+    }),
+  );
 
   const microservice = app.connectMicroservice<CustomStrategy>({
     strategy: new NatsTransportStrategy({
