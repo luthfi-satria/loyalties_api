@@ -1,8 +1,13 @@
 import { DriverType, StorageModule } from '@codebrew/nestjs-storage';
 import { HttpModule } from '@nestjs/axios';
 import { BullModule } from '@nestjs/bull';
-import { Global, Module } from '@nestjs/common';
+import { forwardRef, Global, Module } from '@nestjs/common';
+import { MessageService } from 'src/message/message.service';
+import { PromoProviderModule } from 'src/promo-provider/promo-provider.module';
+import { ResponseService } from 'src/response/response.service';
 import { NatsController } from './nats/nats.controller';
+import { RedisPromoProviderProcessor } from './redis/redis-promo-provider.processor';
+import { RedisPromoProviderService } from './redis/redis-promo-provider.service';
 
 @Global()
 @Module({
@@ -28,12 +33,18 @@ import { NatsController } from './nats/nats.controller';
       },
     }),
     BullModule.registerQueue({
-      name: 'orders',
+      name: 'loyalties',
     }),
     HttpModule,
+    forwardRef(() => PromoProviderModule),
   ],
-  providers: [],
-  exports: [],
+  providers: [
+    RedisPromoProviderService,
+    RedisPromoProviderProcessor,
+    MessageService,
+    ResponseService,
+  ],
+  exports: [RedisPromoProviderService, RedisPromoProviderProcessor],
   controllers: [NatsController],
 })
 export class CommonModule {}

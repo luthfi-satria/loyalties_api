@@ -97,4 +97,10 @@ export class DateTimeUtils {
   static getNewThisWeekDate(currentDate: Date) {
     return moment(currentDate).subtract(1, 'week').startOf('day');
   }
+
+  static nowToDatetimeMilis = (date: Date): number => {
+    const target = momenttz(date);
+    const now = momenttz(new Date());
+    return momenttz.duration(target.diff(now)).asMilliseconds();
+  };
 }
