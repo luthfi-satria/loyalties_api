@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { DatabaseService } from './database/database.service';
 import { PromoProviderModule } from './promo-provider/promo-provider.module';
 import { SettingModule } from './settings/setting.module';
+import { VoucherModule } from './vouchers/voucher.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { SettingModule } from './settings/setting.module';
       },
     }),
     SettingModule,
+    VoucherModule,
     AuthModule,
     PromoProviderModule,
   ],
