@@ -21,7 +21,7 @@ import { MessageService } from 'src/message/message.service';
 import { RMessage } from 'src/response/response.interface';
 import { ResponseService } from 'src/response/response.service';
 import { DateTimeUtils } from 'src/utils/date-time-utils';
-import { Not, Raw } from 'typeorm';
+import { Any, Not } from 'typeorm';
 import {
   BaseCreatePromoProviderDto,
   DbCreatePromoProviderDto,
@@ -63,9 +63,7 @@ export class PromoProviderService {
       //Get Existing Promo
       const promoProviders = await this.promoProviderRepository.find({
         where: {
-          status: Raw(
-            (status) => `${status} = 'ACTIVE' OR ${status} = 'SCHEDULED'`,
-          ),
+          status: Any(['ACTIVE', 'SCHEDULED']),
         },
       });
 
@@ -288,9 +286,7 @@ export class PromoProviderService {
 
       const promoProviders = await this.promoProviderRepository.find({
         where: {
-          status: Raw(
-            (status) => `${status} = 'ACTIVE' OR ${status} = 'SCHEDULED'`,
-          ),
+          status: Any(['ACTIVE', 'SCHEDULED']),
           id: Not(data.id),
         },
       });
