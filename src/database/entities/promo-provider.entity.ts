@@ -71,6 +71,9 @@ export class PromoProviderDocument {
   discount_value: number;
 
   @Column({ nullable: true })
+  discount_maximum: number;
+
+  @Column({ nullable: true })
   cancellation_reason: string;
 
   @Column()
