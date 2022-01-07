@@ -11,6 +11,7 @@ import {
 } from 'src/common/redis/dto/redis-promo-provider.dto';
 import { RedisPromoProviderService } from 'src/common/redis/redis-promo-provider.service';
 import {
+  EnumPromoProviderDiscountType,
   EnumPromoProviderStatus,
   PromoProviderDocument,
 } from 'src/database/entities/promo-provider.entity';
@@ -57,6 +58,8 @@ export class PromoProviderService {
 
   async createPromoProvider(data: BaseCreatePromoProviderDto) {
     try {
+      this.validatePromoData(data);
+
       //Get Existing Promo
       const promoProviders = await this.promoProviderRepository.find({
         where: {
@@ -265,6 +268,8 @@ export class PromoProviderService {
 
   async updatePromoProvider(data: UpdatePromoProviderDto) {
     try {
+      this.validatePromoData(data);
+
       const findPromoProvider = await this.findOneOrFail(data.id);
       if (
         findPromoProvider.status === EnumPromoProviderStatus.CANCELLED ||
@@ -635,6 +640,28 @@ export class PromoProviderService {
 
     if (now > timeEnd) {
       this.errorGenerator('', 'date_end', 'general.promoProvider.errorInPast');
+    }
+  }
+
+  validatePromoData(data: BaseCreatePromoProviderDto) {
+    if (
+      data.discount_type === EnumPromoProviderDiscountType.PERCENTAGE &&
+      typeof data.discount_maximum !== 'number'
+    ) {
+      this.errorGenerator(
+        '',
+        'discount_maximum',
+        'general.promoProvider.errorDiscountMaximum',
+      );
+    }
+
+    if (
+      data.minimum_transaction < 0 ||
+      data.quota < 0 ||
+      data.discount_maximum < 0 ||
+      data.discount_value < 0
+    ) {
+      this.errorGenerator('', '', 'general.general.dataInvalid');
     }
   }
 

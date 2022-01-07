@@ -4,6 +4,7 @@ import {
   IsEnum,
   IsNotEmpty,
   IsNumber,
+  IsOptional,
 } from 'class-validator';
 import {
   EnumPromoProviderType,
@@ -48,6 +49,10 @@ export class BaseCreatePromoProviderDto {
   @IsNotEmpty()
   @IsNumber()
   discount_value: number;
+
+  @IsOptional()
+  @IsNumber()
+  discount_maximum: number;
 
   @IsNotEmpty()
   @IsBoolean()

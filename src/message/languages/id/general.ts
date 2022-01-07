@@ -186,5 +186,9 @@ export default {
       code: 'PROMO_IN_PAST',
       message: 'Tidak bisa memasukan promo dengan periode yang sudah terlewat.',
     },
+    errorDiscountMaximum: {
+      code: 'DISCOUNT_MAXIMUM_REQUIRED',
+      message: 'Harus menambahkan maksimum discount untuk jenis promo ini.',
+    },
   },
 };
