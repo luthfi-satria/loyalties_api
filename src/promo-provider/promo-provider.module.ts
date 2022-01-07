@@ -19,6 +19,6 @@ import { DummyRepository } from 'src/database/repository/dummy.repository';
   ],
   controllers: [PromoProviderController],
   providers: [PromoProviderService, MessageService, ResponseService],
-  exports: [PromoProviderService],
+  exports: [PromoProviderService, TypeOrmModule],
 })
 export class PromoProviderModule {}
