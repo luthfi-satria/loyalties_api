@@ -15,6 +15,7 @@ import {
   PromoProviderDocument,
 } from 'src/database/entities/promo-provider.entity';
 import { PromoProviderRepository } from 'src/database/repository/promo-provider.repository';
+import { GetPromoProvidersDto } from 'src/internal/dto/get-promo-providers.dto';
 import { MessageService } from 'src/message/message.service';
 import { RMessage } from 'src/response/response.interface';
 import { ResponseService } from 'src/response/response.service';
@@ -142,6 +143,9 @@ export class PromoProviderService {
         periode_end: data.periode_end,
         status: data.status,
         order_type: data.order_type,
+        minimum_transaction: null,
+        target_list: null,
+        order_type_list: null,
       });
     } catch (error) {
       this.errorReport(error, 'general.list.fail');
@@ -160,6 +164,9 @@ export class PromoProviderService {
         periode_end: null,
         status: null,
         order_type: null,
+        minimum_transaction: null,
+        target_list: null,
+        order_type_list: null,
       });
       const result = items?.[0];
       if (!result) {
@@ -191,6 +198,10 @@ export class PromoProviderService {
       const status = data.status || null;
       const orderType = data.order_type || null;
       const promoProviderId = data.promo_provider_id || null;
+
+      const minimumTransaction = data.minimum_transaction || null;
+      const targetList = data.target_list || null;
+      const orderTypeList = data.order_type_list || null;
 
       const query = this.promoProviderRepository.createQueryBuilder('ppro');
 
@@ -447,6 +458,36 @@ export class PromoProviderService {
       return updatedPromoProvider;
     } catch (error) {
       this.errorReport(error, 'general.update.fail');
+    }
+  }
+
+  async getPromoProviders(
+    data: GetPromoProvidersDto,
+  ): Promise<PromoProviderDocument[]> {
+    try {
+      const targetList = []; //update this!
+      const orderTypeList = []; //update this!
+      const cartTotal = data.cart_total || null; //update this!
+      const status = 'ACTIVE';
+
+      const { items } = await this.fetchPromoProvidersFromDb({
+        promo_provider_id: '',
+        limit: 9999,
+        page: 1,
+        target: '',
+        type: '',
+        periode_start: '',
+        periode_end: '',
+        status: status,
+        order_type: '',
+        minimum_transaction: null, //update this!
+        target_list: null, //update this!
+        order_type_list: null, //update this!
+      });
+
+      return items;
+    } catch (error) {
+      this.errorReport(error, 'general.list.fail');
     }
   }
 

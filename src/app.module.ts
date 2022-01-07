@@ -6,6 +6,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { DatabaseService } from './database/database.service';
+import { InternalModule } from './internal/internal.module';
 import { PromoProviderModule } from './promo-provider/promo-provider.module';
 import { SettingModule } from './settings/setting.module';
 import { VoucherModule } from './vouchers/voucher.module';
@@ -27,6 +28,7 @@ import { VoucherModule } from './vouchers/voucher.module';
     VoucherModule,
     AuthModule,
     PromoProviderModule,
+    InternalModule,
   ],
   controllers: [AppController],
   providers: [AppService],
