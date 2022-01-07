@@ -79,6 +79,9 @@ export class PromoProviderDocument {
   @Column()
   is_combinable: boolean;
 
+  @Column({ nullable: true })
+  dummy: number;
+
   @Column({ enum: EnumPromoProviderStatus })
   status: string;
 

@@ -1,8 +1,8 @@
 import { EntityRepository, Repository } from 'typeorm';
-import { DummyDocument } from '../entities/dummy.entity';
+import { DummyDocumentSix } from '../entities/dummy.entity';
 
-@EntityRepository(DummyDocument)
-export class DummyRepository extends Repository<DummyDocument> {
+@EntityRepository(DummyDocumentSix)
+export class DummyRepositorySix extends Repository<DummyDocumentSix> {
   constructor() {
     super();
   }

@@ -7,8 +7,8 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-@Entity({ name: 'loyalties_dummies' })
-export class DummyDocument {
+@Entity({ name: 'loyalties_dummies_six' })
+export class DummyDocumentSix {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
