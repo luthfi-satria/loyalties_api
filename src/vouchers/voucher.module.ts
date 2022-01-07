@@ -12,9 +12,6 @@ import { DatabaseService } from 'src/database/database.service';
 @Module({
   imports: [
     ConfigModule.forRoot(),
-    TypeOrmModule.forRootAsync({
-      useClass: DatabaseService,
-    }),
     TypeOrmModule.forFeature([VouchersRepository]),
     forwardRef(() => CommonModule),
   ],

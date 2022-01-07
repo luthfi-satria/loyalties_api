@@ -8,11 +8,11 @@ import { ConfigModule } from '@nestjs/config';
 import { HttpModule } from '@nestjs/axios';
 import { PromoProviderRepository } from 'src/database/repository/promo-provider.repository';
 import { CommonModule } from 'src/common/common.module';
-import { DummyRepository } from 'src/database/repository/dummy.repository';
+import { DummyRepositorySix } from 'src/database/repository/dummy.repository';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([PromoProviderRepository, DummyRepository]),
+    TypeOrmModule.forFeature([PromoProviderRepository, DummyRepositorySix]),
     ConfigModule,
     HttpModule,
     forwardRef(() => CommonModule),
