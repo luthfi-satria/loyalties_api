@@ -55,8 +55,8 @@ async function bootstrap() {
 
   microservice.listen();
 
-  app.listen(process.env.HTTP_PORT || 4004, () => {
-    logger.log(`Running on ${process.env.HTTP_PORT || 4004}`);
+  app.listen(process.env.HTTP_PORT || 4014, () => {
+    logger.log(`Running on ${process.env.HTTP_PORT || 4014}`);
   });
 }
 bootstrap();

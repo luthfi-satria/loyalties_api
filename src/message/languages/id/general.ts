@@ -134,6 +134,10 @@ export default {
       code: 'CREATE_QUEUE_FAIL',
       message: 'Tidak dapat membuat queue',
     },
+    deleteQueueFail: {
+      code: 'DELETE_QUEUE_FAIL',
+      message: 'Tidak dapat menghapus queue',
+    },
   },
   pos: {
     cashierShiftBackdate: {
@@ -167,6 +171,24 @@ export default {
     dateDifferent: {
       code: 'DATE_DIFFERENT',
       message: 'Tanggal mulai dan tanggal selesai tidak sama.',
+    },
+  },
+  promoProvider: {
+    errorBackDate: {
+      code: 'BACKDATE',
+      message: 'Tanggal Promo backdate.',
+    },
+    errorOverlap: {
+      code: 'DATE_OVERLAP',
+      message: 'Tanggal Promo overlap.',
+    },
+    errorInPast: {
+      code: 'PROMO_IN_PAST',
+      message: 'Tidak bisa memasukan promo dengan periode yang sudah terlewat.',
+    },
+    errorDiscountMaximum: {
+      code: 'DISCOUNT_MAXIMUM_REQUIRED',
+      message: 'Harus menambahkan maksimum discount untuk jenis promo ini.',
     },
   },
 };

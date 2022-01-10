@@ -7,16 +7,12 @@ import { ResponseService } from 'src/response/response.service';
 import { CommonModule } from 'src/common/common.module';
 import { SettingsRepository } from './repository/settings.repository';
 import { ConfigModule } from '@nestjs/config';
-import { DatabaseService } from 'src/database/database.service';
 import { Seeder } from './seeders/seeder';
 import { SettingsSeederModule } from './seeders/settings/settings.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
-    TypeOrmModule.forRootAsync({
-      useClass: DatabaseService,
-    }),
     TypeOrmModule.forFeature([SettingsRepository]),
     forwardRef(() => CommonModule),
     SettingsSeederModule,
