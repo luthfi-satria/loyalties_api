@@ -58,10 +58,10 @@ export class PromoProviderDocument {
   @Column({ type: 'timestamptz' })
   date_end: Date;
 
-  @Column()
+  @Column({ nullable: true })
   minimum_transaction: number;
 
-  @Column()
+  @Column({ nullable: true })
   quota: number;
 
   @Column({ enum: EnumPromoProviderDiscountType })
