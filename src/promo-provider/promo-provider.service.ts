@@ -640,16 +640,16 @@ export class PromoProviderService {
   }
 
   validatePromoData(data: BaseCreatePromoProviderDto) {
-    if (
-      data.discount_type === EnumPromoProviderDiscountType.PERCENTAGE &&
-      typeof data.discount_maximum !== 'number'
-    ) {
-      this.errorGenerator(
-        '',
-        'discount_maximum',
-        'general.promoProvider.errorDiscountMaximum',
-      );
-    }
+    // if (
+    //   data.discount_type === EnumPromoProviderDiscountType.PERCENTAGE &&
+    //   typeof data.discount_maximum !== 'number'
+    // ) {
+    //   this.errorGenerator(
+    //     '',
+    //     'discount_maximum',
+    //     'general.promoProvider.errorDiscountMaximum',
+    //   );
+    // }
 
     if (
       data.minimum_transaction < 0 ||

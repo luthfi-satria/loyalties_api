@@ -34,11 +34,11 @@ export class BaseCreatePromoProviderDto {
   @IsDateString()
   date_end: Date;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsNumber()
   minimum_transaction: number;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsNumber()
   quota: number;
 
