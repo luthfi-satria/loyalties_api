@@ -6,7 +6,7 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { DatabaseService } from './database/database.service';
 import { SettingModule } from './settings/setting.module';
-import { VoucherModule } from './vouchers/voucher.module';
+import { MasterVoucherModule } from './master_vouchers/master_voucher.module';
 
 @Module({
   imports: [
@@ -22,7 +22,7 @@ import { VoucherModule } from './vouchers/voucher.module';
     //   },
     // }),
     SettingModule,
-    VoucherModule,
+    MasterVoucherModule,
     AuthModule,
   ],
   controllers: [AppController],

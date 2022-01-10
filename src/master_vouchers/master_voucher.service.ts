@@ -7,21 +7,21 @@ import {
 import { MessageService } from 'src/message/message.service';
 import { ResponseService } from 'src/response/response.service';
 import { Like } from 'typeorm';
-import { CreateVoucherDto } from './dto/voucher.dto';
-import { VouchersRepository } from './repository/voucher.repository';
+import { CreateMasterVoucherDto } from './dto/master_voucher.dto';
+import { MasterVouchersRepository } from './repository/master_voucher.repository';
 
 @Injectable()
-export class VoucherService {
+export class MasterVoucherService {
   constructor(
     private readonly messageService: MessageService,
     private readonly responseService: ResponseService,
-    private readonly vouchersRepository: VouchersRepository,
+    private readonly masterVouchersRepository: MasterVouchersRepository,
   ) {}
-  private readonly logger = new Logger(VoucherService.name);
+  private readonly logger = new Logger(MasterVoucherService.name);
 
-  async createVoucher(data: CreateVoucherDto) {
+  async createMasterVoucher(data: CreateMasterVoucherDto) {
     try {
-      return await this.vouchersRepository.save(data);
+      return await this.masterVouchersRepository.save(data);
     } catch (error) {
       this.logger.log(error);
       throw new BadRequestException(
@@ -41,11 +41,9 @@ export class VoucherService {
     }
   }
 
-  // restart
-
-  async getVoucherDetail(id) {
+  async getMasterVoucherDetail(id) {
     try {
-      return await this.vouchersRepository.findOneOrFail(id);
+      return await this.masterVouchersRepository.findOneOrFail(id);
     } catch (error) {
       throw new BadRequestException(
         this.responseService.error(
@@ -64,7 +62,7 @@ export class VoucherService {
     }
   }
 
-  async getListVoucher(data) {
+  async getListMasterVoucher(data) {
     try {
       const page = data.page || 1;
       const limit = data.limit || 10;
@@ -77,7 +75,7 @@ export class VoucherService {
       if (data.order_type) qry = { ...qry, order_type: data.order_type };
       if (data.search) qry = { ...qry, name: Like(`%${data.search}%`) };
 
-      const [items, count] = await this.vouchersRepository.findAndCount({
+      const [items, count] = await this.masterVouchersRepository.findAndCount({
         take: limit,
         skip: offset,
         where: qry,
