@@ -9,7 +9,7 @@ import { DatabaseService } from './database/database.service';
 import { InternalModule } from './internal/internal.module';
 import { PromoProviderModule } from './promo-provider/promo-provider.module';
 import { SettingModule } from './settings/setting.module';
-import { VoucherModule } from './vouchers/voucher.module';
+import { MasterVoucherModule } from './master_vouchers/master_voucher.module';
 
 @Module({
   imports: [
@@ -25,7 +25,7 @@ import { VoucherModule } from './vouchers/voucher.module';
       },
     }),
     SettingModule,
-    VoucherModule,
+    MasterVoucherModule,
     AuthModule,
     PromoProviderModule,
     InternalModule,

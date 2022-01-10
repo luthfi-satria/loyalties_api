@@ -26,8 +26,8 @@ export enum DurationGroup {
   THIRTY_DAYS = '30DAYS',
 }
 
-@Entity({ name: 'loyalties_voucher' })
-export class VouchersDocument {
+@Entity({ name: 'loyalties_master_voucher' })
+export class MasterVouchersDocument {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -79,7 +79,7 @@ export class VouchersDocument {
   @DeleteDateColumn({ nullable: true })
   deleted_at: Date;
 
-  constructor(init?: Partial<VouchersDocument>) {
+  constructor(init?: Partial<MasterVouchersDocument>) {
     Object.assign(this, init);
   }
 }

@@ -10,9 +10,9 @@ import {
   DiscountGroup,
   DurationGroup,
   TypeGroup,
-} from '../entities/voucher.entity';
+} from '../entities/master_voucher.entity';
 
-export class CreateVoucherDto {
+export class CreateMasterVoucherDto {
   @IsNotEmpty()
   @IsString()
   name: string;
@@ -47,7 +47,7 @@ export class CreateVoucherDto {
   is_combinable: boolean;
 }
 
-export class ListVoucherDto {
+export class ListMasterVoucherDto {
   @IsString()
   @IsOptional()
   search: string;
