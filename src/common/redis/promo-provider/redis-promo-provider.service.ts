@@ -14,7 +14,7 @@ import {
   DeleteAutoStartPromoProviderDto,
   CreateAutoFinishPromoProviderDto,
   DeleteAutoFinishPromoProviderDto,
-} from './dto/redis-promo-provider.dto';
+} from '../dto/redis-promo-provider.dto';
 
 @Injectable()
 export class RedisPromoProviderService {

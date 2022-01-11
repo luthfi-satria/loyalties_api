@@ -9,7 +9,7 @@ import {
   CreateAutoFinishPromoProviderDto,
   CreateAutoStartPromoProviderDto,
 } from 'src/common/redis/dto/redis-promo-provider.dto';
-import { RedisPromoProviderService } from 'src/common/redis/redis-promo-provider.service';
+import { RedisPromoProviderService } from 'src/common/redis/promo-provider/redis-promo-provider.service';
 import {
   EnumPromoProviderDiscountType,
   EnumPromoProviderStatus,
