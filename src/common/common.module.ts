@@ -6,8 +6,8 @@ import { MessageService } from 'src/message/message.service';
 import { PromoProviderModule } from 'src/promo-provider/promo-provider.module';
 import { ResponseService } from 'src/response/response.service';
 import { NatsController } from './nats/nats.controller';
-import { RedisPromoProviderProcessor } from './redis/redis-promo-provider.processor';
-import { RedisPromoProviderService } from './redis/redis-promo-provider.service';
+import { RedisPromoProviderProcessor } from './redis/promo-provider/redis-promo-provider.processor';
+import { RedisPromoProviderService } from './redis/promo-provider/redis-promo-provider.service';
 
 @Global()
 @Module({
