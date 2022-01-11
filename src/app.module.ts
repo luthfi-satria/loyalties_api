@@ -10,6 +10,7 @@ import { InternalModule } from './internal/internal.module';
 import { PromoProviderModule } from './promo-provider/promo-provider.module';
 import { SettingModule } from './settings/setting.module';
 import { MasterVoucherModule } from './master_vouchers/master_voucher.module';
+import { VoucherCodeModule } from './voucher_code/voucher_code.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { MasterVoucherModule } from './master_vouchers/master_voucher.module';
     }),
     SettingModule,
     MasterVoucherModule,
+    VoucherCodeModule,
     AuthModule,
     PromoProviderModule,
     InternalModule,
