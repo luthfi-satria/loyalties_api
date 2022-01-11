@@ -466,8 +466,8 @@ export class PromoProviderService {
     data: GetPromoProvidersDto,
   ): Promise<PromoProviderDocument[]> {
     try {
-      const targetList = []; //update this!
-      const orderTypeList = []; //update this!
+      const targetList = ['ALL']; //update this!
+      const orderTypeList = ['DELIVERY_AND_PICKUP']; //update this!
       const cartTotal = data.cart_total || null; //update this!
       const status = 'ACTIVE';
 
