@@ -71,7 +71,7 @@ export class PromoProviderService {
       const timeStart = new Date(`${data.date_start} +${gmt_offset}`);
       const timeEnd = new Date(`${data.date_end} +${gmt_offset}`);
 
-      this.checkPromoOverlap(promoProviders, timeStart, timeEnd);
+      // this.checkPromoOverlap(promoProviders, timeStart, timeEnd);
 
       this.checkPromoInPast(timeEnd);
 
@@ -291,7 +291,7 @@ export class PromoProviderService {
         },
       });
 
-      this.checkPromoOverlap(promoProviders, timeStart, timeEnd);
+      // this.checkPromoOverlap(promoProviders, timeStart, timeEnd);
 
       this.checkPromoInPast(timeEnd);
 
