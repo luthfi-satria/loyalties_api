@@ -7,7 +7,6 @@ import { ResponseService } from 'src/response/response.service';
 import { CommonModule } from 'src/common/common.module';
 import { MasterVouchersRepository } from './repository/master_voucher.repository';
 import { ConfigModule } from '@nestjs/config';
-import { DatabaseService } from 'src/database/database.service';
 
 @Module({
   imports: [
