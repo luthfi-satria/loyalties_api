@@ -2,7 +2,7 @@ import { Controller, Get, Query } from '@nestjs/common';
 import { MessageService } from 'src/message/message.service';
 import { ResponseStatusCode } from 'src/response/response.decorator';
 import { ResponseService } from 'src/response/response.service';
-import { GetPromoProvidersDto } from './dto/get-promo-providers.dto';
+import { GetPromoVouchersDto } from './dto/get-promo-vouchers.dto';
 import { InternalService } from './internal.service';
 
 @Controller('api/v1/internal/loyalties')
@@ -15,9 +15,9 @@ export class InternalController {
 
   @Get('provider-promos')
   @ResponseStatusCode()
-  async getPromoProviders(@Query() data: GetPromoProvidersDto) {
+  async getPromoVouchers(@Query() data: GetPromoVouchersDto) {
     try {
-      const result = await this.internalService.getPromoProviders(data);
+      const result = await this.internalService.getPromoVouchers(data);
       return this.responseService.success(
         true,
         this.messageService.get('general.general.success'),
