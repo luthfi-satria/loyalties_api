@@ -1,3 +1,4 @@
+import { VoucherService } from './../voucher/voucher.service';
 import { MasterVoucherService } from './../master_vouchers/master_voucher.service';
 import { MasterVouchersDocument } from './../master_vouchers/entities/master_voucher.entity';
 import { RedisVoucherCodeService } from './../common/redis/voucher_code/redis-voucher_code.service';
@@ -40,6 +41,7 @@ export class VoucherCodeService {
     private readonly voucherCodesRepository: VoucherCodesRepository,
     private readonly redisVoucherCodeService: RedisVoucherCodeService,
     private readonly masterVoucherService: MasterVoucherService,
+    private readonly voucherService: VoucherService,
   ) {}
   private readonly logger = new Logger(VoucherCodeService.name);
 
@@ -122,7 +124,6 @@ export class VoucherCodeService {
       const timeStart = new Date(`${data.date_start} +${gmt_offset}`);
       const timeEnd = new Date(`${data.date_end} +${gmt_offset}`);
 
-      // console.log(data);
       // this.checkVoucherCodeOverlap(voucherCodes, timeStart, timeEnd);
 
       this.checkVoucherCodeInPast(timeEnd);
@@ -181,10 +182,37 @@ export class VoucherCodeService {
         ...data,
         vouchers: listVoucher,
       };
-      console.log(dataToDb);
 
       const createdVoucher = await this.voucherCodesRepository.save(dataToDb);
       await this.createVoucherCodeQueue(voucherCodeStatus, createdVoucher);
+
+      if (data.is_prepopulated && data.quota) {
+        const vouchers = [];
+        for (let i = 0; i < listVoucher.length; i++) {
+          const masterVoucher: MasterVouchersDocument = listVoucher[i];
+          for (let j = 0; j < data.quota; j++) {
+            const dataVoucher = {
+              voucher_code_id: createdVoucher.id,
+              customer_id: null,
+              code: 'PROMO' + Math.floor(Math.random() * (100 - 1 + 1)) + 1,
+              type: masterVoucher.type,
+              order_type: masterVoucher.order_type,
+              target: createdVoucher.target,
+              date_start: null,
+              date_end: null,
+              minimum_transaction: masterVoucher.minimum_transaction,
+              discount_type: masterVoucher.discount_type,
+              discount_value: masterVoucher.discount_value,
+              discount_maximum: masterVoucher.discount_maximum,
+              is_combinable: masterVoucher.is_combinable,
+            };
+            vouchers.push(dataVoucher);
+          }
+        }
+        await this.voucherService.createVoucherBulk(vouchers);
+      }
+
+      await this.redisVoucherCodeService.checkJobs();
       return createdVoucher;
     } catch (error) {
       this.logger.log(error);
@@ -313,7 +341,6 @@ export class VoucherCodeService {
     timeStart: Date,
     timeEnd: Date,
   ) {
-    console.log(timeStart);
     const unixStart = moment(timeStart).unix();
 
     const unixEnd = moment(timeEnd).unix();

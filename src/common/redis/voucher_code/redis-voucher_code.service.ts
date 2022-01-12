@@ -104,4 +104,8 @@ export class RedisVoucherCodeService {
       );
     }
   }
+
+  checkJobs() {
+    console.log(this.voucherCodesQueue.getJobs([]));
+  }
 }
