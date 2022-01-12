@@ -11,6 +11,8 @@ import {
 } from 'src/common/redis/dto/redis-promo-provider.dto';
 import { RedisPromoProviderService } from 'src/common/redis/promo-provider/redis-promo-provider.service';
 import {
+  EnumPromoProviderDiscountType,
+  EnumPromoProviderOrderType,
   EnumPromoProviderStatus,
   PromoProviderDocument,
 } from 'src/database/entities/promo-provider.entity';
@@ -21,6 +23,8 @@ import { MessageService } from 'src/message/message.service';
 import { RMessage } from 'src/response/response.interface';
 import { ResponseService } from 'src/response/response.service';
 import { DateTimeUtils } from 'src/utils/date-time-utils';
+import { VoucherDocument } from 'src/voucher/entities/voucher.entity';
+import { VoucherService } from 'src/voucher/voucher.service';
 import { Brackets } from 'typeorm';
 import {
   BaseCreatePromoProviderDto,
@@ -47,6 +51,7 @@ export class PromoProviderService {
     private readonly messageService: MessageService,
     private readonly promoProviderRepository: PromoProviderRepository,
     private readonly redisPromoProviderService: RedisPromoProviderService,
+    private readonly voucherService: VoucherService,
   ) {}
 
   private readonly logger = new Logger(PromoProviderService.name);
@@ -491,21 +496,164 @@ export class PromoProviderService {
 
   async getPromoVouchers(data: GetPromoVouchersDto): Promise<any> {
     try {
-      const targetList = data.target;
-      const orderTypeList = data.order_type;
+      const target = data.target;
+      const orderType = data.order_type;
       const cartTotal = data.cart_total || null;
       const customerId = data.customer_id;
-      const status = 'ACTIVE';
 
       const promoProviders = await this.getPromoProviders({
-        target: targetList,
-        order_type: orderTypeList,
-        cart_total: cartTotal,
+        target: target,
       });
 
-      // const vouchers = await
+      const vouchers = await this.voucherService.getVoucherByCustomerId(
+        customerId,
+      );
 
-      return promoProviders;
+      //=> cari promoProviders terbesar relatif ke order
+      const maxNotCombineablePromo: {
+        promo: PromoProviderDocument;
+        discount: number;
+      } = {
+        promo: null,
+        discount: 0,
+      };
+      let accumulatedCombineablePromo = 0;
+      const notAvailablePromos = [];
+      const combineablePromos = [];
+      const leftoverPromos = [];
+      promoProviders.forEach((promo: PromoProviderDocument) => {
+        //=> check apakah promo bisa dipakai
+        if (!this.checkUsablePromo(promo, cartTotal, orderType)) {
+          notAvailablePromos.push(promo);
+        } else {
+          const discount = this.calculatePromoDiscount(promo, cartTotal);
+          if (promo.is_combinable) {
+            accumulatedCombineablePromo += discount;
+            combineablePromos.push(promo);
+          } else {
+            if (discount > maxNotCombineablePromo.discount) {
+              if (maxNotCombineablePromo.promo) {
+                leftoverPromos.push(maxNotCombineablePromo.promo);
+              }
+              maxNotCombineablePromo.promo = promo;
+              maxNotCombineablePromo.discount = discount;
+            } else {
+              leftoverPromos.push(promo);
+            }
+          }
+        }
+      });
+
+      //=> cari vouchers terbesar relatif ke order
+      const maxNotCombineableVoucher: {
+        voucher: VoucherDocument;
+        discount: number;
+      } = {
+        voucher: null,
+        discount: 0,
+      };
+      let accumulatedCombineableVoucher = 0;
+      const notAvailableVouchers = [];
+      const combineableVouchers = [];
+      const leftoverVouchers = [];
+      vouchers.forEach((voucher: VoucherDocument) => {
+        //=> check apakah voucher bisa dipakai
+        if (
+          !this.voucherService.checkUsableVoucher(voucher, cartTotal, orderType)
+        ) {
+          notAvailableVouchers.push();
+        } else {
+          const discount = this.voucherService.calculateVoucherDiscount(
+            voucher,
+            cartTotal,
+          );
+          if (voucher.is_combinable) {
+            accumulatedCombineableVoucher += discount;
+            combineableVouchers.push(voucher);
+          } else {
+            if (discount > maxNotCombineableVoucher.discount) {
+              if (maxNotCombineableVoucher.voucher) {
+                leftoverVouchers.push(maxNotCombineableVoucher.voucher);
+              }
+              maxNotCombineableVoucher.voucher = voucher;
+              maxNotCombineableVoucher.discount = discount;
+            } else {
+              leftoverVouchers.push(voucher);
+            }
+          }
+        }
+      });
+
+      const recommended = {
+        promos: [],
+        vouchers: [],
+      };
+      const available = {
+        promos: [],
+        vouchers: [],
+      };
+
+      //merge discount dan voucher
+      const totalCombineableDiscount =
+        accumulatedCombineablePromo + accumulatedCombineableVoucher;
+      const maxUncombineDiscount = this.findMaxPromoVoucher(
+        maxNotCombineablePromo,
+        maxNotCombineableVoucher,
+      );
+      if (maxUncombineDiscount?.item.discount >= totalCombineableDiscount) {
+        if (maxUncombineDiscount.type == 'PROMO') {
+          recommended.promos.push(maxUncombineDiscount.item.promo);
+          if (maxNotCombineableVoucher.voucher) {
+            leftoverVouchers.push(maxNotCombineableVoucher.voucher);
+          }
+        } else if (maxUncombineDiscount.type == 'VOUCHER') {
+          recommended.vouchers.push(maxUncombineDiscount.item.voucher);
+          if (maxNotCombineablePromo.promo) {
+            leftoverVouchers.push(maxNotCombineablePromo.promo);
+          }
+        }
+        available.promos.push(
+          ...combineablePromos,
+          ...leftoverPromos,
+          ...notAvailablePromos,
+        );
+        available.vouchers.push(
+          ...combineableVouchers,
+          ...leftoverVouchers,
+          ...notAvailableVouchers,
+        );
+      } else {
+        recommended.promos.push(...combineablePromos);
+        if (maxNotCombineablePromo.promo) {
+          available.promos.push(
+            maxNotCombineablePromo.promo,
+            ...leftoverPromos,
+            ...notAvailablePromos,
+          );
+        } else {
+          available.promos.push(...notAvailablePromos);
+        }
+
+        recommended.vouchers.push(...combineableVouchers);
+        if (maxNotCombineableVoucher.voucher) {
+          available.vouchers.push(
+            maxNotCombineableVoucher.voucher,
+            ...leftoverVouchers,
+            ...notAvailableVouchers,
+          );
+        } else {
+          available.vouchers.push(...notAvailableVouchers);
+        }
+      }
+
+      console.log(combineablePromos, 'combineablePromos');
+      console.log(leftoverPromos, 'leftoverPromos');
+      console.log(notAvailablePromos, 'notAvailablePromos');
+
+      return {
+        recommended,
+        available,
+      };
     } catch (error) {
       this.errorReport(error, 'general.list.fail');
     }
@@ -514,15 +662,15 @@ export class PromoProviderService {
   async getPromoProviders(data: GetPromoProvidersDto): Promise<any> {
     try {
       const targetList = ['ALL'];
-      const orderTypeList = ['DELIVERY_AND_PICKUP'];
-      const cartTotal = data.cart_total || null;
+      // const orderTypeList = ['DELIVERY_AND_PICKUP'];
+      // const cartTotal = data.cart_total || null;
       const status = 'ACTIVE';
 
       targetList.push(data.target);
 
-      const orderType =
-        data.order_type === 'DELIVERY' ? 'DELIVERY_ONLY' : 'PICKUP_ONLY';
-      orderTypeList.push(orderType);
+      // const orderType =
+      //   data.order_type === 'DELIVERY' ? 'DELIVERY_ONLY' : 'PICKUP_ONLY';
+      // orderTypeList.push(orderType);
 
       const { items } = await this.fetchPromoProvidersFromDb({
         promo_provider_id: '',
@@ -534,9 +682,9 @@ export class PromoProviderService {
         periode_end: '',
         status: status,
         order_type: '',
-        cart_total: cartTotal,
+        cart_total: null,
         target_list: targetList,
-        order_type_list: orderTypeList,
+        order_type_list: null,
       });
 
       return items;
@@ -553,6 +701,77 @@ export class PromoProviderService {
   }
 
   //=> Utility services. Only Services called internally defined here.
+
+  // generateRecommendedPromoVoucers()
+
+  checkMaxUncombineableOrCombineable(
+    promo: { promo: any; discount: number },
+    totalCombinedDiscount: number,
+  ) {
+    const singleDiscount = promo?.discount || null;
+    if (singleDiscount >= totalCombinedDiscount) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  findMaxPromoVoucher(
+    promo: {
+      promo: PromoProviderDocument;
+      discount: number;
+    },
+    voucher: {
+      voucher: VoucherDocument;
+      discount: number;
+    },
+  ): { type: string; item: any } {
+    if (
+      (promo.promo && !voucher.voucher) ||
+      promo.discount >= voucher.discount
+    ) {
+      return { type: 'PROMO', item: promo };
+    } else if (
+      (!promo.promo && voucher.voucher) ||
+      promo.discount < voucher.discount
+    ) {
+      return { type: 'VOUCHER', item: voucher };
+    } else if (!promo.promo && !voucher.voucher) {
+      return null;
+    }
+  }
+
+  calculatePromoDiscount(
+    promo: PromoProviderDocument,
+    cartTotal: number,
+  ): number {
+    let discount =
+      promo.discount_type == EnumPromoProviderDiscountType.PRICE
+        ? promo.discount_value
+        : Math.ceil((cartTotal * promo.discount_value) / 100);
+    if (discount > promo.discount_maximum && promo.discount_maximum) {
+      discount = promo.discount_maximum;
+    }
+    return discount;
+  }
+
+  checkUsablePromo(
+    promo: PromoProviderDocument,
+    totalCart: number,
+    orderType: string,
+  ): boolean {
+    if (
+      (!promo.minimum_transaction || promo.minimum_transaction <= totalCart) &&
+      (promo.order_type == EnumPromoProviderOrderType.DELIVERY_AND_PICKUP ||
+        (promo.order_type == EnumPromoProviderOrderType.DELIVERY_ONLY &&
+          orderType == 'DELIVERY') ||
+        (promo.order_type == EnumPromoProviderOrderType.PICKUP_ONLY &&
+          orderType == 'PICKUP'))
+    ) {
+      return true;
+    }
+    return false;
+  }
 
   async findOneOrFail(promoId: string): Promise<PromoProviderDocument> {
     return this.promoProviderRepository

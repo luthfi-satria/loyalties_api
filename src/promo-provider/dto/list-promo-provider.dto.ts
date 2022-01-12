@@ -71,13 +71,13 @@ export class GetPromoProvidersDto {
   @IsEnum(EnumGetPromoProviderTarget)
   target: string;
 
-  @IsOptional()
-  @IsString()
-  @IsEnum(EnumGetPromoProviderOrderType)
-  order_type: string;
+  // @IsOptional()
+  // @IsString()
+  // @IsEnum(EnumGetPromoProviderOrderType)
+  // order_type: string;
 
-  @IsOptional()
-  @IsNumber()
-  @Type(() => Number)
-  cart_total: number;
+  // @IsOptional()
+  // @IsNumber()
+  // @Type(() => Number)
+  // cart_total: number;
 }
