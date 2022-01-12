@@ -61,6 +61,7 @@ export class VoucherCodeService {
         take: limit,
         skip: offset,
         where: qry,
+        relations: ['vouchers', 'master_vouchers'],
       });
 
       const listItems = {
@@ -92,7 +93,9 @@ export class VoucherCodeService {
 
   async getVoucherCodeDetail(id) {
     try {
-      return await this.voucherCodesRepository.findOneOrFail(id);
+      return await this.voucherCodesRepository.findOneOrFail(id, {
+        relations: ['vouchers', 'master_vouchers'],
+      });
     } catch (error) {
       throw new BadRequestException(
         this.responseService.error(
@@ -179,7 +182,7 @@ export class VoucherCodeService {
 
       const dataToDb: CreateVoucherCodeToDbDto = {
         ...data,
-        vouchers: listVoucher,
+        master_vouchers: listVoucher,
       };
 
       const createdVoucher = await this.voucherCodesRepository.save(dataToDb);
