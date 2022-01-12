@@ -62,7 +62,7 @@ export class CreateVoucherCodeToDbDto {
   @IsNotEmpty()
   is_prepopulated: boolean;
 
-  vouchers: MasterVouchersDocument[];
+  master_vouchers: MasterVouchersDocument[];
 
   @IsEnum(TargetGroup, { message: 'Target invalid' })
   target: TargetGroup;

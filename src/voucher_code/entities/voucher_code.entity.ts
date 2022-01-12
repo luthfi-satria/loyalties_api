@@ -6,9 +6,11 @@ import {
   Entity,
   JoinTable,
   ManyToMany,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { VoucherDocument } from 'src/voucher/entities/voucher.entity';
 
 export enum TargetGroup {
   ALL = 'ALL',
@@ -60,7 +62,10 @@ export class VoucherCodeDocument {
 
   @ManyToMany(() => MasterVouchersDocument)
   @JoinTable({ name: 'loyalties_master_voucher_voucher_code' })
-  vouchers: MasterVouchersDocument[];
+  master_vouchers: MasterVouchersDocument[];
+
+  @OneToMany(() => VoucherDocument, (voucher) => voucher.groups)
+  vouchers: VoucherDocument;
 
   @CreateDateColumn({ type: 'timestamptz', default: () => 'LOCALTIMESTAMP' })
   created_at: Date | string;

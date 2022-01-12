@@ -1,8 +1,11 @@
+import { VoucherCodeDocument } from './../../voucher_code/entities/voucher_code.entity';
 import {
   Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -98,6 +101,10 @@ export class VoucherDocument {
 
   @DeleteDateColumn({ nullable: true })
   deleted_at: Date;
+
+  @ManyToOne(() => VoucherCodeDocument, (voucher_code) => voucher_code.vouchers)
+  @JoinColumn({ name: 'voucher_code_id', referencedColumnName: 'id' })
+  groups: VoucherCodeDocument;
 
   constructor(init?: Partial<VoucherDocument>) {
     Object.assign(this, init);
