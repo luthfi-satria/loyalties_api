@@ -11,7 +11,6 @@ import {
 } from 'src/common/redis/dto/redis-promo-provider.dto';
 import { RedisPromoProviderService } from 'src/common/redis/promo-provider/redis-promo-provider.service';
 import {
-  EnumPromoProviderDiscountType,
   EnumPromoProviderStatus,
   PromoProviderDocument,
 } from 'src/database/entities/promo-provider.entity';
@@ -21,7 +20,7 @@ import { MessageService } from 'src/message/message.service';
 import { RMessage } from 'src/response/response.interface';
 import { ResponseService } from 'src/response/response.service';
 import { DateTimeUtils } from 'src/utils/date-time-utils';
-import { Any, Brackets, Not } from 'typeorm';
+import { Brackets } from 'typeorm';
 import {
   BaseCreatePromoProviderDto,
   DbCreatePromoProviderDto,
@@ -61,11 +60,11 @@ export class PromoProviderService {
       this.validatePromoData(data);
 
       //Get Existing Promo
-      const promoProviders = await this.promoProviderRepository.find({
-        where: {
-          status: Any(['ACTIVE', 'SCHEDULED']),
-        },
-      });
+      // const promoProviders = await this.promoProviderRepository.find({
+      //   where: {
+      //     status: Any(['ACTIVE', 'SCHEDULED']),
+      //   },
+      // });
 
       const gmt_offset = '7';
       const timeStart = new Date(`${data.date_start} +${gmt_offset}`);
@@ -310,12 +309,12 @@ export class PromoProviderService {
       const timeStart = new Date(`${data.date_start} +${gmt_offset}`);
       const timeEnd = new Date(`${data.date_end} +${gmt_offset}`);
 
-      const promoProviders = await this.promoProviderRepository.find({
-        where: {
-          status: Any(['ACTIVE', 'SCHEDULED']),
-          id: Not(data.id),
-        },
-      });
+      // const promoProviders = await this.promoProviderRepository.find({
+      //   where: {
+      //     status: Any(['ACTIVE', 'SCHEDULED']),
+      //     id: Not(data.id),
+      //   },
+      // });
 
       // this.checkPromoOverlap(promoProviders, timeStart, timeEnd);
 
