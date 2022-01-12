@@ -143,7 +143,7 @@ export class VoucherCodeService {
 
       const listVoucher = [];
 
-      for (const voucher of data.vouchers) {
+      for (const voucher of data.master_vouchers) {
         if (!voucher.master_voucher_id) {
           throw new BadRequestException(
             this.responseService.error(
