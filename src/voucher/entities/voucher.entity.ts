@@ -41,7 +41,7 @@ export class VoucherDocument {
   @Column('uuid', { nullable: true })
   customer_id: string;
 
-  @Column()
+  @Column({ nullable: true })
   code: string;
 
   @Column({
