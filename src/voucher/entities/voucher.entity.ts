@@ -81,13 +81,13 @@ export class VoucherDocument {
   })
   discount_type: DiscountTypeVoucherEnum;
 
-  @Column()
+  @Column({ nullable: true })
   discount_value: number;
 
-  @Column()
+  @Column({ nullable: true })
   discount_maximum: number;
 
-  @Column()
+  @Column({ nullable: true })
   is_combinable: boolean;
 
   @CreateDateColumn({ type: 'timestamptz', default: () => 'LOCALTIMESTAMP' })
