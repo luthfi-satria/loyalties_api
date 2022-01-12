@@ -54,7 +54,7 @@ export class DetailPromoProviderDto {
 export class ExtendedListPromoProviderDto extends ListPromoProviderDto {
   promo_provider_id: string;
 
-  minimum_transaction: number;
+  cart_total: number;
 
   target_list: string[];
 
