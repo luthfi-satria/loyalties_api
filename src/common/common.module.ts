@@ -1,3 +1,4 @@
+import { RedisVoucherCodeService } from './redis/voucher_code/redis-voucher_code.service';
 import { DriverType, StorageModule } from '@codebrew/nestjs-storage';
 import { HttpModule } from '@nestjs/axios';
 import { BullModule } from '@nestjs/bull';
@@ -8,6 +9,8 @@ import { ResponseService } from 'src/response/response.service';
 import { NatsController } from './nats/nats.controller';
 import { RedisPromoProviderProcessor } from './redis/promo-provider/redis-promo-provider.processor';
 import { RedisPromoProviderService } from './redis/promo-provider/redis-promo-provider.service';
+import { RedisVoucherCodeProcessor } from './redis/voucher_code/redis-voucher_code.processor';
+import { VoucherCodeModule } from 'src/voucher_code/voucher_code.module';
 
 @Global()
 @Module({
@@ -37,14 +40,22 @@ import { RedisPromoProviderService } from './redis/promo-provider/redis-promo-pr
     }),
     HttpModule,
     forwardRef(() => PromoProviderModule),
+    forwardRef(() => VoucherCodeModule),
   ],
   providers: [
     RedisPromoProviderService,
     RedisPromoProviderProcessor,
+    RedisVoucherCodeService,
+    RedisVoucherCodeProcessor,
     MessageService,
     ResponseService,
   ],
-  exports: [RedisPromoProviderService, RedisPromoProviderProcessor],
+  exports: [
+    RedisPromoProviderService,
+    RedisPromoProviderProcessor,
+    RedisVoucherCodeService,
+    RedisVoucherCodeProcessor,
+  ],
   controllers: [NatsController],
 })
 export class CommonModule {}
