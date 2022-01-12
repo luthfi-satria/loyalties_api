@@ -21,7 +21,7 @@ import { MessageService } from 'src/message/message.service';
 import { RMessage } from 'src/response/response.interface';
 import { ResponseService } from 'src/response/response.service';
 import { DateTimeUtils } from 'src/utils/date-time-utils';
-import { Any, Not } from 'typeorm';
+import { Any, Brackets, Not } from 'typeorm';
 import {
   BaseCreatePromoProviderDto,
   DbCreatePromoProviderDto,
@@ -144,7 +144,7 @@ export class PromoProviderService {
         periode_end: data.periode_end,
         status: data.status,
         order_type: data.order_type,
-        minimum_transaction: null,
+        cart_total: null,
         target_list: null,
         order_type_list: null,
       });
@@ -165,7 +165,7 @@ export class PromoProviderService {
         periode_end: null,
         status: null,
         order_type: null,
-        minimum_transaction: null,
+        cart_total: null,
         target_list: null,
         order_type_list: null,
       });
@@ -190,6 +190,8 @@ export class PromoProviderService {
     items: any[];
   }> {
     try {
+      console.log(data, 'data');
+
       const currentPage = data.page || 1;
       const perPage = data.limit || 10;
       const target = data.target || null;
@@ -200,9 +202,11 @@ export class PromoProviderService {
       const orderType = data.order_type || null;
       const promoProviderId = data.promo_provider_id || null;
 
-      const minimumTransaction = data.minimum_transaction || null;
-      const targetList = data.target_list || null;
-      const orderTypeList = data.order_type_list || null;
+      const cartTotal = data.cart_total || null;
+      const targetList = data.target_list?.length ? data.target_list : null;
+      const orderTypeList = data.order_type_list?.length
+        ? data.order_type_list
+        : null;
 
       const query = this.promoProviderRepository.createQueryBuilder('ppro');
 
@@ -243,6 +247,28 @@ export class PromoProviderService {
       if (orderType) {
         query.andWhere('ppro.order_type = :orderType', {
           orderType,
+        });
+      }
+
+      if (cartTotal) {
+        query.andWhere(
+          new Brackets((qb) => {
+            qb.where('ppro.minimum_transaction <= :cartTotal', {
+              cartTotal: cartTotal,
+            })
+              .orWhere('ppro.minimum_transaction IS NULL')
+              .orWhere('ppro.minimum_transaction = 0');
+          }),
+        );
+      }
+
+      if (targetList) {
+        query.andWhere('ppro.target in (:...targetList)', { targetList });
+      }
+
+      if (orderTypeList) {
+        query.andWhere('ppro.order_type in (:...orderTypeList)', {
+          orderTypeList,
         });
       }
 
@@ -466,10 +492,16 @@ export class PromoProviderService {
     data: GetPromoProvidersDto,
   ): Promise<PromoProviderDocument[]> {
     try {
-      const targetList = ['ALL']; //update this!
-      const orderTypeList = ['DELIVERY_AND_PICKUP']; //update this!
-      const cartTotal = data.cart_total || null; //update this!
+      const targetList = ['ALL'];
+      const orderTypeList = ['DELIVERY_AND_PICKUP'];
+      const cartTotal = data.cart_total || null;
       const status = 'ACTIVE';
+
+      targetList.push(data.target);
+
+      const orderType =
+        data.order_type === 'DELIVERY' ? 'DELIVERY_ONLY' : 'PICKUP_ONLY';
+      orderTypeList.push(orderType);
 
       const { items } = await this.fetchPromoProvidersFromDb({
         promo_provider_id: '',
@@ -481,9 +513,9 @@ export class PromoProviderService {
         periode_end: '',
         status: status,
         order_type: '',
-        minimum_transaction: null, //update this!
-        target_list: null, //update this!
-        order_type_list: null, //update this!
+        cart_total: cartTotal,
+        target_list: targetList,
+        order_type_list: orderTypeList,
       });
 
       return items;
