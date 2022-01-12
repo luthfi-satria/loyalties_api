@@ -15,7 +15,8 @@ import {
   PromoProviderDocument,
 } from 'src/database/entities/promo-provider.entity';
 import { PromoProviderRepository } from 'src/database/repository/promo-provider.repository';
-import { GetPromoProvidersDto } from 'src/internal/dto/get-promo-providers.dto';
+import { GetPromoVouchersDto } from 'src/internal/dto/get-promo-vouchers.dto';
+import { ValidatePromosDto } from 'src/internal/dto/validate-promos.dto';
 import { MessageService } from 'src/message/message.service';
 import { RMessage } from 'src/response/response.interface';
 import { ResponseService } from 'src/response/response.service';
@@ -28,6 +29,7 @@ import {
 import {
   DetailPromoProviderDto,
   ExtendedListPromoProviderDto,
+  GetPromoProvidersDto,
   ListPromoProviderDto,
 } from './dto/list-promo-provider.dto';
 import {
@@ -487,9 +489,29 @@ export class PromoProviderService {
     }
   }
 
-  async getPromoProviders(
-    data: GetPromoProvidersDto,
-  ): Promise<PromoProviderDocument[]> {
+  async getPromoVouchers(data: GetPromoVouchersDto): Promise<any> {
+    try {
+      const targetList = data.target;
+      const orderTypeList = data.order_type;
+      const cartTotal = data.cart_total || null;
+      const customerId = data.customer_id;
+      const status = 'ACTIVE';
+
+      const promoProviders = await this.getPromoProviders({
+        target: targetList,
+        order_type: orderTypeList,
+        cart_total: cartTotal,
+      });
+
+      // const vouchers = await
+
+      return promoProviders;
+    } catch (error) {
+      this.errorReport(error, 'general.list.fail');
+    }
+  }
+
+  async getPromoProviders(data: GetPromoProvidersDto): Promise<any> {
     try {
       const targetList = ['ALL'];
       const orderTypeList = ['DELIVERY_AND_PICKUP'];
@@ -518,6 +540,13 @@ export class PromoProviderService {
       });
 
       return items;
+    } catch (error) {
+      this.errorReport(error, 'general.list.fail');
+    }
+  }
+
+  async validatePromos(data: ValidatePromosDto) {
+    try {
     } catch (error) {
       this.errorReport(error, 'general.list.fail');
     }

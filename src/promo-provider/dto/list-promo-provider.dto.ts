@@ -6,6 +6,10 @@ import {
   EnumPromoProviderStatus,
   EnumPromoProviderOrderType,
 } from 'src/database/entities/promo-provider.entity';
+import {
+  EnumGetPromoProviderTarget,
+  EnumGetPromoProviderOrderType,
+} from 'src/internal/dto/get-promo-vouchers.dto';
 
 export class ListPromoProviderDto {
   @IsOptional()
@@ -59,4 +63,21 @@ export class ExtendedListPromoProviderDto extends ListPromoProviderDto {
   target_list: string[];
 
   order_type_list: string[];
+}
+
+export class GetPromoProvidersDto {
+  @IsOptional()
+  @IsString()
+  @IsEnum(EnumGetPromoProviderTarget)
+  target: string;
+
+  @IsOptional()
+  @IsString()
+  @IsEnum(EnumGetPromoProviderOrderType)
+  order_type: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  cart_total: number;
 }

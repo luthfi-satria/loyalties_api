@@ -1,5 +1,12 @@
 import { Type } from 'class-transformer';
-import { IsOptional, IsString, IsEnum, IsNumber } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsEnum,
+  IsNumber,
+  IsUUID,
+  ValidateIf,
+} from 'class-validator';
 
 export enum EnumGetPromoProviderTarget {
   NEW = 'NEW',
@@ -12,7 +19,7 @@ export enum EnumGetPromoProviderOrderType {
   PICKUP = 'PICKUP',
 }
 
-export class GetPromoProvidersDto {
+export class GetPromoVouchersDto {
   @IsOptional()
   @IsString()
   @IsEnum(EnumGetPromoProviderTarget)
@@ -27,4 +34,9 @@ export class GetPromoProvidersDto {
   @IsNumber()
   @Type(() => Number)
   cart_total: number;
+
+  @IsOptional()
+  @IsUUID()
+  @ValidateIf((o) => o.customer_id !== '')
+  customer_id: string;
 }
