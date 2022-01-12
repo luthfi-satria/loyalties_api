@@ -16,7 +16,6 @@ import {
   CancelVoucherCodeDto,
   CreateVoucherCodeDto,
   CreateVoucherCodeToDbDto,
-  MasterVoucherVoucherCodeDto,
   StopVoucherCodeDto,
   UpdateVoucherCodeStatusActiveDto,
   UpdateVoucherCodeStatusFinishDto,
