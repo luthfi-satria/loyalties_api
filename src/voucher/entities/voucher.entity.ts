@@ -35,7 +35,7 @@ export class VoucherDocument {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column('uuid')
+  @Column('uuid', { nullable: true })
   voucher_code_id: string;
 
   @Column('uuid', { nullable: true })
