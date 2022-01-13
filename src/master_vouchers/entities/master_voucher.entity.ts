@@ -1,8 +1,10 @@
+import { MasterVoucherVoucherCodeDocument } from 'src/master_voucher_voucher_code/entities/master_voucher_voucher_code.entity';
 import {
   Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -69,6 +71,12 @@ export class MasterVouchersDocument {
 
   @Column()
   is_combinable: boolean;
+
+  @OneToMany(
+    () => MasterVoucherVoucherCodeDocument,
+    (master_voucher_voucher_code) => master_voucher_voucher_code.master_voucher,
+  )
+  master_voucher_voucher_code: MasterVoucherVoucherCodeDocument[];
 
   @CreateDateColumn({ type: 'timestamptz', default: () => 'LOCALTIMESTAMP' })
   created_at: Date | string;

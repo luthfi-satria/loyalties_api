@@ -64,9 +64,9 @@ export class VoucherCodeService {
         .leftJoinAndSelect('vc.vouchers', 'vouchers')
         .leftJoinAndSelect('vc.master_vouchers', 'master_vouchers')
         .leftJoinAndSelect(
-          'vc.master_voucher_voucher_code',
+          'master_vouchers.master_voucher_voucher_code',
           'master_voucher_voucher_code',
-          'master_vouchers.id = master_voucher_voucher_code.loyaltiesMasterVoucherId',
+          'vc.id = master_voucher_voucher_code.loyaltiesVoucherCodeId',
         )
         .where(qry);
 
