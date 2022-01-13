@@ -104,7 +104,7 @@ export class VoucherDocument {
 
   @ManyToOne(() => VoucherCodeDocument, (voucher_code) => voucher_code.vouchers)
   @JoinColumn({ name: 'voucher_code_id', referencedColumnName: 'id' })
-  groups: VoucherCodeDocument;
+  vouchers: VoucherCodeDocument;
 
   constructor(init?: Partial<VoucherDocument>) {
     Object.assign(this, init);

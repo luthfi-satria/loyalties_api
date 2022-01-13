@@ -31,7 +31,7 @@ export class CreateVoucherCodeDto {
   @IsNotEmpty()
   is_prepopulated: boolean;
 
-  master_vouchers: MasterVoucherVoucherCodeDto[];
+  master_vouchers: any;
 
   @IsEnum(TargetGroup, { message: 'Target invalid' })
   target: TargetGroup;

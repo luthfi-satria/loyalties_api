@@ -1,6 +1,7 @@
+import { MasterVoucherVoucherCodeRepository } from './../master_voucher_voucher_code/repository/master_voucher_voucher_code.repository';
+import { MasterVouchersDocument } from 'src/master_vouchers/entities/master_voucher.entity';
 import { VoucherService } from './../voucher/voucher.service';
 import { MasterVoucherService } from './../master_vouchers/master_voucher.service';
-import { MasterVouchersDocument } from './../master_vouchers/entities/master_voucher.entity';
 import { RedisVoucherCodeService } from './../common/redis/voucher_code/redis-voucher_code.service';
 import { VoucherCodesRepository } from './repository/voucher_code.repository';
 import {
@@ -41,6 +42,7 @@ export class VoucherCodeService {
     private readonly redisVoucherCodeService: RedisVoucherCodeService,
     private readonly masterVoucherService: MasterVoucherService,
     private readonly voucherService: VoucherService,
+    private readonly masterVoucherVoucherCodeRepository: MasterVoucherVoucherCodeRepository,
   ) {}
   private readonly logger = new Logger(VoucherCodeService.name);
 
@@ -57,17 +59,31 @@ export class VoucherCodeService {
       if (data.status) qry = { ...qry, status: data.status };
       if (data.search) qry = { ...qry, code: Like(`%${data.search}%`) };
 
-      const [items, count] = await this.voucherCodesRepository.findAndCount({
-        take: limit,
-        skip: offset,
-        where: qry,
-        relations: ['vouchers', 'master_vouchers'],
-      });
+      const query = this.voucherCodesRepository
+        .createQueryBuilder('vc')
+        .leftJoinAndSelect('vc.vouchers', 'vouchers')
+        .leftJoinAndSelect('vc.master_vouchers', 'master_vouchers')
+        .leftJoinAndSelect(
+          'vc.master_voucher_voucher_code',
+          'master_voucher_voucher_code',
+          'master_vouchers.id = master_voucher_voucher_code.loyaltiesMasterVoucherId',
+        )
+        .where(qry);
+
+      const items = await query.getMany();
+      const count = await query.getCount();
+
+      // const [items, count] = await this.voucherCodesRepository.findAndCount({
+      //   take: limit,
+      //   skip: offset,
+      //   where: qry,
+      //   relations: ['vouchers', 'master_vouchers'],
+      // });
 
       const listItems = {
-        current_page: page,
+        current_page: parseInt(page),
         total_item: count,
-        limit: limit,
+        limit: parseInt(limit),
         items: items,
       };
 
@@ -186,6 +202,17 @@ export class VoucherCodeService {
       };
 
       const createdVoucher = await this.voucherCodesRepository.save(dataToDb);
+      for (const voucher of data.master_vouchers) {
+        const result = await this.masterVoucherVoucherCodeRepository.findOne({
+          where: {
+            loyaltiesMasterVoucherId: voucher.master_voucher_id,
+            loyaltiesVoucherCodeId: createdVoucher.id,
+          },
+        });
+
+        result.quantity = voucher.quantity;
+        await this.masterVoucherVoucherCodeRepository.save(result);
+      }
       await this.createVoucherCodeQueue(voucherCodeStatus, createdVoucher);
 
       if (data.is_prepopulated && data.quota) {
