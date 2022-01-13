@@ -109,9 +109,17 @@ export class VoucherCodeService {
 
   async getVoucherCodeDetail(id) {
     try {
-      return await this.voucherCodesRepository.findOneOrFail(id, {
-        relations: ['vouchers', 'master_vouchers'],
-      });
+      const query = this.voucherCodesRepository
+        .createQueryBuilder('vc')
+        .leftJoinAndSelect('vc.vouchers', 'vouchers')
+        .leftJoinAndSelect('vc.master_vouchers', 'master_vouchers')
+        .leftJoinAndSelect(
+          'master_vouchers.master_voucher_voucher_code',
+          'master_voucher_voucher_code',
+          'vc.id = master_voucher_voucher_code.loyaltiesVoucherCodeId',
+        )
+        .where(id);
+      return query.getMany();
     } catch (error) {
       throw new BadRequestException(
         this.responseService.error(
