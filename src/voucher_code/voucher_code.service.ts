@@ -1,3 +1,5 @@
+import { CommonStorageService } from 'src/common/storage/storage.service';
+import ExcelJS from 'exceljs';
 import { MasterVoucherVoucherCodeRepository } from './../master_voucher_voucher_code/repository/master_voucher_voucher_code.repository';
 import { MasterVouchersDocument } from 'src/master_vouchers/entities/master_voucher.entity';
 import { VoucherService } from './../voucher/voucher.service';
@@ -32,6 +34,7 @@ import {
   CreateAutoFinishVoucherCodeDto,
   CreateAutoStartVoucherCodeDto,
 } from 'src/common/redis/dto/redis-voucher-code.dto';
+import { VoucherDocument } from 'src/voucher/entities/voucher.entity';
 
 @Injectable()
 export class VoucherCodeService {
@@ -43,6 +46,7 @@ export class VoucherCodeService {
     private readonly masterVoucherService: MasterVoucherService,
     private readonly voucherService: VoucherService,
     private readonly masterVoucherVoucherCodeRepository: MasterVoucherVoucherCodeRepository,
+    private readonly storage: CommonStorageService,
   ) {}
   private readonly logger = new Logger(VoucherCodeService.name);
 
@@ -576,5 +580,41 @@ export class VoucherCodeService {
         ),
       );
     }
+  }
+
+  async exportExcel(id) {
+    const voucher_codes: VoucherCodeDocument = await this.getVoucherCodeDetail(
+      id,
+    );
+    let url = null;
+
+    if (voucher_codes.excel_file) {
+      url = voucher_codes.excel_file;
+    } else {
+      const workbook = new ExcelJS.Workbook();
+      workbook.creator = 'Efood';
+      const sheetVoucherCode = workbook.addWorksheet('Voucher Code', {
+        properties: { defaultColWidth: 20 },
+      });
+
+      sheetVoucherCode.columns = [
+        { header: 'Id', key: 'id', width: 10 },
+        { header: 'Kode Unik', key: 'code', width: 32 },
+      ];
+
+      for (let i = 0; i < voucher_codes.vouchers.length; i++) {
+        const voucher: VoucherDocument = voucher_codes.vouchers[i];
+        sheetVoucherCode.getCell(`A${i + 2}`).value = voucher.id;
+        sheetVoucherCode.getCell(`B${i + 2}`).value = voucher.code;
+      }
+
+      const fileName: string = `voucher_codes_${id.id}.xlsx`;
+      await workbook.xlsx.writeFile(fileName);
+      url = await this.storage.store(fileName);
+      voucher_codes.excel_file = url;
+      await this.voucherCodesRepository.save(voucher_codes);
+    }
+
+    return { url };
   }
 }

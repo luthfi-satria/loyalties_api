@@ -72,7 +72,10 @@ export class VoucherCodeDocument {
   master_voucher_voucher_code: MasterVoucherVoucherCodeDocument[];
 
   @OneToMany(() => VoucherDocument, (voucher) => voucher.vouchers)
-  vouchers: VoucherDocument;
+  vouchers: VoucherDocument[];
+
+  @Column({ nullable: true })
+  excel_file: string;
 
   @CreateDateColumn({ type: 'timestamptz', default: () => 'LOCALTIMESTAMP' })
   created_at: Date | string;

@@ -1,3 +1,4 @@
+import { CommonStorageService } from 'src/common/storage/storage.service';
 import { RedisVoucherCodeService } from './redis/voucher_code/redis-voucher_code.service';
 import { DriverType, StorageModule } from '@codebrew/nestjs-storage';
 import { HttpModule } from '@nestjs/axios';
@@ -47,6 +48,7 @@ import { VoucherCodeModule } from 'src/voucher_code/voucher_code.module';
     RedisPromoProviderProcessor,
     RedisVoucherCodeService,
     RedisVoucherCodeProcessor,
+    CommonStorageService,
     MessageService,
     ResponseService,
   ],
@@ -55,6 +57,7 @@ import { VoucherCodeModule } from 'src/voucher_code/voucher_code.module';
     RedisPromoProviderProcessor,
     RedisVoucherCodeService,
     RedisVoucherCodeProcessor,
+    CommonStorageService,
   ],
   controllers: [NatsController],
 })
