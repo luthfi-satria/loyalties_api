@@ -119,7 +119,7 @@ export class VoucherCodeService {
           'vc.id = master_voucher_voucher_code.loyaltiesVoucherCodeId',
         )
         .where(id);
-      return query.getMany();
+      return query.getOneOrFail();
     } catch (error) {
       throw new BadRequestException(
         this.responseService.error(
