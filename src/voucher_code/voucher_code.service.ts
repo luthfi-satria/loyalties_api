@@ -598,14 +598,14 @@ export class VoucherCodeService {
       });
 
       sheetVoucherCode.columns = [
-        { header: 'Id', key: 'id', width: 10 },
+        // { header: 'Id', key: 'id', width: 10 },
         { header: 'Kode Unik', key: 'code', width: 32 },
       ];
 
       for (let i = 0; i < voucher_codes.vouchers.length; i++) {
         const voucher: VoucherDocument = voucher_codes.vouchers[i];
-        sheetVoucherCode.getCell(`A${i + 2}`).value = voucher.id;
-        sheetVoucherCode.getCell(`B${i + 2}`).value = voucher.code;
+        // sheetVoucherCode.getCell(`A${i + 2}`).value = voucher.id;
+        sheetVoucherCode.getCell(`A${i + 2}`).value = voucher.code;
       }
 
       const fileName: string = `voucher_codes_${id.id}.xlsx`;
