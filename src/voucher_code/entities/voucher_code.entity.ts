@@ -11,6 +11,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { VoucherDocument } from 'src/voucher/entities/voucher.entity';
+import { MasterVoucherVoucherCodeDocument } from 'src/master_voucher_voucher_code/entities/master_voucher_voucher_code.entity';
 
 export enum TargetGroup {
   ALL = 'ALL',
@@ -64,7 +65,13 @@ export class VoucherCodeDocument {
   @JoinTable({ name: 'loyalties_master_voucher_voucher_code' })
   master_vouchers: MasterVouchersDocument[];
 
-  @OneToMany(() => VoucherDocument, (voucher) => voucher.groups)
+  @OneToMany(
+    () => MasterVoucherVoucherCodeDocument,
+    (master_voucher_voucher_code) => master_voucher_voucher_code.voucher_code,
+  )
+  master_voucher_voucher_code: MasterVoucherVoucherCodeDocument[];
+
+  @OneToMany(() => VoucherDocument, (voucher) => voucher.vouchers)
   vouchers: VoucherDocument;
 
   @CreateDateColumn({ type: 'timestamptz', default: () => 'LOCALTIMESTAMP' })

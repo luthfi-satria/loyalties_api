@@ -1,3 +1,4 @@
+import { MasterVoucherVoucherCodeRepository } from './../master_voucher_voucher_code/repository/master_voucher_voucher_code.repository';
 import { VouchersRepository } from './../voucher/repository/voucher.repository';
 import { VoucherService } from './../voucher/voucher.service';
 import { MasterVouchersRepository } from './../master_vouchers/repository/master_voucher.repository';
@@ -19,6 +20,7 @@ import { VoucherCodeController } from './voucher_code.controller';
       VoucherCodesRepository,
       MasterVouchersRepository,
       VouchersRepository,
+      MasterVoucherVoucherCodeRepository,
     ]),
     forwardRef(() => CommonModule),
   ],
