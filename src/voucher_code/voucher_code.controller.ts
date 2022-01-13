@@ -58,6 +58,24 @@ export class VoucherCodeController {
     }
   }
 
+  @Post(':id/excel')
+  @UserType('admin')
+  @AuthJwtGuard()
+  @ResponseStatusCode()
+  async exportExcel(@Param() id: string): Promise<RSuccessMessage> {
+    try {
+      const result = await this.voucherCodeService.exportExcel(id);
+      return this.responseService.success(
+        true,
+        this.messageService.get('general.list.success'),
+        result,
+      );
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+
   @Post()
   @UserType('admin')
   @AuthJwtGuard()
