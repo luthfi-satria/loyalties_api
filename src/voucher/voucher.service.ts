@@ -8,7 +8,11 @@ import {
 import { MessageService } from 'src/message/message.service';
 import { ResponseService } from 'src/response/response.service';
 
-import { VoucherDocument } from './entities/voucher.entity';
+import {
+  DiscountTypeVoucherEnum,
+  OrderTypeVoucherEnum,
+  VoucherDocument,
+} from './entities/voucher.entity';
 
 @Injectable()
 export class VoucherService {
@@ -46,5 +50,62 @@ export class VoucherService {
         ),
       );
     }
+  }
+
+  async getVoucherByCustomerId(customerId: string): Promise<VoucherDocument[]> {
+    try {
+      return this.vouchersRepository.find({
+        where: { customer_id: customerId },
+      });
+    } catch (error) {
+      this.logger.log(error);
+      throw new BadRequestException(
+        this.responseService.error(
+          HttpStatus.BAD_REQUEST,
+          {
+            value: '',
+            property: '',
+            constraint: [
+              this.messageService.get('general.list.fail'),
+              error.message,
+            ],
+          },
+          'Bad Request',
+        ),
+      );
+    }
+  }
+
+  calculateVoucherDiscount(
+    voucher: VoucherDocument,
+    cartTotal: number,
+  ): number {
+    let discount =
+      voucher.discount_type == DiscountTypeVoucherEnum.PRICE
+        ? voucher.discount_value
+        : Math.ceil((cartTotal * voucher.discount_value) / 100);
+    if (discount > voucher.discount_maximum && voucher.discount_maximum) {
+      discount = voucher.discount_maximum;
+    }
+    return discount;
+  }
+
+  checkUsableVoucher(
+    voucher: VoucherDocument,
+    totalCart: number,
+    orderType: string,
+  ): boolean {
+    if (
+      (!voucher.minimum_transaction ||
+        voucher.minimum_transaction <= totalCart) &&
+      (voucher.order_type == OrderTypeVoucherEnum.DELIVERY_AND_PICKUP ||
+        (voucher.order_type == OrderTypeVoucherEnum.DELIVERY_ONLY &&
+          orderType == 'DELIVERY') ||
+        (voucher.order_type == OrderTypeVoucherEnum.PICKUP_ONLY &&
+          orderType == 'PICKUP'))
+    ) {
+      return true;
+    }
+    return false;
   }
 }

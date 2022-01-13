@@ -8,16 +8,23 @@ import { ConfigModule } from '@nestjs/config';
 import { HttpModule } from '@nestjs/axios';
 import { PromoProviderRepository } from 'src/database/repository/promo-provider.repository';
 import { CommonModule } from 'src/common/common.module';
+import { VoucherService } from 'src/voucher/voucher.service';
+import { VouchersRepository } from 'src/voucher/repository/voucher.repository';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([PromoProviderRepository]),
+    TypeOrmModule.forFeature([PromoProviderRepository, VouchersRepository]),
     ConfigModule,
     HttpModule,
     forwardRef(() => CommonModule),
   ],
   controllers: [PromoProviderController],
-  providers: [PromoProviderService, MessageService, ResponseService],
+  providers: [
+    PromoProviderService,
+    MessageService,
+    ResponseService,
+    VoucherService,
+  ],
   exports: [PromoProviderService, TypeOrmModule],
 })
 export class PromoProviderModule {}

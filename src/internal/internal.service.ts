@@ -8,7 +8,7 @@ import { MessageService } from 'src/message/message.service';
 import { PromoProviderService } from 'src/promo-provider/promo-provider.service';
 import { RMessage } from 'src/response/response.interface';
 import { ResponseService } from 'src/response/response.service';
-import { GetPromoProvidersDto } from './dto/get-promo-providers.dto';
+import { GetPromoVouchersDto } from './dto/get-promo-vouchers.dto';
 
 @Injectable()
 export class InternalService {
@@ -20,9 +20,9 @@ export class InternalService {
 
   private readonly logger = new Logger(InternalService.name);
 
-  async getPromoProviders(data: GetPromoProvidersDto): Promise<any> {
+  async getPromoVouchers(data: GetPromoVouchersDto): Promise<any> {
     try {
-      return this.promoProviderService.getPromoProviders(data);
+      return this.promoProviderService.getPromoVouchers(data);
     } catch (error) {
       this.errorReport(error, 'general.general.fail');
     }
