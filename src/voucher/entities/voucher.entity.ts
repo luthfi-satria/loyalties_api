@@ -68,6 +68,9 @@ export class VoucherDocument {
   })
   target: TargetVoucherEnum;
 
+  @Column({ nullable: true })
+  status: string;
+
   @Column({ type: 'timestamptz', nullable: true })
   date_start: Date;
 

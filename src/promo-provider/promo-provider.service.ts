@@ -14,6 +14,7 @@ import {
   EnumPromoProviderDiscountType,
   EnumPromoProviderOrderType,
   EnumPromoProviderStatus,
+  EnumPromoProviderType,
   PromoProviderDocument,
 } from 'src/database/entities/promo-provider.entity';
 import { PromoProviderRepository } from 'src/database/repository/promo-provider.repository';
@@ -196,8 +197,6 @@ export class PromoProviderService {
     items: any[];
   }> {
     try {
-      console.log(data, 'data');
-
       const currentPage = data.page || 1;
       const perPage = data.limit || 10;
       const target = data.target || null;
@@ -500,16 +499,20 @@ export class PromoProviderService {
       const orderType = data.order_type;
       const cartTotal = data.cart_total || null;
       const customerId = data.customer_id;
+      const deliveryFee = data.delivery_fee || 0;
+
+      console.log(data, 'data');
 
       const promoProviders = await this.getPromoProviders({
         target: target,
       });
 
-      const vouchers = await this.voucherService.getVoucherByCustomerId(
-        customerId,
-      );
+      const vouchers = await this.voucherService.getActiveTargetVouchers({
+        customer_id: customerId,
+        target: target,
+      });
 
-      //=> cari promoProviders terbesar relatif ke order
+      //=> cari promoProviders terbesar relatif ke order || delivery_fee
       const maxNotCombineablePromo: {
         promo: PromoProviderDocument;
         discount: number;
@@ -526,7 +529,11 @@ export class PromoProviderService {
         if (!this.checkUsablePromo(promo, cartTotal, orderType)) {
           notAvailablePromos.push(promo);
         } else {
-          const discount = this.calculatePromoDiscount(promo, cartTotal);
+          const discount = this.calculatePromoDiscount(
+            promo,
+            cartTotal,
+            deliveryFee,
+          );
           if (promo.is_combinable) {
             accumulatedCombineablePromo += discount;
             combineablePromos.push(promo);
@@ -566,6 +573,7 @@ export class PromoProviderService {
           const discount = this.voucherService.calculateVoucherDiscount(
             voucher,
             cartTotal,
+            deliveryFee,
           );
           if (voucher.is_combinable) {
             accumulatedCombineableVoucher += discount;
@@ -601,7 +609,10 @@ export class PromoProviderService {
         maxNotCombineableVoucher,
       );
       if (maxUncombineDiscount?.item.discount >= totalCombineableDiscount) {
-        if (maxUncombineDiscount.type == 'PROMO') {
+        if (
+          maxUncombineDiscount.type == 'PROMO' &&
+          maxUncombineDiscount.item.promo
+        ) {
           recommended.promos.push(maxUncombineDiscount.item.promo);
           if (maxNotCombineableVoucher.voucher) {
             leftoverVouchers.push(maxNotCombineableVoucher.voucher);
@@ -646,9 +657,10 @@ export class PromoProviderService {
         }
       }
 
+      console.log(notAvailablePromos, 'notAvailablePromos');
       console.log(combineablePromos, 'combineablePromos');
       console.log(leftoverPromos, 'leftoverPromos');
-      console.log(notAvailablePromos, 'notAvailablePromos');
+      console.log(maxNotCombineablePromo, 'maxNotCombineablePromo');
 
       return {
         recommended,
@@ -744,11 +756,20 @@ export class PromoProviderService {
   calculatePromoDiscount(
     promo: PromoProviderDocument,
     cartTotal: number,
+    delieryFee: number,
   ): number {
-    let discount =
-      promo.discount_type == EnumPromoProviderDiscountType.PRICE
-        ? promo.discount_value
-        : Math.ceil((cartTotal * promo.discount_value) / 100);
+    let discount = null;
+    if (promo.type == EnumPromoProviderType.SHOPPING_COST) {
+      discount =
+        promo.discount_type == EnumPromoProviderDiscountType.PRICE
+          ? promo.discount_value
+          : Math.ceil((cartTotal * promo.discount_value) / 100);
+    } else if (promo.type == EnumPromoProviderType.DELIVERY_COST) {
+      discount =
+        promo.discount_type == EnumPromoProviderDiscountType.PRICE
+          ? promo.discount_value
+          : Math.ceil((delieryFee * promo.discount_value) / 100);
+    }
     if (discount > promo.discount_maximum && promo.discount_maximum) {
       discount = promo.discount_maximum;
     }

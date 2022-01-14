@@ -11,8 +11,11 @@ import { ResponseService } from 'src/response/response.service';
 import {
   DiscountTypeVoucherEnum,
   OrderTypeVoucherEnum,
+  TypeVoucherEnum,
   VoucherDocument,
 } from './entities/voucher.entity';
+import { GetActiveTargetVouchersDto } from './dto/get-vouchers.dto';
+import { Any } from 'typeorm';
 
 @Injectable()
 export class VoucherService {
@@ -52,10 +55,17 @@ export class VoucherService {
     }
   }
 
-  async getVoucherByCustomerId(customerId: string): Promise<VoucherDocument[]> {
+  async getActiveTargetVouchers(
+    data: GetActiveTargetVouchersDto,
+  ): Promise<VoucherDocument[]> {
     try {
+      const targetList = ['ALL', data.target];
       return this.vouchersRepository.find({
-        where: { customer_id: customerId },
+        where: {
+          customer_id: data.customer_id,
+          status: 'ACTIVE',
+          target: Any(targetList),
+        },
       });
     } catch (error) {
       this.logger.log(error);
@@ -79,11 +89,20 @@ export class VoucherService {
   calculateVoucherDiscount(
     voucher: VoucherDocument,
     cartTotal: number,
+    deliveryFee: number,
   ): number {
-    let discount =
-      voucher.discount_type == DiscountTypeVoucherEnum.PRICE
-        ? voucher.discount_value
-        : Math.ceil((cartTotal * voucher.discount_value) / 100);
+    let discount = null;
+    if (voucher.type == TypeVoucherEnum.SHOPPING_COST) {
+      discount =
+        voucher.discount_type == DiscountTypeVoucherEnum.PRICE
+          ? voucher.discount_value
+          : Math.ceil((cartTotal * voucher.discount_value) / 100);
+    } else if (voucher.type == TypeVoucherEnum.DELIVERY_COST) {
+      discount =
+        voucher.discount_type == DiscountTypeVoucherEnum.PRICE
+          ? voucher.discount_value
+          : Math.ceil((deliveryFee * voucher.discount_value) / 100);
+    }
     if (discount > voucher.discount_maximum && voucher.discount_maximum) {
       discount = voucher.discount_maximum;
     }
