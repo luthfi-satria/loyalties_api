@@ -33,6 +33,13 @@ export enum OrderTypeVoucherEnum {
   DELIVERY_AND_PICKUP = 'DELIVERY_AND_PICKUP',
 }
 
+export enum StatusVoucherEnum {
+  CREATED = 'CREATED',
+  ACTIVE = 'ACTIVE',
+  USED = 'USED',
+  FINISHED = 'FINISHED',
+}
+
 @Entity({ name: 'loyalties_voucher' })
 export class VoucherDocument {
   @PrimaryGeneratedColumn('uuid')
@@ -54,12 +61,8 @@ export class VoucherDocument {
   })
   type: TypeVoucherEnum;
 
-  @Column({
-    type: 'enum',
-    enum: OrderTypeVoucherEnum,
-    nullable: true,
-  })
-  order_type: OrderTypeVoucherEnum;
+  @Column({ nullable: true })
+  order_type: string;
 
   @Column({
     type: 'enum',
@@ -92,6 +95,13 @@ export class VoucherDocument {
 
   @Column({ nullable: true })
   is_combinable: boolean;
+
+  @Column({
+    type: 'enum',
+    enum: StatusVoucherEnum,
+    default: StatusVoucherEnum.CREATED,
+  })
+  status: StatusVoucherEnum;
 
   @CreateDateColumn({ type: 'timestamptz', default: () => 'LOCALTIMESTAMP' })
   created_at: Date | string;
