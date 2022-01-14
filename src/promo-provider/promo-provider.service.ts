@@ -19,7 +19,6 @@ import {
 } from 'src/database/entities/promo-provider.entity';
 import { PromoProviderRepository } from 'src/database/repository/promo-provider.repository';
 import { GetPromoVouchersDto } from 'src/internal/dto/get-promo-vouchers.dto';
-import { ValidatePromosDto } from 'src/internal/dto/validate-promos.dto';
 import { MessageService } from 'src/message/message.service';
 import { RMessage } from 'src/response/response.interface';
 import { ResponseService } from 'src/response/response.service';
