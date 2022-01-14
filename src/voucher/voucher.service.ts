@@ -206,6 +206,7 @@ export class VoucherService {
           };
           postVoucherDatas.push(postVoucherData);
         }
+        await this.createVoucherBulk(postVoucherDatas);
       }
     } else {
       // AUTO GENERATE
