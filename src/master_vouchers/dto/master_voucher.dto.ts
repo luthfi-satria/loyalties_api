@@ -24,7 +24,7 @@ export class CreateMasterVoucherDto {
   duration: DurationGroup;
 
   @IsNumber()
-  @IsNotEmpty()
+  @IsOptional()
   minimum_transaction: number;
 
   @IsNotEmpty()
@@ -39,7 +39,7 @@ export class CreateMasterVoucherDto {
   discount_value: number;
 
   @IsNumber()
-  @IsNotEmpty()
+  @IsOptional()
   discount_maximum: number;
 
   @IsBoolean()

@@ -50,7 +50,7 @@ export class MasterVouchersDocument {
   })
   duration: DurationGroup;
 
-  @Column()
+  @Column({ nullable: true })
   minimum_transaction: number;
 
   @Column()
@@ -66,7 +66,7 @@ export class MasterVouchersDocument {
   @Column()
   discount_value: number;
 
-  @Column()
+  @Column({ nullable: true })
   discount_maximum: number;
 
   @Column()

@@ -72,7 +72,9 @@ export class VoucherCodeService {
           'master_voucher_voucher_code',
           'vc.id = master_voucher_voucher_code.loyaltiesVoucherCodeId',
         )
-        .where(qry);
+        .where(qry)
+        .take(limit)
+        .skip(offset);
 
       const items = await query.getMany();
       const count = await query.getCount();
@@ -235,7 +237,10 @@ export class VoucherCodeService {
             const dataVoucher = {
               voucher_code_id: createdVoucher.id,
               customer_id: null,
-              code: 'PROMO' + Math.floor(Math.random() * (100 - 1 + 1)) + 1,
+              code:
+                createdVoucher.code +
+                Math.floor(Math.random() * (100 - 1 + 1)) +
+                1,
               type: masterVoucher.type,
               order_type: masterVoucher.order_type,
               target: createdVoucher.target,
