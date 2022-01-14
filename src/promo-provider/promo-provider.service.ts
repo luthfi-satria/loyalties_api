@@ -501,8 +501,6 @@ export class PromoProviderService {
       const customerId = data.customer_id;
       const deliveryFee = data.delivery_fee || 0;
 
-      console.log(data, 'data');
-
       const promoProviders = await this.getPromoProviders({
         target: target,
       });
@@ -657,11 +655,6 @@ export class PromoProviderService {
         }
       }
 
-      console.log(notAvailablePromos, 'notAvailablePromos');
-      console.log(combineablePromos, 'combineablePromos');
-      console.log(leftoverPromos, 'leftoverPromos');
-      console.log(maxNotCombineablePromo, 'maxNotCombineablePromo');
-
       return {
         recommended,
         available,
@@ -700,13 +693,6 @@ export class PromoProviderService {
       });
 
       return items;
-    } catch (error) {
-      this.errorReport(error, 'general.list.fail');
-    }
-  }
-
-  async validatePromos(data: ValidatePromosDto) {
-    try {
     } catch (error) {
       this.errorReport(error, 'general.list.fail');
     }

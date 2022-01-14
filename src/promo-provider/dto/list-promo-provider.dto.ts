@@ -6,10 +6,7 @@ import {
   EnumPromoProviderStatus,
   EnumPromoProviderOrderType,
 } from 'src/database/entities/promo-provider.entity';
-import {
-  EnumGetPromoProviderTarget,
-  EnumGetPromoProviderOrderType,
-} from 'src/internal/dto/get-promo-vouchers.dto';
+import { EnumGetPromoProviderTarget } from 'src/internal/dto/get-promo-vouchers.dto';
 
 export class ListPromoProviderDto {
   @IsOptional()
