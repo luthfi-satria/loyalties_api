@@ -39,4 +39,9 @@ export class GetPromoVouchersDto {
   @IsUUID()
   @ValidateIf((o) => o.customer_id !== '')
   customer_id: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  delivery_fee: number;
 }
