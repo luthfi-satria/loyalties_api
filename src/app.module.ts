@@ -12,6 +12,7 @@ import { SettingModule } from './settings/setting.module';
 import { MasterVoucherModule } from './master_vouchers/master_voucher.module';
 import { VoucherCodeModule } from './voucher_code/voucher_code.module';
 import { MasterVoucherVoucherCodeModule } from './master_voucher_voucher_code/master_voucher_voucher_code.module';
+import { VoucherModule } from './voucher/voucher.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { MasterVoucherVoucherCodeModule } from './master_voucher_voucher_code/ma
     AuthModule,
     MasterVoucherVoucherCodeModule,
     PromoProviderModule,
+    VoucherModule,
     InternalModule,
   ],
   controllers: [AppController],
