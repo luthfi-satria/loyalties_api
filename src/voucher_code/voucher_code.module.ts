@@ -1,6 +1,5 @@
 import { MasterVoucherVoucherCodeRepository } from './../master_voucher_voucher_code/repository/master_voucher_voucher_code.repository';
 import { VouchersRepository } from './../voucher/repository/voucher.repository';
-import { VoucherService } from './../voucher/voucher.service';
 import { MasterVouchersRepository } from './../master_vouchers/repository/master_voucher.repository';
 import { MasterVoucherService } from './../master_vouchers/master_voucher.service';
 import { VoucherCodesRepository } from './repository/voucher_code.repository';
@@ -12,6 +11,8 @@ import { ResponseService } from 'src/response/response.service';
 import { CommonModule } from 'src/common/common.module';
 import { ConfigModule } from '@nestjs/config';
 import { VoucherCodeController } from './voucher_code.controller';
+import { MasterVoucherVoucherCodeModule } from 'src/master_voucher_voucher_code/master_voucher_voucher_code.module';
+import { VoucherModule } from 'src/voucher/voucher.module';
 
 @Module({
   imports: [
@@ -23,6 +24,8 @@ import { VoucherCodeController } from './voucher_code.controller';
       MasterVoucherVoucherCodeRepository,
     ]),
     forwardRef(() => CommonModule),
+    MasterVoucherVoucherCodeModule,
+    forwardRef(() => VoucherModule),
   ],
   controllers: [VoucherCodeController],
   providers: [
@@ -30,7 +33,6 @@ import { VoucherCodeController } from './voucher_code.controller';
     MessageService,
     ResponseService,
     MasterVoucherService,
-    VoucherService,
     Logger,
   ],
   exports: [TypeOrmModule, VoucherCodeService],

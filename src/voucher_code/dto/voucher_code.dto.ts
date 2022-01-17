@@ -121,6 +121,8 @@ export class StopVoucherCodeDto {
   cancellation_reason: string;
 
   id: string;
+
+  isBypassValidation?: boolean;
 }
 
 export class UpdateVoucherCodeStatusActiveDto {

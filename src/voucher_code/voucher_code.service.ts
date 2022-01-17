@@ -8,7 +8,9 @@ import { RedisVoucherCodeService } from './../common/redis/voucher_code/redis-vo
 import { VoucherCodesRepository } from './repository/voucher_code.repository';
 import {
   BadRequestException,
+  forwardRef,
   HttpStatus,
+  Inject,
   Injectable,
   Logger,
 } from '@nestjs/common';
@@ -44,6 +46,7 @@ export class VoucherCodeService {
     private readonly voucherCodesRepository: VoucherCodesRepository,
     private readonly redisVoucherCodeService: RedisVoucherCodeService,
     private readonly masterVoucherService: MasterVoucherService,
+    @Inject(forwardRef(() => VoucherService))
     private readonly voucherService: VoucherService,
     private readonly masterVoucherVoucherCodeRepository: MasterVoucherVoucherCodeRepository,
     private readonly storage: CommonStorageService,
@@ -336,7 +339,10 @@ export class VoucherCodeService {
         data.id,
       );
 
-      if (findVoucherCode.status != StatusVoucherCodeGroup.ACTIVE) {
+      if (
+        findVoucherCode.status != StatusVoucherCodeGroup.ACTIVE &&
+        !data.isBypassValidation
+      ) {
         throw new BadRequestException(
           this.responseService.error(
             HttpStatus.BAD_REQUEST,
@@ -351,6 +357,13 @@ export class VoucherCodeService {
             'Bad Request',
           ),
         );
+      }
+
+      if (
+        data.isBypassValidation &&
+        findVoucherCode.status != StatusVoucherCodeGroup.ACTIVE
+      ) {
+        return null;
       }
 
       findVoucherCode.cancellation_reason = data.cancellation_reason;
@@ -613,7 +626,8 @@ export class VoucherCodeService {
         sheetVoucherCode.getCell(`A${i + 2}`).value = voucher.code;
       }
 
-      const fileName: string = `voucher_codes_${id.id}.xlsx`;
+      // const fileName: string = `voucher_codes_${id.id}.xlsx`;
+      const fileName = `voucher_codes_${id.id}.xlsx`;
       await workbook.xlsx.writeFile(fileName);
       url = await this.storage.store(fileName);
       voucher_codes.excel_file = url;
