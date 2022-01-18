@@ -1,3 +1,4 @@
+import { NatsClient } from '@alexy4744/nestjs-nats-jetstream-transporter';
 import {
   BadRequestException,
   HttpStatus,
@@ -56,11 +57,11 @@ export class PromoProviderService {
 
   private readonly logger = new Logger(PromoProviderService.name);
 
-  // private readonly client = new NatsClient({
-  //   connection: {
-  //     servers: process.env.NATS_SERVERS.split(','),
-  //   },
-  // });
+  private readonly client = new NatsClient({
+    connection: {
+      servers: process.env.NATS_SERVERS.split(','),
+    },
+  });
 
   async createPromoProvider(data: BaseCreatePromoProviderDto) {
     try {
@@ -88,11 +89,6 @@ export class PromoProviderService {
           ? EnumPromoProviderStatus.ACTIVE
           : EnumPromoProviderStatus.SCHEDULED;
 
-      // const broadcastEvent =
-      //   promoStatus === EnumPromoProviderStatus.ACTIVE
-      //     ? 'discount.started'
-      //     : 'discount.scheduled';
-
       data.date_start = timeStart;
       data.date_end = timeEnd;
       data.status = promoStatus;
@@ -101,7 +97,12 @@ export class PromoProviderService {
 
       await this.createPromoProviderQueue(promoStatus, createdPromo);
 
-      // await this.broadcastDiscount(createdDiscount.id, broadcastEvent);
+      if (promoStatus == EnumPromoProviderStatus.ACTIVE) {
+        await this.broadcastPromoProvider(
+          createdPromo.id,
+          'promo_provider.active',
+        );
+      }
 
       return createdPromo;
     } catch (error) {
@@ -332,11 +333,6 @@ export class PromoProviderService {
           ? EnumPromoProviderStatus.ACTIVE
           : EnumPromoProviderStatus.SCHEDULED;
 
-      // const broadcastEvent =
-      //   discountStatus === EnumDiscountStatus.ACTIVE
-      //     ? 'discount.started'
-      //     : 'discount.scheduled';
-
       findPromoProvider.date_start = timeStart;
       findPromoProvider.date_end = timeEnd;
       findPromoProvider.type = data.type;
@@ -360,7 +356,12 @@ export class PromoProviderService {
         updatedPromoProvider,
       );
 
-      // await this.broadcastDiscount(updatedDiscount.id, broadcastEvent);
+      if (promoProviderStatus == EnumPromoProviderStatus.ACTIVE) {
+        await this.broadcastPromoProvider(
+          updatedPromoProvider.id,
+          'promo_provider.active',
+        );
+      }
 
       return updatedPromoProvider;
     } catch (error) {
@@ -391,7 +392,10 @@ export class PromoProviderService {
 
       await this.deletePromoProviderQueues(updatedPromo.id);
 
-      // await this.broadcastDiscount(updatedPromo.id, 'discount.cancelled');
+      await this.broadcastPromoProvider(
+        updatedPromo.id,
+        'promo_provider.inactive',
+      );
 
       return updatedPromo;
     } catch (error) {
@@ -422,7 +426,10 @@ export class PromoProviderService {
 
       await this.deletePromoProviderQueues(updatedPromoProvider.id);
 
-      // await this.broadcastDiscount(updatedDiscount.id, 'discount.stopped');
+      await this.broadcastPromoProvider(
+        updatedPromoProvider.id,
+        'promo_provider.inactive',
+      );
 
       return updatedPromoProvider;
     } catch (error) {
@@ -453,7 +460,10 @@ export class PromoProviderService {
       );
 
       //broadcast here
-      // await this.broadcastDiscount(updatedDiscount.id, 'discount.started');
+      await this.broadcastPromoProvider(
+        updatedPromo.id,
+        'promo_provider.active',
+      );
 
       return updatedPromo;
     } catch (error) {
@@ -484,7 +494,10 @@ export class PromoProviderService {
       );
 
       //broadcast here
-      // await this.broadcastPromoProvider(updatedPromoProvider.id, 'promoprovider.finished');
+      await this.broadcastPromoProvider(
+        updatedPromoProvider.id,
+        'promo_provider.inactive',
+      );
 
       return updatedPromoProvider;
     } catch (error) {
@@ -946,11 +959,14 @@ export class PromoProviderService {
     }
   }
 
-  // async broadcastDiscount(id: string, event: string) {
-  //   const broadcastDiscount = await this.findOneOrFail(id);
-  //   this.client.emit<DiscountDocument>('catalogs.' + event, broadcastDiscount);
-  //   this.logger.debug('BROADCASTED: catalogs.' + event);
-  // }
+  async broadcastPromoProvider(id: string, event: string) {
+    const broadcastPromo = await this.findOneOrFail(id);
+    this.client.emit<PromoProviderDocument>(
+      'loyalties.' + event,
+      broadcastPromo,
+    );
+    this.logger.debug('BROADCASTED: loyalties.' + event);
+  }
 
   // async findActiveDiscounts(store_id: string): Promise<DiscountDocument[]> {
   //   const findDiscount = await this.discountRepository.find({

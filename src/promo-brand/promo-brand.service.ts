@@ -1,3 +1,4 @@
+import { NatsClient } from '@alexy4744/nestjs-nats-jetstream-transporter';
 import {
   BadRequestException,
   HttpStatus,
@@ -48,17 +49,16 @@ export class PromoBrandService {
     private readonly responseService: ResponseService,
     private readonly messageService: MessageService,
     private readonly promoBrandRepository: PromoBrandRepository,
-    private readonly redisPromoBrandService: RedisPromoBrandService,
-  ) // private readonly voucherService: VoucherService,
-  {}
+    private readonly redisPromoBrandService: RedisPromoBrandService, // private readonly voucherService: VoucherService,
+  ) {}
 
   private readonly logger = new Logger(PromoBrandService.name);
 
-  // private readonly client = new NatsClient({
-  //   connection: {
-  //     servers: process.env.NATS_SERVERS.split(','),
-  //   },
-  // });
+  private readonly client = new NatsClient({
+    connection: {
+      servers: process.env.NATS_SERVERS.split(','),
+    },
+  });
 
   async createPromoBrand(data: BaseCreatePromoBrandDto) {
     try {
@@ -77,11 +77,6 @@ export class PromoBrandService {
           ? EnumPromoBrandStatus.ACTIVE
           : EnumPromoBrandStatus.SCHEDULED;
 
-      // const broadcastEvent =
-      //   promoStatus === EnumPromoBrandStatus.ACTIVE
-      //     ? 'discount.started'
-      //     : 'discount.scheduled';
-
       data.date_start = timeStart;
       data.date_end = timeEnd;
       data.status = promoStatus;
@@ -90,7 +85,9 @@ export class PromoBrandService {
 
       await this.createPromoBrandQueue(promoStatus, createdPromo);
 
-      // await this.broadcastDiscount(createdDiscount.id, broadcastEvent);
+      if (promoStatus == EnumPromoBrandStatus.ACTIVE) {
+        await this.broadcastPromoBrand(createdPromo.id, 'promo_brand.active');
+      }
 
       return createdPromo;
     } catch (error) {
@@ -319,11 +316,6 @@ export class PromoBrandService {
           ? EnumPromoBrandStatus.ACTIVE
           : EnumPromoBrandStatus.SCHEDULED;
 
-      // const broadcastEvent =
-      //   discountStatus === EnumDiscountStatus.ACTIVE
-      //     ? 'discount.started'
-      //     : 'discount.scheduled';
-
       findPromoBrand.date_start = timeStart;
       findPromoBrand.date_end = timeEnd;
       findPromoBrand.type = data.type;
@@ -342,7 +334,12 @@ export class PromoBrandService {
 
       await this.createPromoBrandQueue(promoBrandStatus, updatedPromoBrand);
 
-      // await this.broadcastDiscount(updatedDiscount.id, broadcastEvent);
+      if (promoBrandStatus == EnumPromoBrandStatus.ACTIVE) {
+        await this.broadcastPromoBrand(
+          updatedPromoBrand.id,
+          'promo_brand.active',
+        );
+      }
 
       return updatedPromoBrand;
     } catch (error) {
@@ -369,7 +366,7 @@ export class PromoBrandService {
 
       await this.deletePromoBrandQueues(updatedPromo.id);
 
-      // await this.broadcastDiscount(updatedPromo.id, 'discount.cancelled');
+      await this.broadcastPromoBrand(updatedPromo.id, 'promo_brand.inactive');
 
       return updatedPromo;
     } catch (error) {
@@ -396,7 +393,10 @@ export class PromoBrandService {
 
       await this.deletePromoBrandQueues(updatedPromoBrand.id);
 
-      // await this.broadcastDiscount(updatedDiscount.id, 'discount.stopped');
+      await this.broadcastPromoBrand(
+        updatedPromoBrand.id,
+        'promo_brand.inactive',
+      );
 
       return updatedPromoBrand;
     } catch (error) {
@@ -423,7 +423,7 @@ export class PromoBrandService {
       const updatedPromo = await this.insertPromoBrandToDb(findPromoBrand);
 
       //broadcast here
-      // await this.broadcastDiscount(updatedDiscount.id, 'discount.started');
+      await this.broadcastPromoBrand(updatedPromo.id, 'promo_brand.active');
 
       return updatedPromo;
     } catch (error) {
@@ -450,7 +450,10 @@ export class PromoBrandService {
       const updatedPromoBrand = await this.insertPromoBrandToDb(findPromoBrand);
 
       //broadcast here
-      // await this.broadcastPromoBrand(updatedPromoBrand.id, 'promobrand.finished');
+      await this.broadcastPromoBrand(
+        updatedPromoBrand.id,
+        'promo_brand.inactive',
+      );
 
       return updatedPromoBrand;
     } catch (error) {
@@ -901,11 +904,11 @@ export class PromoBrandService {
     }
   }
 
-  // async broadcastDiscount(id: string, event: string) {
-  //   const broadcastDiscount = await this.findOneOrFail(id);
-  //   this.client.emit<DiscountDocument>('catalogs.' + event, broadcastDiscount);
-  //   this.logger.debug('BROADCASTED: catalogs.' + event);
-  // }
+  async broadcastPromoBrand(id: string, event: string) {
+    const broadcastPromo = await this.findOneOrFail(id);
+    this.client.emit<PromoBrandDocument>('loyalties.' + event, broadcastPromo);
+    this.logger.debug('BROADCASTED: loyalties.' + event);
+  }
 
   // async findActiveDiscounts(store_id: string): Promise<DiscountDocument[]> {
   //   const findDiscount = await this.discountRepository.find({
