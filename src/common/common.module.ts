@@ -12,6 +12,9 @@ import { RedisPromoProviderProcessor } from './redis/promo-provider/redis-promo-
 import { RedisPromoProviderService } from './redis/promo-provider/redis-promo-provider.service';
 import { RedisVoucherCodeProcessor } from './redis/voucher_code/redis-voucher_code.processor';
 import { VoucherCodeModule } from 'src/voucher_code/voucher_code.module';
+import { RedisPromoBrandProcessor } from './redis/promo-brand/redis-promo-brand.processor';
+import { RedisPromoBrandService } from './redis/promo-brand/redis-promo-brand.service';
+import { PromoBrandModule } from 'src/promo-brand/promo-brand.module';
 
 @Global()
 @Module({
@@ -41,6 +44,7 @@ import { VoucherCodeModule } from 'src/voucher_code/voucher_code.module';
     }),
     HttpModule,
     forwardRef(() => PromoProviderModule),
+    forwardRef(() => PromoBrandModule),
     forwardRef(() => VoucherCodeModule),
   ],
   providers: [
@@ -48,6 +52,8 @@ import { VoucherCodeModule } from 'src/voucher_code/voucher_code.module';
     RedisPromoProviderProcessor,
     RedisVoucherCodeService,
     RedisVoucherCodeProcessor,
+    RedisPromoBrandService,
+    RedisPromoBrandProcessor,
     CommonStorageService,
     MessageService,
     ResponseService,
@@ -57,6 +63,8 @@ import { VoucherCodeModule } from 'src/voucher_code/voucher_code.module';
     RedisPromoProviderProcessor,
     RedisVoucherCodeService,
     RedisVoucherCodeProcessor,
+    RedisPromoBrandService,
+    RedisPromoBrandProcessor,
     CommonStorageService,
   ],
   controllers: [NatsController],
