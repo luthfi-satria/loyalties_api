@@ -145,39 +145,76 @@ export class VoucherService {
 
     if (voucherCode) {
       if (voucherCode.quota) {
+        let vouchersTotal = 0;
         const count = await this.vouchersRepository.count({
           where: {
             voucher_code_id: voucherCode.id,
             status: StatusVoucherEnum.ACTIVE,
           },
         });
+
+        const mvvcs =
+          await this.masterVoucherVoucherCodeService.fetchMasterVoucherVoucherCodes(
+            {
+              loyaltiesVoucherCodeId: voucherCodeId,
+              loyaltiesMasterVoucherId: null,
+            },
+          );
+
         console.log(voucherCode);
 
         // if (count < voucherCode.quota) {
         const postVoucherDatas = [];
-        for (let i = 0; i < voucherCode.master_vouchers.length; i++) {
-          const master_voucher = voucherCode.master_vouchers[i];
+        // for (let i = 0; i < voucherCode.master_vouchers.length; i++) {
+        for (let i = 0; i < mvvcs.length; i++) {
+          // const master_voucher = voucherCode.master_vouchers[i];
+          const master_voucher = mvvcs[i].master_voucher;
+          const quantity = mvvcs[i].quantity;
           const date_start = new Date();
           const days = this.getDurationInt(master_voucher.duration);
           const date_end = moment(date_start).add(days, 'days');
-          const postVoucherData = {
-            voucher_code_id: voucherCode.id,
-            customer_id,
-            code:
-              voucherCode.code + Math.floor(Math.random() * (100 - 1 + 1)) + 1,
-            type: master_voucher.type,
-            order_type: master_voucher.order_type,
-            target: voucherCode.target,
-            status: StatusVoucherEnum.ACTIVE,
-            date_start,
-            date_end,
-            minimum_transaction: master_voucher.minimum_transaction,
-            discount_type: master_voucher.discount_type,
-            discount_value: master_voucher.discount_value,
-            discount_maximum: master_voucher.discount_maximum,
-            is_combinable: master_voucher.is_combinable,
-          };
-          postVoucherDatas.push(postVoucherData);
+
+          for (let y = 0; y < quantity; y++) {
+            vouchersTotal += 1;
+            const postVoucherData = {
+              voucher_code_id: voucherCode.id,
+              customer_id,
+              code:
+                voucherCode.code +
+                Math.floor(Math.random() * (100 - 1 + 1)) +
+                1,
+              type: master_voucher.type,
+              order_type: master_voucher.order_type,
+              target: voucherCode.target,
+              status: StatusVoucherEnum.ACTIVE,
+              date_start,
+              date_end,
+              minimum_transaction: master_voucher.minimum_transaction,
+              discount_type: master_voucher.discount_type,
+              discount_value: master_voucher.discount_value,
+              discount_maximum: master_voucher.discount_maximum,
+              is_combinable: master_voucher.is_combinable,
+            };
+            postVoucherDatas.push(postVoucherData);
+          }
+          // const postVoucherData = {
+          //   voucher_code_id: voucherCode.id,
+          //   customer_id,
+          //   code:
+          //     voucherCode.code + Math.floor(Math.random() * (100 - 1 + 1)) + 1,
+          //   type: master_voucher.type,
+          //   order_type: master_voucher.order_type,
+          //   target: voucherCode.target,
+          //   status: StatusVoucherEnum.ACTIVE,
+          //   date_start,
+          //   date_end,
+          //   minimum_transaction: master_voucher.minimum_transaction,
+          //   discount_type: master_voucher.discount_type,
+          //   discount_value: master_voucher.discount_value,
+          //   discount_maximum: master_voucher.discount_maximum,
+          //   is_combinable: master_voucher.is_combinable,
+          // };
+          // postVoucherDatas.push(postVoucherData);
         }
         await this.createVoucherBulk(postVoucherDatas);
         // } else {
@@ -199,8 +236,8 @@ export class VoucherService {
 
         //=> update quota jika habis ketika di redeem
         if (
-          count + voucherCode.master_vouchers.length >=
-          voucherCode.quota * voucherCode.master_vouchers.length
+          count + vouchersTotal >= voucherCode.quota * vouchersTotal &&
+          vouchersTotal
         ) {
           await this.updateVoucherCodeEmpty(voucherCode.id);
         }
@@ -404,7 +441,7 @@ export class VoucherService {
           {
             value: customerId,
             property: 'customer_id',
-            constraint: ['general.voucher.redeemUsed'],
+            constraint: [this.messageService.get('general.voucher.redeemUsed')],
           },
           'Bad Request',
         ),
@@ -427,7 +464,9 @@ export class VoucherService {
           {
             value: code,
             property: 'code',
-            constraint: ['general.voucher.quotaReached'],
+            constraint: [
+              this.messageService.get('general.voucher.quotaReached'),
+            ],
           },
           'Bad Request',
         ),
