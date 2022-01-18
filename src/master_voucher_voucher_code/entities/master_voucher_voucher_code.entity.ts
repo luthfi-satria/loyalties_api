@@ -1,13 +1,6 @@
 import { MasterVouchersDocument } from 'src/master_vouchers/entities/master_voucher.entity';
 import { VoucherCodeDocument } from './../../voucher_code/entities/voucher_code.entity';
-import {
-  Column,
-  Entity,
-  JoinColumn,
-  JoinTable,
-  ManyToOne,
-  PrimaryColumn,
-} from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 
 @Entity({ name: 'loyalties_master_voucher_voucher_code' })
 export class MasterVoucherVoucherCodeDocument {

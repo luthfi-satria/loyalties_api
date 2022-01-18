@@ -191,4 +191,14 @@ export default {
       message: 'Harus menambahkan maksimum discount untuk jenis promo ini.',
     },
   },
+  voucher: {
+    redeemUsed: {
+      code: 'VOUCHER_USED',
+      message: 'Voucher sudah di-redeem.',
+    },
+    quotaReached: {
+      code: 'QUOTA_REACHED',
+      message: 'Kuota voucher telah habis.',
+    },
+  },
 };

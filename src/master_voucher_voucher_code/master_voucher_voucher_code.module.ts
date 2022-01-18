@@ -5,6 +5,7 @@ import { ResponseService } from 'src/response/response.service';
 import { CommonModule } from 'src/common/common.module';
 import { ConfigModule } from '@nestjs/config';
 import { MasterVoucherVoucherCodeRepository } from './repository/master_voucher_voucher_code.repository';
+import { MasterVoucherVoucherCodeService } from './master_voucher_voucher_code.service';
 
 @Module({
   imports: [
@@ -13,7 +14,12 @@ import { MasterVoucherVoucherCodeRepository } from './repository/master_voucher_
     forwardRef(() => CommonModule),
   ],
   controllers: [],
-  providers: [MessageService, ResponseService, Logger],
-  exports: [TypeOrmModule],
+  providers: [
+    MessageService,
+    ResponseService,
+    Logger,
+    MasterVoucherVoucherCodeService,
+  ],
+  exports: [TypeOrmModule, MasterVoucherVoucherCodeService],
 })
 export class MasterVoucherVoucherCodeModule {}
