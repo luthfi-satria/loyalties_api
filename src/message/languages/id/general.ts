@@ -191,6 +191,24 @@ export default {
       message: 'Harus menambahkan maksimum discount untuk jenis promo ini.',
     },
   },
+  promoBrand: {
+    errorBackDate: {
+      code: 'BACKDATE',
+      message: 'Tanggal Promo backdate.',
+    },
+    errorOverlap: {
+      code: 'DATE_OVERLAP',
+      message: 'Tanggal Promo overlap.',
+    },
+    errorInPast: {
+      code: 'PROMO_IN_PAST',
+      message: 'Tidak bisa memasukan promo dengan periode yang sudah terlewat.',
+    },
+    errorDiscountMaximum: {
+      code: 'DISCOUNT_MAXIMUM_REQUIRED',
+      message: 'Harus menambahkan maksimum discount untuk jenis promo ini.',
+    },
+  },
   voucher: {
     redeemUsed: {
       code: 'VOUCHER_USED',
