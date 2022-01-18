@@ -49,6 +49,9 @@ export class VoucherDocument {
   voucher_code_id: string;
 
   @Column('uuid', { nullable: true })
+  master_voucher_id: string;
+
+  @Column('uuid', { nullable: true })
   customer_id: string;
 
   @Column({ nullable: true })

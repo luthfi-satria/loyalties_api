@@ -239,6 +239,7 @@ export class VoucherCodeService {
           for (let j = 0; j < data.quota; j++) {
             const dataVoucher = {
               voucher_code_id: createdVoucher.id,
+              master_voucher_id: masterVoucher.id,
               customer_id: null,
               code:
                 createdVoucher.code +
