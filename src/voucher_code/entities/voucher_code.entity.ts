@@ -62,7 +62,7 @@ export class VoucherCodeDocument {
   status: string;
 
   @ManyToMany(() => MasterVouchersDocument)
-  @JoinTable({ name: 'loyalties_master_voucher_voucher_code' })
+  // @JoinTable({ name: 'loyalties_master_voucher_voucher_code' })
   master_vouchers: MasterVouchersDocument[];
 
   @OneToMany(
