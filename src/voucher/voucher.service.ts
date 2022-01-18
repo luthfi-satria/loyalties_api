@@ -179,6 +179,7 @@ export class VoucherService {
             vouchersTotal += 1;
             const postVoucherData = {
               voucher_code_id: voucherCode.id,
+              master_voucher_id: master_voucher.id,
               customer_id,
               code:
                 voucherCode.code +
@@ -251,6 +252,7 @@ export class VoucherService {
           const date_end = moment(date_start).add(days, 'days');
           const postVoucherData = {
             voucher_code_id: voucherCode.id,
+            master_voucher_id: master_voucher.id,
             customer_id,
             code: voucherCode.code,
             type: master_voucher.type,
