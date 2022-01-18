@@ -7,11 +7,10 @@ import { MasterVoucherVoucherCodeRepository } from './repository/master_voucher_
 
 export class MasterVoucherVoucherCodeService {
   constructor(
-    private readonly responseService: ResponseService,
     private readonly messageService: MessageService,
+    private readonly responseService: ResponseService,
     private readonly masterVoucherVoucherCodeRepository: MasterVoucherVoucherCodeRepository,
   ) {}
-
   private readonly logger = new Logger(MasterVoucherVoucherCodeService.name);
 
   async fetchMasterVoucherVoucherCodes(
@@ -20,6 +19,9 @@ export class MasterVoucherVoucherCodeService {
     try {
       const loyaltiesMasterVoucherId = data.loyaltiesMasterVoucherId || null;
       const loyaltiesVoucherCodeId = data.loyaltiesVoucherCodeId || null;
+      console.log(this.masterVoucherVoucherCodeRepository, 'exis?');
+      this.logger.debug('test');
+
       const query = this.masterVoucherVoucherCodeRepository
         .createQueryBuilder('tab')
         .leftJoinAndSelect('tab.master_voucher', 'master_voucher');

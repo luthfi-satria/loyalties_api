@@ -11,8 +11,8 @@ import { ResponseService } from 'src/response/response.service';
 import { CommonModule } from 'src/common/common.module';
 import { ConfigModule } from '@nestjs/config';
 import { VoucherCodeController } from './voucher_code.controller';
-import { MasterVoucherVoucherCodeModule } from 'src/master_voucher_voucher_code/master_voucher_voucher_code.module';
 import { VoucherModule } from 'src/voucher/voucher.module';
+import { MasterVoucherVoucherCodeService } from 'src/master_voucher_voucher_code/master_voucher_voucher_code.service';
 
 @Module({
   imports: [
@@ -24,7 +24,7 @@ import { VoucherModule } from 'src/voucher/voucher.module';
       MasterVoucherVoucherCodeRepository,
     ]),
     forwardRef(() => CommonModule),
-    MasterVoucherVoucherCodeModule,
+    // MasterVoucherVoucherCodeModule,
     forwardRef(() => VoucherModule),
   ],
   controllers: [VoucherCodeController],
@@ -34,6 +34,7 @@ import { VoucherModule } from 'src/voucher/voucher.module';
     ResponseService,
     MasterVoucherService,
     Logger,
+    MasterVoucherVoucherCodeService,
   ],
   exports: [TypeOrmModule, VoucherCodeService],
 })

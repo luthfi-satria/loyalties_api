@@ -22,6 +22,9 @@ import { GetActiveTargetVouchersDto } from './dto/get-vouchers.dto';
 import { Any } from 'typeorm';
 import { MasterVoucherVoucherCodeService } from 'src/master_voucher_voucher_code/master_voucher_voucher_code.service';
 import { VoucherCodeService } from 'src/voucher_code/voucher_code.service';
+import { MasterVoucherVoucherCodeRepository } from 'src/master_voucher_voucher_code/repository/master_voucher_voucher_code.repository';
+import { FetchMasterVoucherVoucherCodesDto } from 'src/master_voucher_voucher_code/dto/get_master_voucher_voucher_code.dto';
+import { MasterVoucherVoucherCodeDocument } from 'src/master_voucher_voucher_code/entities/master_voucher_voucher_code.entity';
 
 @Injectable()
 export class VoucherService {
@@ -32,6 +35,7 @@ export class VoucherService {
     private readonly voucherCodesRepository: VoucherCodesRepository,
     private readonly masterVoucherVoucherCodeService: MasterVoucherVoucherCodeService,
     private readonly voucherCodeService: VoucherCodeService,
+    private readonly masterVoucherVoucherCodeRepository: MasterVoucherVoucherCodeRepository,
   ) {}
   private readonly logger = new Logger(VoucherService.name);
 
@@ -153,13 +157,10 @@ export class VoucherService {
           },
         });
 
-        const mvvcs =
-          await this.masterVoucherVoucherCodeService.fetchMasterVoucherVoucherCodes(
-            {
-              loyaltiesVoucherCodeId: voucherCodeId,
-              loyaltiesMasterVoucherId: null,
-            },
-          );
+        const mvvcs = await this.fetchMasterVoucherVoucherCodes({
+          loyaltiesVoucherCodeId: voucherCodeId,
+          loyaltiesMasterVoucherId: null,
+        });
 
         console.log(voucherCode);
 
@@ -343,7 +344,7 @@ export class VoucherService {
     }
 
     //=> Response api
-    return this.masterVoucherVoucherCodeService.fetchMasterVoucherVoucherCodes({
+    return this.fetchMasterVoucherVoucherCodes({
       loyaltiesVoucherCodeId: voucherCodeId,
       loyaltiesMasterVoucherId: null,
     });
@@ -480,5 +481,39 @@ export class VoucherService {
       id: voucherCodeId,
       isBypassValidation: true,
     });
+  }
+
+  async fetchMasterVoucherVoucherCodes(
+    data: FetchMasterVoucherVoucherCodesDto,
+  ): Promise<MasterVoucherVoucherCodeDocument[]> {
+    try {
+      const loyaltiesMasterVoucherId = data.loyaltiesMasterVoucherId || null;
+      const loyaltiesVoucherCodeId = data.loyaltiesVoucherCodeId || null;
+
+      this.logger.debug('test');
+
+      const query = this.masterVoucherVoucherCodeRepository
+        .createQueryBuilder('tab')
+        .leftJoinAndSelect('tab.master_voucher', 'master_voucher');
+
+      if (loyaltiesMasterVoucherId) {
+        query.andWhere(
+          'tab.loyaltiesMasterVoucherId = :loyaltiesMasterVoucherId',
+          {
+            loyaltiesMasterVoucherId,
+          },
+        );
+      }
+
+      if (loyaltiesVoucherCodeId) {
+        query.andWhere('tab.loyaltiesVoucherCodeId = :loyaltiesVoucherCodeId', {
+          loyaltiesVoucherCodeId,
+        });
+      }
+
+      return query.getMany();
+    } catch (error) {
+      console.error(error);
+    }
   }
 }
