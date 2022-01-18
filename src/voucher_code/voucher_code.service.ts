@@ -69,11 +69,15 @@ export class VoucherCodeService {
       const query = this.voucherCodesRepository
         .createQueryBuilder('vc')
         .leftJoinAndSelect('vc.vouchers', 'vouchers')
-        .leftJoinAndSelect('vc.master_vouchers', 'master_vouchers')
+        // .leftJoinAndSelect('vc.master_vouchers', 'master_vouchers')
         .leftJoinAndSelect(
-          'master_vouchers.master_voucher_voucher_code',
+          'vc.master_voucher_voucher_code',
           'master_voucher_voucher_code',
           'vc.id = master_voucher_voucher_code.loyaltiesVoucherCodeId',
+        )
+        .leftJoinAndSelect(
+          'master_voucher_voucher_code.master_voucher',
+          'master_voucher',
         )
         .where(qry)
         .take(limit)
@@ -121,11 +125,15 @@ export class VoucherCodeService {
       const query = this.voucherCodesRepository
         .createQueryBuilder('vc')
         .leftJoinAndSelect('vc.vouchers', 'vouchers')
-        .leftJoinAndSelect('vc.master_vouchers', 'master_vouchers')
+        // .leftJoinAndSelect('vc.master_vouchers', 'master_vouchers')
         .leftJoinAndSelect(
-          'master_vouchers.master_voucher_voucher_code',
+          'vc.master_voucher_voucher_code',
           'master_voucher_voucher_code',
           'vc.id = master_voucher_voucher_code.loyaltiesVoucherCodeId',
+        )
+        .leftJoinAndSelect(
+          'master_voucher_voucher_code.master_voucher',
+          'master_voucher',
         )
         .where(id);
       return query.getOneOrFail();
@@ -214,8 +222,14 @@ export class VoucherCodeService {
       }
 
       const dataToDb: CreateVoucherCodeToDbDto = {
-        ...data,
-        master_vouchers: listVoucher,
+        code: data.code,
+        date_end: data.date_end,
+        date_start: data.date_start,
+        is_prepopulated: data.is_prepopulated,
+        quota: data.quota,
+        status: data.status,
+        target: data.target,
+        // master_vouchers: listVoucher,
       };
 
       const createdVoucher = await this.voucherCodesRepository.save(dataToDb);
@@ -226,9 +240,14 @@ export class VoucherCodeService {
             loyaltiesVoucherCodeId: createdVoucher.id,
           },
         });
-
-        result.quantity = voucher.quantity;
-        await this.masterVoucherVoucherCodeRepository.save(result);
+        if (!result) {
+          const postDataMvvc = {
+            loyaltiesMasterVoucherId: voucher.master_voucher_id,
+            loyaltiesVoucherCodeId: createdVoucher.id,
+            quantity: voucher.quantity,
+          };
+          await this.masterVoucherVoucherCodeRepository.save(postDataMvvc);
+        }
       }
       await this.createVoucherCodeQueue(voucherCodeStatus, createdVoucher);
 

@@ -134,7 +134,7 @@ export class VoucherService {
     // NOT AUTO GENERATE
     let voucherCode = await this.voucherCodesRepository.findOne({
       where: { code: data.code, status: StatusVoucherCodeGroup.ACTIVE },
-      relations: ['master_vouchers', 'vouchers'],
+      relations: ['master_voucher_voucher_code', 'vouchers'],
     });
 
     let voucherCodeId = voucherCode?.id;
@@ -161,8 +161,6 @@ export class VoucherService {
           loyaltiesVoucherCodeId: voucherCodeId,
           loyaltiesMasterVoucherId: null,
         });
-
-        console.log(voucherCode);
 
         // if (count < voucherCode.quota) {
         const postVoucherDatas = [];
@@ -245,8 +243,15 @@ export class VoucherService {
         }
       } else {
         const postVoucherDatas = [];
-        for (let i = 0; i < voucherCode.master_vouchers.length; i++) {
-          const master_voucher = voucherCode.master_vouchers[i];
+        for (
+          let i = 0;
+          i < voucherCode.master_voucher_voucher_code.length;
+          i++
+        ) {
+          const master_voucher_voucher_code =
+            voucherCode.master_voucher_voucher_code[i];
+
+          const master_voucher = master_voucher_voucher_code.master_voucher;
           const date_start = new Date();
           const days = this.getDurationInt(master_voucher.duration);
           const date_end = moment(date_start).add(days, 'days');
@@ -281,41 +286,27 @@ export class VoucherService {
         voucherCodeId = vouchers[0]?.voucher_code_id;
         const voucher = vouchers[0];
         voucher.status = StatusVoucherEnum.ACTIVE;
-        // const date_start = new Date();
-        // const days = this.getDurationInt(master_voucher.duration);
+        voucher.customer_id = customer_id;
 
         voucherCode = await this.voucherCodesRepository.findOne({
           where: { id: voucher.voucher_code_id },
-          relations: ['master_vouchers'],
         });
-        const postVoucherDatas = [];
-        for (let i = 0; i < voucherCode.master_vouchers.length; i++) {
-          const master_voucher = voucherCode.master_vouchers[i];
+
+        const mvvcs = await this.fetchMasterVoucherVoucherCodes({
+          loyaltiesVoucherCodeId: voucherCodeId,
+          loyaltiesMasterVoucherId: voucher.master_voucher_id,
+        });
+
+        for (let i = 0; i < mvvcs.length; i++) {
+          const master_voucher_voucher_code = mvvcs[i];
+          const master_voucher = master_voucher_voucher_code.master_voucher;
           const date_start = new Date();
           const days = this.getDurationInt(master_voucher.duration);
           const date_end = moment(date_start).add(days, 'days');
-          if (vouchers[i]) {
-            const postVoucherData = {
-              id: vouchers[i].id,
-              voucher_code_id: voucherCode.id,
-              customer_id,
-              code: voucherCode.code,
-              type: master_voucher.type,
-              order_type: master_voucher.order_type,
-              target: voucherCode.target,
-              status: StatusVoucherEnum.ACTIVE,
-              date_start,
-              date_end,
-              minimum_transaction: master_voucher.minimum_transaction,
-              discount_type: master_voucher.discount_type,
-              discount_value: master_voucher.discount_value,
-              discount_maximum: master_voucher.discount_maximum,
-              is_combinable: master_voucher.is_combinable,
-            };
-            postVoucherDatas.push(postVoucherData);
-          }
+          voucher.date_end = date_end.toDate();
+          voucher.date_start = date_start;
         }
-        await this.createVoucherBulk(postVoucherDatas);
+        await this.vouchersRepository.save(voucher);
 
         //=> update quota jika habis ketika di redeem
         if (voucherCode) {
