@@ -118,7 +118,7 @@ export class PromoProviderController {
   }
 
   @Put('provider-promos/:promo_id/stopped')
-  @UserType('admin', 'merchant')
+  @UserType('admin')
   @AuthJwtGuard()
   @ResponseStatusCode()
   async stopPromoProvider(

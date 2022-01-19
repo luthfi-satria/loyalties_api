@@ -20,6 +20,9 @@ import { VoucherPackagesModule } from 'src/voucher-packages/voucher-packages.mod
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { VoucherPackagesRepository } from 'src/voucher-packages/repository/voucher_package.repository';
 import { VoucherPackagesMasterVouchersRepository } from 'src/voucher-packages/repository/voucher_package._master_voucher.repository';
+import { RedisPromoBrandProcessor } from './redis/promo-brand/redis-promo-brand.processor';
+import { RedisPromoBrandService } from './redis/promo-brand/redis-promo-brand.service';
+import { PromoBrandModule } from 'src/promo-brand/promo-brand.module';
 
 @Global()
 @Module({
@@ -49,6 +52,7 @@ import { VoucherPackagesMasterVouchersRepository } from 'src/voucher-packages/re
     }),
     HttpModule,
     forwardRef(() => PromoProviderModule),
+    forwardRef(() => PromoBrandModule),
     forwardRef(() => VoucherCodeModule),
     forwardRef(() => VoucherPackagesModule),
     TypeOrmModule.forFeature([
@@ -63,6 +67,8 @@ import { VoucherPackagesMasterVouchersRepository } from 'src/voucher-packages/re
     RedisVoucherCodeProcessor,
     RedisVoucherPackageService,
     RedisVoucherPackageProcessor,
+    RedisPromoBrandService,
+    RedisPromoBrandProcessor,
     CommonStorageService,
     MessageService,
     ResponseService,
@@ -76,6 +82,8 @@ import { VoucherPackagesMasterVouchersRepository } from 'src/voucher-packages/re
     RedisVoucherCodeProcessor,
     RedisVoucherPackageService,
     RedisVoucherPackageProcessor,
+    RedisPromoBrandService,
+    RedisPromoBrandProcessor,
     CommonStorageService,
   ],
   controllers: [NatsController],

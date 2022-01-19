@@ -5,10 +5,12 @@ import {
   Logger,
 } from '@nestjs/common';
 import { MessageService } from 'src/message/message.service';
+import { PromoBrandService } from 'src/promo-brand/promo-brand.service';
 import { PromoProviderService } from 'src/promo-provider/promo-provider.service';
 import { RMessage } from 'src/response/response.interface';
 import { ResponseService } from 'src/response/response.service';
 import { GetPromoVouchersDto } from './dto/get-promo-vouchers.dto';
+import { GetRecommendedPromosDto } from './dto/get-recommended-promos.dto';
 
 @Injectable()
 export class InternalService {
@@ -16,6 +18,7 @@ export class InternalService {
     private readonly responseService: ResponseService,
     private readonly messageService: MessageService,
     private readonly promoProviderService: PromoProviderService,
+    private readonly promoBrandService: PromoBrandService,
   ) {}
 
   private readonly logger = new Logger(InternalService.name);
@@ -23,6 +26,14 @@ export class InternalService {
   async getPromoVouchers(data: GetPromoVouchersDto): Promise<any> {
     try {
       return this.promoProviderService.getPromoVouchers(data);
+    } catch (error) {
+      this.errorReport(error, 'general.general.fail');
+    }
+  }
+
+  async getRecommendedPromos(data: GetRecommendedPromosDto): Promise<any> {
+    try {
+      return this.promoBrandService.getRecommendedPromos(data);
     } catch (error) {
       this.errorReport(error, 'general.general.fail');
     }

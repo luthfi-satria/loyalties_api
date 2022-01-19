@@ -348,9 +348,7 @@ export class VoucherPackagesService {
     });
   }
 
-  async createVoucherPackageQueue(
-    voucherPackage: VoucherPackageDocument,
-  ) {
+  async createVoucherPackageQueue(voucherPackage: VoucherPackageDocument) {
     const payloadStart: CreateAutoStartVoucherPackageDto = {
       voucher_package_id: voucherPackage.id,
       delay: DateTimeUtils.nowToDatetimeMilis(voucherPackage.date_start),
