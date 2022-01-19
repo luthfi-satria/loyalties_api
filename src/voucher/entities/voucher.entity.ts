@@ -37,7 +37,7 @@ export enum StatusVoucherEnum {
   CREATED = 'CREATED',
   ACTIVE = 'ACTIVE',
   USED = 'USED',
-  FINISHED = 'FINISHED',
+  EXPIRED = 'EXPIRED',
 }
 
 @Entity({ name: 'loyalties_voucher' })
