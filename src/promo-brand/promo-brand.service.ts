@@ -20,6 +20,7 @@ import {
   PromoBrandDocument,
 } from 'src/database/entities/promo-brand.entity';
 import { PromoBrandRepository } from 'src/database/repository/promo-brand.repository';
+import { GetRecommendedPromosDto } from 'src/internal/dto/get-recommended-promos.dto';
 import { MessageService } from 'src/message/message.service';
 import { RMessage } from 'src/response/response.interface';
 import { ResponseService } from 'src/response/response.service';
@@ -665,6 +666,84 @@ export class PromoBrandService {
   //     this.errorReport(error, 'general.list.fail');
   //   }
   // }
+
+  async getRecommendedPromos(data: GetRecommendedPromosDto): Promise<any> {
+    try {
+      const merchantId = data.merchant_id || null;
+      if (!merchantId) {
+        this.errorGenerator(
+          merchantId,
+          'merchant_id',
+          'general.general.dataNotFound',
+        );
+      }
+      const promoBrands = await this.promoBrandRepository.find({
+        where: { merchant_id: merchantId },
+      });
+
+      const recommendedGlobalPromo = {
+        promo: null,
+        discountVal: null,
+      };
+      const recommendedShoppingDiscountPromo = {
+        promo: null,
+        discountVal: null,
+      };
+      const recommendedDeliveryDiscoutPromo = {
+        promo: null,
+        discountVal: null,
+      };
+
+      //=> Cari promo terbaik
+      // rule:
+      // - jika discount_type=PERCENTAGE, ambil discount_maximum sebagai nilai diskon
+      // - jika discount_type=PRICE, ambil discount_value sebagai nilai diskon
+      for (const promo of promoBrands) {
+        let discountVal = 0;
+        if (promo.discount_type == EnumPromoBrandDiscountType.PERCENTAGE) {
+          discountVal = promo.discount_maximum || 0;
+        } else {
+          discountVal = promo.discount_value;
+        }
+
+        if (!recommendedGlobalPromo.promo) {
+          recommendedGlobalPromo.promo = promo;
+        }
+
+        if (discountVal > recommendedGlobalPromo.discountVal) {
+          recommendedGlobalPromo.promo = promo;
+        }
+
+        if (promo.type == EnumPromoBrandType.SHOPPING_COST) {
+          if (!recommendedShoppingDiscountPromo.promo) {
+            recommendedShoppingDiscountPromo.promo = promo;
+          }
+
+          if (discountVal > recommendedShoppingDiscountPromo.discountVal) {
+            recommendedShoppingDiscountPromo.promo = promo;
+          }
+        } else {
+          if (!recommendedDeliveryDiscoutPromo.promo) {
+            recommendedDeliveryDiscoutPromo.promo = promo;
+          }
+
+          if (discountVal > recommendedDeliveryDiscoutPromo.discountVal) {
+            recommendedDeliveryDiscoutPromo.promo = promo;
+          }
+        }
+      }
+
+      return {
+        recommended_global_promo: recommendedGlobalPromo.promo,
+        recommended_shopping_discount_promo:
+          recommendedShoppingDiscountPromo.promo,
+        recommended_delivery_discout_promo:
+          recommendedDeliveryDiscoutPromo.promo,
+      };
+    } catch (error) {
+      this.errorReport(error, 'general.list.fail');
+    }
+  }
 
   //=> Utility services. Only Services called internally defined here.
 
