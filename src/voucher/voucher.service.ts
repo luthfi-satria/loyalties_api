@@ -349,11 +349,25 @@ export class VoucherService {
       const limit = data.limit || 10;
       const offset = (page - 1) * limit;
 
-      const [items, count] = await this.vouchersRepository.findAndCount({
-        take: limit,
-        skip: offset,
-        where: { customer_id, status: StatusVoucherEnum.ACTIVE },
-      });
+      // const [items, count] = await this.vouchersRepository.findAndCount({
+      //   take: limit,
+      //   skip: offset,
+      //   where: { customer_id, status: StatusVoucherEnum.ACTIVE },
+      // });
+
+      const [items, count] = await this.masterVoucherVoucherCodeRepository
+        .createQueryBuilder('mvvc')
+        .innerJoinAndSelect('mvvc.master_voucher', 'master_voucher')
+        .innerJoinAndSelect('mvvc.voucher_code', 'voucher_code')
+        .innerJoinAndSelect(
+          'voucher_code.vouchers',
+          'vouchers',
+          'vouchers.customer_id = :customer_id and vouchers.status = :status',
+          { customer_id, status: StatusVoucherEnum.ACTIVE },
+        )
+        .take(limit)
+        .skip(offset)
+        .getManyAndCount();
 
       const listItems = {
         current_page: parseInt(page),
