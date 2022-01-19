@@ -1,7 +1,16 @@
 import momenttz from 'moment-timezone';
 import moment from 'moment';
+import { BadRequestException, HttpStatus } from '@nestjs/common';
+import { MessageService } from 'src/message/message.service';
+import { ResponseService } from 'src/response/response.service';
 
 export class DateTimeUtils {
+  static responseService: any;
+  constructor(
+    private readonly messageService: MessageService,
+    private readonly responseService: ResponseService,
+  ) {}
+
   /**
    *
    * @param date Date format
@@ -103,4 +112,55 @@ export class DateTimeUtils {
     const now = momenttz(new Date());
     return momenttz.duration(target.diff(now)).asMilliseconds();
   };
+
+  validateStartEndDateWithCurrentDate(dateStart: Date, dateEnd: Date) {
+    const now = new Date();
+    const startDate = new Date(dateStart);
+    const endDate = new Date(dateEnd);
+    if (startDate < now) {
+      throw new BadRequestException(
+        this.responseService.error(
+          HttpStatus.BAD_REQUEST,
+          {
+            value: dateStart.toString(),
+            property: 'date_start',
+            constraint: [
+              this.messageService.get('general.general.invalidGreaterDate'),
+            ],
+          },
+          'Bad Request',
+        ),
+      );
+    }
+    if (endDate < now) {
+      throw new BadRequestException(
+        this.responseService.error(
+          HttpStatus.BAD_REQUEST,
+          {
+            value: dateEnd.toString(),
+            property: 'date_end',
+            constraint: [
+              this.messageService.get('general.general.invalidGreaterDate'),
+            ],
+          },
+          'Bad Request',
+        ),
+      );
+    }
+    if (startDate > endDate) {
+      throw new BadRequestException(
+        this.responseService.error(
+          HttpStatus.BAD_REQUEST,
+          {
+            value: [dateStart, dateEnd].join(','),
+            property: 'date',
+            constraint: [
+              this.messageService.get('general.general.invalidStartEndDate'),
+            ],
+          },
+          'Bad Request',
+        ),
+      );
+    }
+  }
 }

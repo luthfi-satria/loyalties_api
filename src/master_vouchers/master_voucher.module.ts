@@ -7,15 +7,28 @@ import { ResponseService } from 'src/response/response.service';
 import { CommonModule } from 'src/common/common.module';
 import { MasterVouchersRepository } from './repository/master_voucher.repository';
 import { ConfigModule } from '@nestjs/config';
+import { VoucherPackagesService } from 'src/voucher-packages/voucher-packages.service';
+import { VoucherPackagesRepository } from 'src/voucher-packages/repository/voucher_package.repository';
+import { VoucherPackagesMasterVouchersRepository } from 'src/voucher-packages/repository/voucher_package._master_voucher.repository';
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
-    TypeOrmModule.forFeature([MasterVouchersRepository]),
+    TypeOrmModule.forFeature([
+      MasterVouchersRepository,
+      VoucherPackagesRepository,
+      VoucherPackagesMasterVouchersRepository,
+    ]),
     forwardRef(() => CommonModule),
   ],
   controllers: [MasterVoucherController],
-  providers: [MasterVoucherService, MessageService, ResponseService, Logger],
+  providers: [
+    MasterVoucherService,
+    MessageService,
+    ResponseService,
+    Logger,
+    VoucherPackagesService,
+  ],
   exports: [TypeOrmModule, MasterVoucherService],
 })
 export class MasterVoucherModule {}

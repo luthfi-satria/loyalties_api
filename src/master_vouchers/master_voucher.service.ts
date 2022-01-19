@@ -8,6 +8,7 @@ import { MessageService } from 'src/message/message.service';
 import { ResponseService } from 'src/response/response.service';
 import { Like } from 'typeorm';
 import { CreateMasterVoucherDto } from './dto/master_voucher.dto';
+import { MasterVouchersDocument } from './entities/master_voucher.entity';
 import { MasterVouchersRepository } from './repository/master_voucher.repository';
 
 @Injectable()
@@ -105,5 +106,32 @@ export class MasterVoucherService {
         ),
       );
     }
+  }
+
+  async getAndValidateMasterVoucherById(
+    masterVoucherId: string,
+  ): Promise<MasterVouchersDocument> {
+    const masterVoucher = await this.getMasterVoucherDetail(
+      masterVoucherId,
+    ).catch((error) => {
+      throw error;
+    });
+    if (!masterVoucher) {
+      throw new BadRequestException(
+        this.responseService.error(
+          HttpStatus.BAD_REQUEST,
+          {
+            value: masterVoucherId,
+            property: 'master_voucher_id',
+            constraint: [
+              this.messageService.get('catalog.general.id_notfound'),
+            ],
+          },
+          'Bad Request',
+        ),
+      );
+    }
+
+    return masterVoucher;
   }
 }

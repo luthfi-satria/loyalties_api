@@ -12,6 +12,14 @@ import { RedisPromoProviderProcessor } from './redis/promo-provider/redis-promo-
 import { RedisPromoProviderService } from './redis/promo-provider/redis-promo-provider.service';
 import { RedisVoucherCodeProcessor } from './redis/voucher_code/redis-voucher_code.processor';
 import { VoucherCodeModule } from 'src/voucher_code/voucher_code.module';
+import { RedisVoucherPackageService } from './redis/voucher_package/redis-voucher_package.service';
+import { RedisVoucherPackageProcessor } from './redis/voucher_package/redis-voucher_package.processor';
+import { VoucherPackagesService } from 'src/voucher-packages/voucher-packages.service';
+import { MasterVoucherService } from 'src/master_vouchers/master_voucher.service';
+import { VoucherPackagesModule } from 'src/voucher-packages/voucher-packages.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { VoucherPackagesRepository } from 'src/voucher-packages/repository/voucher_package.repository';
+import { VoucherPackagesMasterVouchersRepository } from 'src/voucher-packages/repository/voucher_package._master_voucher.repository';
 
 @Global()
 @Module({
@@ -42,21 +50,32 @@ import { VoucherCodeModule } from 'src/voucher_code/voucher_code.module';
     HttpModule,
     forwardRef(() => PromoProviderModule),
     forwardRef(() => VoucherCodeModule),
+    forwardRef(() => VoucherPackagesModule),
+    TypeOrmModule.forFeature([
+      VoucherPackagesRepository,
+      VoucherPackagesMasterVouchersRepository,
+    ]),
   ],
   providers: [
     RedisPromoProviderService,
     RedisPromoProviderProcessor,
     RedisVoucherCodeService,
     RedisVoucherCodeProcessor,
+    RedisVoucherPackageService,
+    RedisVoucherPackageProcessor,
     CommonStorageService,
     MessageService,
     ResponseService,
+    VoucherPackagesService,
+    MasterVoucherService,
   ],
   exports: [
     RedisPromoProviderService,
     RedisPromoProviderProcessor,
     RedisVoucherCodeService,
     RedisVoucherCodeProcessor,
+    RedisVoucherPackageService,
+    RedisVoucherPackageProcessor,
     CommonStorageService,
   ],
   controllers: [NatsController],

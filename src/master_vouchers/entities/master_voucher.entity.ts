@@ -1,4 +1,5 @@
 import { MasterVoucherVoucherCodeDocument } from 'src/master_voucher_voucher_code/entities/master_voucher_voucher_code.entity';
+import { VoucherPackagesMasterVouchersDocument } from 'src/voucher-packages/entities/voucher-package-master-voucher.entity';
 import {
   Column,
   CreateDateColumn,
@@ -77,6 +78,13 @@ export class MasterVouchersDocument {
     (master_voucher_voucher_code) => master_voucher_voucher_code.master_voucher,
   )
   master_voucher_voucher_code: MasterVoucherVoucherCodeDocument[];
+
+  @OneToMany(
+    () => VoucherPackagesMasterVouchersDocument,
+    (voucher_package_master_vouchers) =>
+      voucher_package_master_vouchers.master_voucher,
+  )
+  voucher_package_master_vouchers: VoucherPackagesMasterVouchersDocument[];
 
   @CreateDateColumn({ type: 'timestamptz', default: () => 'LOCALTIMESTAMP' })
   created_at: Date | string;
