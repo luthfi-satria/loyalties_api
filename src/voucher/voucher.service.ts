@@ -323,11 +323,10 @@ export class VoucherService {
           this.responseService.error(
             HttpStatus.BAD_REQUEST,
             {
-              value: `${voucherCode.quota}`,
-              property: 'quota',
+              value: data.code,
+              property: 'code',
               constraint: [
-                this.messageService.get('general.create.fail'),
-                'quota full',
+                this.messageService.get('general.voucher.quotaReached'),
               ],
             },
             'Bad Request',
