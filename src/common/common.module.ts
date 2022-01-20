@@ -23,6 +23,9 @@ import { VoucherPackagesMasterVouchersRepository } from 'src/voucher-packages/re
 import { RedisPromoBrandProcessor } from './redis/promo-brand/redis-promo-brand.processor';
 import { RedisPromoBrandService } from './redis/promo-brand/redis-promo-brand.service';
 import { PromoBrandModule } from 'src/promo-brand/promo-brand.module';
+import { VoucherModule } from 'src/voucher/voucher.module';
+import { PromoProviderUsageModule } from 'src/promo-provider-usage/promo-provider-usage.module';
+import { PromoBrandUsageModule } from 'src/promo-brand-usage/promo-brand-usage.module';
 
 @Global()
 @Module({
@@ -55,6 +58,9 @@ import { PromoBrandModule } from 'src/promo-brand/promo-brand.module';
     forwardRef(() => PromoBrandModule),
     forwardRef(() => VoucherCodeModule),
     forwardRef(() => VoucherPackagesModule),
+    forwardRef(() => VoucherModule),
+    forwardRef(() => PromoProviderUsageModule),
+    forwardRef(() => PromoBrandUsageModule),
     TypeOrmModule.forFeature([
       VoucherPackagesRepository,
       VoucherPackagesMasterVouchersRepository,

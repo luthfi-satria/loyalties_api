@@ -712,8 +712,6 @@ export class PromoProviderService {
 
   //=> Utility services. Only Services called internally defined here.
 
-  // generateRecommendedPromoVoucers()
-
   checkMaxUncombineableOrCombineable(
     promo: { promo: any; discount: number },
     totalCombinedDiscount: number,
