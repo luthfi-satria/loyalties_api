@@ -63,6 +63,8 @@ export class ExtendedListPromoBrandDto extends ListPromoBrandDto {
   target_list: string[];
 
   order_type_list: string[];
+
+  is_quota_available: boolean;
 }
 
 // export class GetPromoBrandsDto {
