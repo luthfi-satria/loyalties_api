@@ -98,8 +98,12 @@ export class VoucherPackagesController {
   ): Promise<RSuccessMessage> {
     try {
       const gmt_offset = '7';
-      query.periode_start = new Date(`${query.periode_start} +${gmt_offset}`);
-      query.periode_end = new Date(`${query.periode_end} +${gmt_offset}`);
+      if (query.periode_start) {
+        query.periode_start = new Date(`${query.periode_start} +${gmt_offset}`);
+      }
+      if (query.periode_end) {
+        query.periode_end = new Date(`${query.periode_end} +${gmt_offset}`);
+      }
       const result = await this.voucherPackagesService.getList(query);
       return this.responseService.success(
         true,
