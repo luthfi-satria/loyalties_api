@@ -86,6 +86,14 @@ export default {
       code: 'STATUS_NOT_ALLOWED',
       message: 'Tidak dapat mengupdate data pada status ini.',
     },
+    invalidStartEndDate: {
+      code: 'INVALID_START_END_DATE',
+      message: 'Tanggal mulai harus lebih kecil dari tanggal selesai.',
+    },
+    invalidGreaterDate: {
+      code: 'INVALID_GREATER_DATE',
+      message: 'Tanggal harus lebih besar dari sekarang.',
+    },
   },
   delivery: {
     outOfRange: {
