@@ -60,6 +60,8 @@ export class ExtendedListPromoProviderDto extends ListPromoProviderDto {
   target_list: string[];
 
   order_type_list: string[];
+
+  is_quota_available: boolean;
 }
 
 export class GetPromoProvidersDto {

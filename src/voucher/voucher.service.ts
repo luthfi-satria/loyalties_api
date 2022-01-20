@@ -236,7 +236,8 @@ export class VoucherService {
         //=> update quota jika habis ketika di redeem
         if (
           count + vouchersTotal >= voucherCode.quota * vouchersTotal &&
-          vouchersTotal
+          vouchersTotal &&
+          voucherCode.quota
         ) {
           await this.updateVoucherCodeEmpty(voucherCode.id);
         }

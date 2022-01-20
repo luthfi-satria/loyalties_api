@@ -11,7 +11,7 @@ import {
   CreateAutoStartPromoProviderDto,
 } from 'src/common/redis/dto/redis-promo-provider.dto';
 import { RedisPromoProviderService } from 'src/common/redis/promo-provider/redis-promo-provider.service';
-// import { PromoProviderUsageDocument } from 'src/database/entities/promo-provider-usage.entity';
+import { PromoProviderUsageDocument } from 'src/database/entities/promo-provider-usage.entity';
 import {
   EnumPromoProviderDiscountType,
   EnumPromoProviderOrderType,
@@ -155,6 +155,7 @@ export class PromoProviderService {
         cart_total: null,
         target_list: null,
         order_type_list: null,
+        is_quota_available: null,
       });
     } catch (error) {
       this.errorReport(error, 'general.list.fail');
@@ -176,6 +177,7 @@ export class PromoProviderService {
         cart_total: null,
         target_list: null,
         order_type_list: null,
+        is_quota_available: null,
       });
       const result = items?.[0];
       if (!result) {
@@ -214,7 +216,7 @@ export class PromoProviderService {
         ? data.order_type_list
         : null;
 
-      // const isQuotaAvailable = true;
+      const isQuotaAvailable = data.is_quota_available || null;
 
       const query = this.promoProviderRepository.createQueryBuilder('ppro');
 
@@ -280,35 +282,35 @@ export class PromoProviderService {
         });
       }
 
-      // if (isQuotaAvailable) {
-      //   query.leftJoinAndSelect(
-      //     (qb) =>
-      //       qb
-      //         .select(
-      //           'COUNT(DISTINCT(usg.id)) AS used_count, ppro.id AS promo_provider_id',
-      //         )
-      //         .from(PromoProviderDocument, 'ppro')
-      //         .innerJoinAndSelect(
-      //           PromoProviderUsageDocument,
-      //           'usg',
-      //           `usg.promo_provider_id = ppro.id AND usg.status = 'USED'`,
-      //         )
-      //         .groupBy('ppro.id, usg.id'),
-      //     'usage',
-      //     'usage.promo_provider_id = ppro.id',
-      //   );
+      if (isQuotaAvailable) {
+        query.leftJoinAndSelect(
+          (qb) =>
+            qb
+              .select(
+                'COUNT(DISTINCT(usg.id)) AS used_count, ppro.id AS promo_provider_id',
+              )
+              .from(PromoProviderDocument, 'ppro')
+              .leftJoin(
+                PromoProviderUsageDocument,
+                'usg',
+                `usg.promo_provider_id = ppro.id AND usg.status = 'USED'`,
+              )
+              .groupBy('ppro.id'),
+          'usage',
+          'usage.promo_provider_id = ppro.id',
+        );
 
-      //   query.andWhere(
-      //     'usage.used_count < ppro.quota OR ppro.quota IS NULL OR ppro.quota = 0',
-      //   );
-      // }
+        query.andWhere(
+          'usage.used_count < ppro.quota OR ppro.quota IS NULL OR ppro.quota = 0',
+        );
+      }
 
       query
         .orderBy('ppro.created_at', 'DESC')
         .skip((currentPage - 1) * perPage)
         .take(perPage);
 
-      // console.log(await query.getRawMany());
+      console.log(await query.getRawMany());
 
       const [items, count] = await query.getManyAndCount();
 
@@ -730,18 +732,8 @@ export class PromoProviderService {
         cart_total: null,
         target_list: targetList,
         order_type_list: null,
+        is_quota_available: true,
       });
-
-      //=> run filter quota
-
-      // if (items?.length) {
-      //   const promoIds = items.map((promo) => {
-      //     return promo.id;
-      //   });
-
-      //   for (const promo of items) {
-      //   }
-      // }
 
       return items;
     } catch (error) {

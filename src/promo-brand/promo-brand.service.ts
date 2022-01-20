@@ -11,6 +11,7 @@ import {
   CreateAutoFinishPromoBrandDto,
 } from 'src/common/redis/dto/redis-promo-brand.dto';
 import { RedisPromoBrandService } from 'src/common/redis/promo-brand/redis-promo-brand.service';
+import { PromoBrandUsageDocument } from 'src/database/entities/promo-brand-usage.entity';
 
 import {
   EnumPromoBrandDiscountType,
@@ -141,6 +142,7 @@ export class PromoBrandService {
         target_list: null,
         order_type_list: null,
         merchant_id: data.merchant_id,
+        is_quota_available: null,
       });
     } catch (error) {
       this.errorReport(error, 'general.list.fail');
@@ -163,6 +165,7 @@ export class PromoBrandService {
         target_list: null,
         order_type_list: null,
         merchant_id: data.merchant_id,
+        is_quota_available: null,
       });
       const result = items?.[0];
       if (!result) {
@@ -201,6 +204,8 @@ export class PromoBrandService {
       const orderTypeList = data.order_type_list?.length
         ? data.order_type_list
         : null;
+
+      const isQuotaAvailable = data.is_quota_available || null;
 
       const query = this.promoBrandRepository.createQueryBuilder('pbrand');
 
@@ -268,6 +273,29 @@ export class PromoBrandService {
         query.andWhere('pbrand.order_type in (:...orderTypeList)', {
           orderTypeList,
         });
+      }
+
+      if (isQuotaAvailable) {
+        query.leftJoinAndSelect(
+          (qb) =>
+            qb
+              .select(
+                'COUNT(DISTINCT(usg.id)) AS used_count, pbrand.id AS promo_brand_id',
+              )
+              .from(PromoBrandDocument, 'pbrand')
+              .leftJoin(
+                PromoBrandUsageDocument,
+                'usg',
+                `usg.promo_brand_id = pbrand.id AND usg.status = 'USED'`,
+              )
+              .groupBy('pbrand.id'),
+          'usage',
+          'usage.promo_brand_id = pbrand.id',
+        );
+
+        query.andWhere(
+          'usage.used_count < pbrand.quota OR pbrand.quota IS NULL OR pbrand.quota = 0',
+        );
       }
 
       query
@@ -633,7 +661,7 @@ export class PromoBrandService {
   //   }
   // }
 
-  // async getPromoProviders(data: GetPromoProvidersDto): Promise<any> {
+  // async getActivePromoProviders(data: GetPromoProvidersDto): Promise<any> {
   //   try {
   //     const targetList = ['ALL'];
   //     // const orderTypeList = ['DELIVERY_AND_PICKUP'];
@@ -659,6 +687,7 @@ export class PromoBrandService {
   //       cart_total: null,
   //       target_list: targetList,
   //       order_type_list: null,
+  //       is_quota_available: true,
   //     });
 
   //     return items;

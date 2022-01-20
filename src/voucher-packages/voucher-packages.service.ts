@@ -13,6 +13,7 @@ import { RedisVoucherPackageService } from 'src/common/redis/voucher_package/red
 import { MasterVouchersDocument } from 'src/master_vouchers/entities/master_voucher.entity';
 import { MasterVoucherService } from 'src/master_vouchers/master_voucher.service';
 import { MessageService } from 'src/message/message.service';
+import { RMessage } from 'src/response/response.interface';
 import { ResponseService } from 'src/response/response.service';
 import { DateTimeUtils } from 'src/utils/date-time-utils';
 import { StatusVoucherEnum } from 'src/voucher/entities/voucher.entity';
@@ -376,44 +377,34 @@ export class VoucherPackagesService {
   }
 
   async orderVoucherPackage(voucherPackageId: string, customerId: string) {
-    const voucherPackage = await this.getAndValidateAvailableVoucherPackageById(
-      voucherPackageId,
-    );
-    for (
-      let i = 0;
-      i < voucherPackage.voucher_package_master_vouchers.length;
-      i++
-    ) {
-      const masterVoucher =
-        voucherPackage.voucher_package_master_vouchers[i].master_voucher;
+    try {
+      const voucherPackage =
+        await this.getAndValidateAvailableVoucherPackageById(voucherPackageId);
       await this.createVoucherByVoucherPackageId(
-        masterVoucher,
+        voucherPackage.voucher_package_master_vouchers,
         customerId,
         voucherPackage.target,
         voucherPackageId,
       );
+    } catch (error) {
+      this.errorReport(error, 'general.update.fail');
     }
 
     //TODO: tambah kan fungsi seperti ini this.updateVoucherCodeEmpty(voucherCode.id);
   }
 
   async createVoucherByVoucherPackageId(
-    masterVoucher: MasterVouchersDocument,
+    voucherPackagesMasterVouchers: VoucherPackagesMasterVouchersDocument[],
     customerId: string,
     target: string,
     voucherPackageId: string,
   ) {
-    const masterVoucherVoucherCodes =
-      await this.voucherService.fetchMasterVoucherVoucherCodes({
-        loyaltiesVoucherCodeId: null,
-        loyaltiesMasterVoucherId: masterVoucher.id,
-      });
-
     let vouchersTotal = 0;
     const postVoucherDatas = [];
-    for (let i = 0; i < masterVoucherVoucherCodes.length; i++) {
-      const master_voucher = masterVoucherVoucherCodes[i].master_voucher;
-      const quantity = masterVoucherVoucherCodes[i].quantity;
+
+    for (const vpmv of voucherPackagesMasterVouchers) {
+      const master_voucher = vpmv.master_voucher;
+      const quantity = vpmv.quantity;
       const date_start = new Date();
       const days = this.voucherService.getDurationInt(master_voucher.duration);
       const date_end = moment(date_start).add(days, 'days');
@@ -424,7 +415,7 @@ export class VoucherPackagesService {
           voucher_package_id: voucherPackageId,
           master_voucher_id: master_voucher.id,
           customer_id: customerId,
-          code: Math.floor(Math.random() * (100 - 1 + 1)) + 1,
+          code: null,
           type: master_voucher.type,
           order_type: master_voucher.order_type,
           target,
@@ -440,7 +431,57 @@ export class VoucherPackagesService {
         postVoucherDatas.push(postVoucherData);
       }
     }
+
     await this.voucherService.createVoucherBulk(postVoucherDatas);
+  }
+
+  errorReport(error: any, message: string) {
+    this.logger.error(error);
+    console.error(error);
+    if (error.message == 'Bad Request Exception') {
+      throw error;
+    } else {
+      const errors: RMessage = {
+        value: '',
+        property: '',
+        constraint: [this.messageService.get(message), error.message],
+      };
+      throw new BadRequestException(
+        this.responseService.error(
+          HttpStatus.BAD_REQUEST,
+          errors,
+          'Bad Request',
+        ),
+      );
+    }
+  }
+
+  errorGenerator(value: string, property: string, constraint: string | any[]) {
+    if (typeof constraint == 'string') {
+      throw new BadRequestException(
+        this.responseService.error(
+          HttpStatus.BAD_REQUEST,
+          {
+            value,
+            property,
+            constraint: [this.messageService.get(constraint)],
+          },
+          'Bad Request',
+        ),
+      );
+    } else {
+      throw new BadRequestException(
+        this.responseService.error(
+          HttpStatus.BAD_REQUEST,
+          {
+            value,
+            property,
+            constraint: constraint,
+          },
+          'Bad Request',
+        ),
+      );
+    }
   }
 
   // QUEUE
