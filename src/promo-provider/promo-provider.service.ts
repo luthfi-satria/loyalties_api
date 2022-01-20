@@ -11,6 +11,7 @@ import {
   CreateAutoStartPromoProviderDto,
 } from 'src/common/redis/dto/redis-promo-provider.dto';
 import { RedisPromoProviderService } from 'src/common/redis/promo-provider/redis-promo-provider.service';
+// import { PromoProviderUsageDocument } from 'src/database/entities/promo-provider-usage.entity';
 import {
   EnumPromoProviderDiscountType,
   EnumPromoProviderOrderType,
@@ -213,6 +214,8 @@ export class PromoProviderService {
         ? data.order_type_list
         : null;
 
+      // const isQuotaAvailable = true;
+
       const query = this.promoProviderRepository.createQueryBuilder('ppro');
 
       if (promoProviderId) {
@@ -277,10 +280,35 @@ export class PromoProviderService {
         });
       }
 
+      // if (isQuotaAvailable) {
+      //   query.leftJoinAndSelect(
+      //     (qb) =>
+      //       qb
+      //         .select(
+      //           'COUNT(DISTINCT(usg.id)) AS used_count, ppro.id AS promo_provider_id',
+      //         )
+      //         .from(PromoProviderDocument, 'ppro')
+      //         .innerJoinAndSelect(
+      //           PromoProviderUsageDocument,
+      //           'usg',
+      //           `usg.promo_provider_id = ppro.id AND usg.status = 'USED'`,
+      //         )
+      //         .groupBy('ppro.id, usg.id'),
+      //     'usage',
+      //     'usage.promo_provider_id = ppro.id',
+      //   );
+
+      //   query.andWhere(
+      //     'usage.used_count < ppro.quota OR ppro.quota IS NULL OR ppro.quota = 0',
+      //   );
+      // }
+
       query
         .orderBy('ppro.created_at', 'DESC')
         .skip((currentPage - 1) * perPage)
         .take(perPage);
+
+      // console.log(await query.getRawMany());
 
       const [items, count] = await query.getManyAndCount();
 
@@ -513,7 +541,7 @@ export class PromoProviderService {
       const customerId = data.customer_id;
       const deliveryFee = data.delivery_fee || 0;
 
-      const promoProviders = await this.getPromoProviders({
+      const promoProviders = await this.getActivePromoProviders({
         target: target,
       });
 
@@ -676,7 +704,7 @@ export class PromoProviderService {
     }
   }
 
-  async getPromoProviders(data: GetPromoProvidersDto): Promise<any> {
+  async getActivePromoProviders(data: GetPromoProvidersDto): Promise<any> {
     try {
       const targetList = ['ALL'];
       // const orderTypeList = ['DELIVERY_AND_PICKUP'];
@@ -703,6 +731,17 @@ export class PromoProviderService {
         target_list: targetList,
         order_type_list: null,
       });
+
+      //=> run filter quota
+
+      // if (items?.length) {
+      //   const promoIds = items.map((promo) => {
+      //     return promo.id;
+      //   });
+
+      //   for (const promo of items) {
+      //   }
+      // }
 
       return items;
     } catch (error) {
