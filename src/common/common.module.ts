@@ -25,6 +25,8 @@ import { RedisPromoBrandService } from './redis/promo-brand/redis-promo-brand.se
 import { PromoBrandModule } from 'src/promo-brand/promo-brand.module';
 import { PaymentService } from './payment/payment.service';
 import { VoucherModule } from 'src/voucher/voucher.module';
+import { PromoProviderUsageModule } from 'src/promo-provider-usage/promo-provider-usage.module';
+import { PromoBrandUsageModule } from 'src/promo-brand-usage/promo-brand-usage.module';
 
 @Global()
 @Module({
@@ -58,6 +60,8 @@ import { VoucherModule } from 'src/voucher/voucher.module';
     forwardRef(() => VoucherCodeModule),
     forwardRef(() => VoucherPackagesModule),
     forwardRef(() => VoucherModule),
+    forwardRef(() => PromoProviderUsageModule),
+    forwardRef(() => PromoBrandUsageModule),
     TypeOrmModule.forFeature([
       VoucherPackagesRepository,
       VoucherPackagesMasterVouchersRepository,

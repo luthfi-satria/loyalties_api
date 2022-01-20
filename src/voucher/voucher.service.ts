@@ -20,11 +20,11 @@ import moment from 'moment';
 import { StatusVoucherCodeGroup } from 'src/voucher_code/entities/voucher_code.entity';
 import { GetActiveTargetVouchersDto } from './dto/get-vouchers.dto';
 import { Any } from 'typeorm';
-import { MasterVoucherVoucherCodeService } from 'src/master_voucher_voucher_code/master_voucher_voucher_code.service';
 import { VoucherCodeService } from 'src/voucher_code/voucher_code.service';
 import { MasterVoucherVoucherCodeRepository } from 'src/master_voucher_voucher_code/repository/master_voucher_voucher_code.repository';
 import { FetchMasterVoucherVoucherCodesDto } from 'src/master_voucher_voucher_code/dto/get_master_voucher_voucher_code.dto';
 import { MasterVoucherVoucherCodeDocument } from 'src/master_voucher_voucher_code/entities/master_voucher_voucher_code.entity';
+import { RMessage } from 'src/response/response.interface';
 
 @Injectable()
 export class VoucherService {
@@ -33,7 +33,6 @@ export class VoucherService {
     private readonly responseService: ResponseService,
     private readonly vouchersRepository: VouchersRepository,
     private readonly voucherCodesRepository: VoucherCodesRepository,
-    private readonly masterVoucherVoucherCodeService: MasterVoucherVoucherCodeService,
     private readonly voucherCodeService: VoucherCodeService,
     private readonly masterVoucherVoucherCodeRepository: MasterVoucherVoucherCodeRepository,
   ) {}
@@ -521,6 +520,114 @@ export class VoucherService {
       return query.getMany();
     } catch (error) {
       console.error(error);
+    }
+  }
+
+  async useVoucher(data: any) {
+    try {
+      const voucherIds = data.voucher_ids || null;
+      const customerId = data.customer_id || null;
+
+      if (voucherIds?.length) {
+        await this.vouchersRepository
+          .createQueryBuilder('q')
+          .update({ status: StatusVoucherEnum.USED })
+          .where({
+            id: Any(voucherIds),
+            customer_id: customerId,
+            status: StatusVoucherEnum.ACTIVE,
+          })
+          .execute()
+          .catch((error) => {
+            this.logger.error(error.message);
+            console.error(error);
+            throw new BadRequestException(
+              this.responseService.error(
+                HttpStatus.BAD_REQUEST,
+                {
+                  value: '',
+                  property: '',
+                  constraint: [this.messageService.get('general.update.fail')],
+                },
+                'Bad Request',
+              ),
+            );
+          });
+      }
+    } catch (error) {
+      if (error.message == 'Bad Request Exception') {
+        throw error;
+      } else {
+        const errors: RMessage = {
+          value: '',
+          property: '',
+          constraint: [
+            this.messageService.get('general.update.fail'),
+            error.message,
+          ],
+        };
+        throw new BadRequestException(
+          this.responseService.error(
+            HttpStatus.BAD_REQUEST,
+            errors,
+            'Bad Request',
+          ),
+        );
+      }
+    }
+  }
+
+  async cancelVoucher(data: any) {
+    try {
+      const voucherIds = data.data.voucher_ids || null;
+      const customerId = data.customer_id || null;
+
+      if (voucherIds?.length) {
+        await this.vouchersRepository
+          .createQueryBuilder('q')
+          .update({ status: StatusVoucherEnum.ACTIVE })
+          .where({
+            id: Any(voucherIds),
+            customer_id: customerId,
+            status: StatusVoucherEnum.USED,
+          })
+          .execute()
+          .catch((error) => {
+            this.logger.error(error.message);
+            console.error(error);
+            throw new BadRequestException(
+              this.responseService.error(
+                HttpStatus.BAD_REQUEST,
+                {
+                  value: '',
+                  property: '',
+                  constraint: [this.messageService.get('general.update.fail')],
+                },
+                'Bad Request',
+              ),
+            );
+          });
+      }
+    } catch (error) {
+      if (error.message == 'Bad Request Exception') {
+        throw error;
+      } else {
+        const errors: RMessage = {
+          value: '',
+          property: '',
+          constraint: [
+            this.messageService.get('general.update.fail'),
+            error.message,
+          ],
+        };
+        throw new BadRequestException(
+          this.responseService.error(
+            HttpStatus.BAD_REQUEST,
+            errors,
+            'Bad Request',
+          ),
+        );
+      }
     }
   }
 }

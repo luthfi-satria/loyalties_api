@@ -9,7 +9,6 @@ import { HttpModule } from '@nestjs/axios';
 import { CommonModule } from 'src/common/common.module';
 import { VoucherService } from 'src/voucher/voucher.service';
 import { VouchersRepository } from 'src/voucher/repository/voucher.repository';
-import { MasterVoucherVoucherCodeModule } from 'src/master_voucher_voucher_code/master_voucher_voucher_code.module';
 import { VoucherCodeModule } from 'src/voucher_code/voucher_code.module';
 
 @Module({
@@ -18,7 +17,6 @@ import { VoucherCodeModule } from 'src/voucher_code/voucher_code.module';
     ConfigModule,
     HttpModule,
     forwardRef(() => CommonModule),
-    MasterVoucherVoucherCodeModule,
     forwardRef(() => VoucherCodeModule),
   ],
   controllers: [VoucherController],
