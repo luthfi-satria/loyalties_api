@@ -68,7 +68,7 @@ export class VoucherPackagesController {
       createVoucherPackageDto.date_end = new Date(
         `${createVoucherPackageDto.date_end} +${gmt_offset}`,
       );
-      this.dateTimeUtils.validateStartEndDateWithCurrentDate(
+      this.dateTimeUtils.validateStartEndDate(
         createVoucherPackageDto.date_start,
         createVoucherPackageDto.date_end,
       );
@@ -98,8 +98,12 @@ export class VoucherPackagesController {
   ): Promise<RSuccessMessage> {
     try {
       const gmt_offset = '7';
-      query.periode_start = new Date(`${query.periode_start} +${gmt_offset}`);
-      query.periode_end = new Date(`${query.periode_end} +${gmt_offset}`);
+      if (query.periode_start) {
+        query.periode_start = new Date(`${query.periode_start} +${gmt_offset}`);
+      }
+      if (query.periode_end) {
+        query.periode_end = new Date(`${query.periode_end} +${gmt_offset}`);
+      }
       const result = await this.voucherPackagesService.getList(query);
       return this.responseService.success(
         true,
@@ -132,6 +136,8 @@ export class VoucherPackagesController {
   }
 
   @Put(':voucher_package_id/cancelled')
+  @UserType('admin')
+  @AuthJwtGuard()
   async cancelled(
     @Param('voucher_package_id') voucherPackageId: string,
     @Body() cancelVoucherPackageDto: CancelVoucherPackageDto,
@@ -153,6 +159,8 @@ export class VoucherPackagesController {
   }
 
   @Put(':voucher_package_id/stopped')
+  @UserType('admin')
+  @AuthJwtGuard()
   async stopped(
     @Param('voucher_package_id') voucherPackageId: string,
     @Body() stopVoucherPackageDto: StopVoucherPackageDto,

@@ -23,6 +23,7 @@ import { VoucherPackagesMasterVouchersRepository } from 'src/voucher-packages/re
 import { RedisPromoBrandProcessor } from './redis/promo-brand/redis-promo-brand.processor';
 import { RedisPromoBrandService } from './redis/promo-brand/redis-promo-brand.service';
 import { PromoBrandModule } from 'src/promo-brand/promo-brand.module';
+import { PaymentService } from './payment/payment.service';
 import { VoucherModule } from 'src/voucher/voucher.module';
 import { PromoProviderUsageModule } from 'src/promo-provider-usage/promo-provider-usage.module';
 import { PromoBrandUsageModule } from 'src/promo-brand-usage/promo-brand-usage.module';
@@ -80,6 +81,7 @@ import { PromoBrandUsageModule } from 'src/promo-brand-usage/promo-brand-usage.m
     ResponseService,
     VoucherPackagesService,
     MasterVoucherService,
+    PaymentService,
   ],
   exports: [
     RedisPromoProviderService,
@@ -91,6 +93,7 @@ import { PromoBrandUsageModule } from 'src/promo-brand-usage/promo-brand-usage.m
     RedisPromoBrandService,
     RedisPromoBrandProcessor,
     CommonStorageService,
+    PaymentService,
   ],
   controllers: [NatsController],
 })

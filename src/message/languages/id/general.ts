@@ -218,5 +218,9 @@ export default {
       code: 'QUOTA_REACHED',
       message: 'Kuota voucher telah habis.',
     },
+    notAvailable: {
+      code: 'VOUCHER_NOT_AVAILABLE',
+      message: 'Voucher tidak tersedia',
+    },
   },
 };

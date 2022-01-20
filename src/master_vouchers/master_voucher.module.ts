@@ -10,6 +10,7 @@ import { ConfigModule } from '@nestjs/config';
 import { VoucherPackagesService } from 'src/voucher-packages/voucher-packages.service';
 import { VoucherPackagesRepository } from 'src/voucher-packages/repository/voucher_package.repository';
 import { VoucherPackagesMasterVouchersRepository } from 'src/voucher-packages/repository/voucher_package._master_voucher.repository';
+import { VoucherModule } from 'src/voucher/voucher.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { VoucherPackagesMasterVouchersRepository } from 'src/voucher-packages/re
       VoucherPackagesMasterVouchersRepository,
     ]),
     forwardRef(() => CommonModule),
+    VoucherModule,
   ],
   controllers: [MasterVoucherController],
   providers: [
