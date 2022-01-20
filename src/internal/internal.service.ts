@@ -12,7 +12,10 @@ import { ResponseService } from 'src/response/response.service';
 import { VoucherPackagesCustomersService } from 'src/voucher-packages-customers/voucher-packages-customers.service';
 import { GetPromoVouchersDto } from './dto/get-promo-vouchers.dto';
 import { GetRecommendedPromosDto } from './dto/get-recommended-promos.dto';
-import { CallBackOrderSuccessDto } from './dto/order-voucher-package.dto';
+import {
+  CallBackOrderExpiredDto,
+  CallBackOrderSuccessDto,
+} from './dto/order-voucher-package.dto';
 
 @Injectable()
 export class InternalService {
@@ -53,6 +56,20 @@ export class InternalService {
       this.errorReport(error, 'general.general.fail');
     }
   }
+
+  async orderVoucherPackageExpired(
+    data: CallBackOrderExpiredDto,
+  ): Promise<any> {
+    try {
+      return this.voucherPackagesCustomersService.orderVoucherPackageExpired(
+        data,
+      );
+    } catch (error) {
+      this.errorReport(error, 'general.general.fail');
+    }
+  }
+
+  orderVoucherPackageCancelled;
 
   errorReport(error: any, message: string) {
     this.logger.error(error);

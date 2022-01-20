@@ -6,7 +6,7 @@ export class CallBackOrderSuccessDto {
   order_id: string;
 }
 
-export class CallBackOrderCancelledDto {
+export class CallBackOrderExpiredDto {
   @IsNotEmpty()
   @IsUUID()
   order_id: string;
