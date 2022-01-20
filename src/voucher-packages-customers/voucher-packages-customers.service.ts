@@ -111,7 +111,7 @@ export class VoucherPackagesCustomersService {
         // },
       };
       const payment = await this.paymentService
-        .createPayment(item)
+        .createVoucherPayment(item)
         .catch((error) => {
           const errors: RMessage = {
             value: '',

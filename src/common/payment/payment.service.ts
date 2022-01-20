@@ -43,6 +43,35 @@ export class PaymentService {
     }
   }
 
+  async createVoucherPayment(data: CreatePayment): Promise<any> {
+    try {
+      const headerRequest = {
+        'Content-Type': 'application/json',
+      };
+      return await firstValueFrom(
+        this.httpService
+          .post(
+            `${process.env.BASEURL_PAYMENTS_SERVICE}/api/v1/payments/internal/voucher-payments`,
+            data,
+            { headers: headerRequest },
+          )
+          .pipe(map((resp) => resp.data)),
+      );
+    } catch (e) {
+      this.logger.error(
+        `${process.env.BASEURL_PAYMENTS_SERVICE}/api/v1/payments/internal/voucher-payments ${e.message}`,
+      );
+      if (e.response) {
+        throw new HttpException(
+          e.response.data.message,
+          e.response.data.statusCode,
+        );
+      } else {
+        throw new InternalServerErrorException();
+      }
+    }
+  }
+
   async getPaymentsBulk(data: GetPaymentsBulk): Promise<any> {
     try {
       const headerRequest = {
