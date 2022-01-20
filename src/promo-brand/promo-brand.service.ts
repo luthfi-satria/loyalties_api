@@ -678,7 +678,7 @@ export class PromoBrandService {
         );
       }
       const promoBrands = await this.promoBrandRepository.find({
-        where: { merchant_id: merchantId },
+        where: { merchant_id: merchantId, status: EnumPromoBrandStatus.ACTIVE },
       });
 
       const recommendedGlobalPromo = {

@@ -77,6 +77,14 @@ export class PromoProviderUsageService {
     }
   }
 
+  //   async bulkCheckPromoProviderQuota(promoIds: string[]): Promise<any[]> {
+  //     try {
+
+  //     } catch (error) {
+  //       this.errorReport(error, 'general.list.fail');
+  //     }
+  //   }
+
   //=> Utility services. Only Services called internally defined here.
 
   errorReport(error: any, message: string) {
