@@ -130,6 +130,7 @@ export class VoucherService {
     return days;
   }
 
+  //TODO: 
   async redeemVoucher(data, customer_id): Promise<any[]> {
     // NOT AUTO GENERATE
     let voucherCode = await this.voucherCodesRepository.findOne({
@@ -156,7 +157,7 @@ export class VoucherService {
             status: StatusVoucherEnum.ACTIVE,
           },
         });
-
+        //TODO: 
         const mvvcs = await this.fetchMasterVoucherVoucherCodes({
           loyaltiesVoucherCodeId: voucherCodeId,
           loyaltiesMasterVoucherId: null,

@@ -8,6 +8,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { VoucherPackagesMasterVouchersDocument } from './voucher-package-master-voucher.entity';
+import { VoucherPackageOrderDocument } from '../../voucher-packages-customers/entities/voucher-packages-order.entity';
 
 export enum TargetVoucherPackage {
   ALL = 'ALL',
@@ -74,6 +75,12 @@ export class VoucherPackageDocument {
       voucher_package_master_vouchers.voucher_package,
   )
   voucher_package_master_vouchers: VoucherPackagesMasterVouchersDocument[];
+
+  @OneToMany(
+    () => VoucherPackageOrderDocument,
+    (voucher_package_orders) => voucher_package_orders.voucher_package,
+  )
+  voucher_package_orders: VoucherPackageOrderDocument[];
 
   @CreateDateColumn({ type: 'timestamptz', default: () => 'LOCALTIMESTAMP' })
   created_at: Date | string;

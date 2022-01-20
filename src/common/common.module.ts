@@ -23,6 +23,8 @@ import { VoucherPackagesMasterVouchersRepository } from 'src/voucher-packages/re
 import { RedisPromoBrandProcessor } from './redis/promo-brand/redis-promo-brand.processor';
 import { RedisPromoBrandService } from './redis/promo-brand/redis-promo-brand.service';
 import { PromoBrandModule } from 'src/promo-brand/promo-brand.module';
+import { PaymentService } from './payment/payment.service';
+import { VoucherModule } from 'src/voucher/voucher.module';
 
 @Global()
 @Module({
@@ -55,6 +57,7 @@ import { PromoBrandModule } from 'src/promo-brand/promo-brand.module';
     forwardRef(() => PromoBrandModule),
     forwardRef(() => VoucherCodeModule),
     forwardRef(() => VoucherPackagesModule),
+    forwardRef(() => VoucherModule),
     TypeOrmModule.forFeature([
       VoucherPackagesRepository,
       VoucherPackagesMasterVouchersRepository,
@@ -74,6 +77,7 @@ import { PromoBrandModule } from 'src/promo-brand/promo-brand.module';
     ResponseService,
     VoucherPackagesService,
     MasterVoucherService,
+    PaymentService,
   ],
   exports: [
     RedisPromoProviderService,
@@ -85,6 +89,7 @@ import { PromoBrandModule } from 'src/promo-brand/promo-brand.module';
     RedisPromoBrandService,
     RedisPromoBrandProcessor,
     CommonStorageService,
+    PaymentService,
   ],
   controllers: [NatsController],
 })

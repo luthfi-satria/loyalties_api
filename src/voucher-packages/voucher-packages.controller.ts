@@ -132,6 +132,8 @@ export class VoucherPackagesController {
   }
 
   @Put(':voucher_package_id/cancelled')
+  @UserType('admin')
+  @AuthJwtGuard()
   async cancelled(
     @Param('voucher_package_id') voucherPackageId: string,
     @Body() cancelVoucherPackageDto: CancelVoucherPackageDto,
@@ -153,6 +155,8 @@ export class VoucherPackagesController {
   }
 
   @Put(':voucher_package_id/stopped')
+  @UserType('admin')
+  @AuthJwtGuard()
   async stopped(
     @Param('voucher_package_id') voucherPackageId: string,
     @Body() stopVoucherPackageDto: StopVoucherPackageDto,

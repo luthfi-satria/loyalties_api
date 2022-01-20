@@ -15,6 +15,7 @@ import { MasterVoucherVoucherCodeModule } from './master_voucher_voucher_code/ma
 import { VoucherModule } from './voucher/voucher.module';
 import { VoucherPackagesModule } from './voucher-packages/voucher-packages.module';
 import { PromoBrandModule } from './promo-brand/promo-brand.module';
+import { VoucherPackagesCustomersModule } from './voucher-packages-customers/voucher-packages-customers.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { PromoBrandModule } from './promo-brand/promo-brand.module';
     InternalModule,
     VoucherPackagesModule,
     PromoBrandModule,
+    VoucherPackagesCustomersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
