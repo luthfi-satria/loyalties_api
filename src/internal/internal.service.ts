@@ -9,8 +9,10 @@ import { PromoBrandService } from 'src/promo-brand/promo-brand.service';
 import { PromoProviderService } from 'src/promo-provider/promo-provider.service';
 import { RMessage } from 'src/response/response.interface';
 import { ResponseService } from 'src/response/response.service';
+import { VoucherPackagesCustomersService } from 'src/voucher-packages-customers/voucher-packages-customers.service';
 import { GetPromoVouchersDto } from './dto/get-promo-vouchers.dto';
 import { GetRecommendedPromosDto } from './dto/get-recommended-promos.dto';
+import { CallBackOrderSuccessDto } from './dto/order-voucher-package.dto';
 
 @Injectable()
 export class InternalService {
@@ -19,6 +21,7 @@ export class InternalService {
     private readonly messageService: MessageService,
     private readonly promoProviderService: PromoProviderService,
     private readonly promoBrandService: PromoBrandService,
+    private readonly voucherPackagesCustomersService: VoucherPackagesCustomersService,
   ) {}
 
   private readonly logger = new Logger(InternalService.name);
@@ -34,6 +37,18 @@ export class InternalService {
   async getRecommendedPromos(data: GetRecommendedPromosDto): Promise<any> {
     try {
       return this.promoBrandService.getRecommendedPromos(data);
+    } catch (error) {
+      this.errorReport(error, 'general.general.fail');
+    }
+  }
+
+  async orderVoucherPackageSuccess(
+    data: CallBackOrderSuccessDto,
+  ): Promise<any> {
+    try {
+      return this.voucherPackagesCustomersService.orderVoucherPackageSuccess(
+        data,
+      );
     } catch (error) {
       this.errorReport(error, 'general.general.fail');
     }

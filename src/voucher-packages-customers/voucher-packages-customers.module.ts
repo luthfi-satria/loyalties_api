@@ -34,5 +34,6 @@ import { MasterVoucherVoucherCodeService } from 'src/master_voucher_voucher_code
     DateTimeUtils,
     MasterVoucherVoucherCodeService,
   ],
+  exports: [VoucherPackagesCustomersService],
 })
 export class VoucherPackagesCustomersModule {}

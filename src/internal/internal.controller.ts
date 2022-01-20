@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { MessageService } from 'src/message/message.service';
 import { ResponseStatusCode } from 'src/response/response.decorator';
 import { ResponseService } from 'src/response/response.service';
@@ -44,6 +44,26 @@ export class InternalController {
         result,
       );
     } catch (error) {
+      throw error;
+    }
+  }
+
+  @Post(':order_id/payment-success')
+  @ResponseStatusCode()
+  async orderVoucherPackageSuccess(
+    @Param('order_id') order_id: string,
+  ): Promise<any> {
+    try {
+      const result = await this.internalService.orderVoucherPackageSuccess({
+        order_id,
+      });
+      return this.responseService.success(
+        true,
+        this.messageService.get('general.general.success'),
+        result,
+      );
+    } catch (error) {
+      console.error(error);
       throw error;
     }
   }
