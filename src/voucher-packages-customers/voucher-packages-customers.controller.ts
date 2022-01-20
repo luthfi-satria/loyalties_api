@@ -57,7 +57,10 @@ export class VoucherPackagesCustomersController {
       if (query.periode_end) {
         query.periode_end = new Date(`${query.periode_end} +${gmt_offset}`);
       }
-      const result = await this.voucherPackagesCustomersService.getList(query);
+      const result = await this.voucherPackagesCustomersService.getList(
+        query,
+        user,
+      );
       return this.responseService.success(
         true,
         this.messageService.get('general.list.success'),
@@ -79,6 +82,7 @@ export class VoucherPackagesCustomersController {
     try {
       const result = await this.voucherPackagesCustomersService.getDetail(
         voucherPackageOrderId,
+        user,
       );
       return this.responseService.success(
         true,

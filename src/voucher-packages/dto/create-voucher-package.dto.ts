@@ -4,6 +4,7 @@ import {
   IsNotEmpty,
   IsNumberString,
   IsObject,
+  IsOptional,
   IsString,
 } from 'class-validator';
 import { TargetVoucherPackage } from '../entities/voucher-package.entity';
@@ -25,7 +26,7 @@ export class CreateVoucherPackageDto {
   @IsIn(Object.values(TargetVoucherPackage))
   target: TargetVoucherPackage;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsNumberString()
   quota: number;
 

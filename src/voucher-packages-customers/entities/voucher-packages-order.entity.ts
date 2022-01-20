@@ -47,6 +47,9 @@ export class VoucherPackageOrderDocument {
   @Column({ nullable: true, type: 'timestamptz' })
   payment_expired_at: Date;
 
+  @Column({ type: 'json', nullable: true })
+  payment_info: any;
+
   @Column({ nullable: true, type: 'timestamptz' })
   paid_at: Date;
 

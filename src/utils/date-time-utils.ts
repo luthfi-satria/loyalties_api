@@ -113,25 +113,10 @@ export class DateTimeUtils {
     return momenttz.duration(target.diff(now)).asMilliseconds();
   };
 
-  validateStartEndDateWithCurrentDate(dateStart: Date, dateEnd: Date) {
+  validateStartEndDate(dateStart: Date, dateEnd: Date) {
     const now = new Date();
     const startDate = new Date(dateStart);
     const endDate = new Date(dateEnd);
-    if (startDate < now) {
-      throw new BadRequestException(
-        this.responseService.error(
-          HttpStatus.BAD_REQUEST,
-          {
-            value: dateStart.toString(),
-            property: 'date_start',
-            constraint: [
-              this.messageService.get('general.general.invalidGreaterDate'),
-            ],
-          },
-          'Bad Request',
-        ),
-      );
-    }
     if (endDate < now) {
       throw new BadRequestException(
         this.responseService.error(

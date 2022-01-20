@@ -5,9 +5,12 @@ import {
   Logger,
 } from '@nestjs/common';
 import { User } from 'src/auth/guard/interface/user.interface';
+import { CreatePayment } from 'src/common/payment/interfaces/payment.interface';
 import { PaymentService } from 'src/common/payment/payment.service';
 import { MessageService } from 'src/message/message.service';
+import { RMessage } from 'src/response/response.interface';
 import { ResponseService } from 'src/response/response.service';
+import { VoucherPackageDocument } from 'src/voucher-packages/entities/voucher-package.entity';
 import { VoucherPackagesService } from 'src/voucher-packages/voucher-packages.service';
 import {
   LessThanOrEqual,
@@ -40,7 +43,7 @@ export class VoucherPackagesCustomersService {
     params: CreateVoucherPackagesCustomerDto,
   ): Promise<VoucherPackageOrderDocument> {
     const voucherPackage =
-      await this.voucherPackageService.getAndValidateVoucherPackageById(
+      await this.voucherPackageService.getAndValidateAvailableVoucherPackageById(
         params.voucher_package_id,
       );
 
@@ -71,21 +74,25 @@ export class VoucherPackagesCustomersService {
       admin_fee = paymentMethod.admin_fee_fixed;
     } else if (paymentMethod.admin_fee_percent) {
       admin_fee = Math.ceil(
-        (voucherPackage.price *
-          voucherPackage.quota *
-          paymentMethod.admin_fee_percent) /
-          100,
+        (voucherPackage.price * paymentMethod.admin_fee_percent) / 100,
       );
     }
 
+    console.log(
+      '===========================Start Debug =================================\n',
+      new Date(Date.now()).toLocaleString(),
+      '\n',
+      paymentMethod,
+      '\n============================End Debug ==================================',
+    );
     const paramCreate: Partial<VoucherPackageOrderDocument> = {
       customer_id: user.id,
       voucher_package: undefined,
       voucher_package_id: voucherPackage.id,
-      total_payment: voucherPackage.price * voucherPackage.quota + admin_fee,
+      total_payment: voucherPackage.price + admin_fee,
       payment_method_id: paymentMethod.id,
       admin_fee: admin_fee,
-      // payment_expired_at: undefined,
+      payment_expired_at: undefined,
       // paid_at: undefined,
       status: StatusVoucherPackageOrder.WAITING,
     };
@@ -93,6 +100,47 @@ export class VoucherPackagesCustomersService {
       const voucherPackageOrder = await this.voucherPackageOrderRepository.save(
         paramCreate,
       );
+
+      //=>Tembak create payment
+      const item: CreatePayment = {
+        order_id: voucherPackageOrder.id,
+        payment_method_id: voucherPackageOrder.payment_method_id,
+        customer_id: voucherPackageOrder.customer_id,
+        price: voucherPackage.price,
+        // card: {
+        //   number: '1234123412341234',
+        //   expired_month: 3,
+        //   expired_year: 2030,
+        // },
+      };
+      const payment = await this.paymentService
+        .createPayment(item)
+        .catch((error) => {
+          const errors: RMessage = {
+            value: '',
+            property: 'payment',
+            constraint: [
+              this.messageService.get('general.create.fail'),
+              this.messageService.get('general.order.paymentFail'),
+              {
+                code: 'PAYMENT_GATEWAY_FAILED',
+                message: error.response?.[0].constraint[0] || '',
+              },
+            ],
+          };
+          throw new BadRequestException(
+            this.responseService.error(
+              HttpStatus.BAD_REQUEST,
+              errors,
+              'Bad Request',
+            ),
+          );
+        });
+
+      //=>Update order with payment expirate at, ongkir, total,
+      voucherPackageOrder.payment_expired_at = payment.data.expired_at;
+      voucherPackageOrder.payment_info = payment.data;
+      await this.voucherPackageOrderRepository.save(voucherPackageOrder);
 
       return voucherPackageOrder;
     } catch (error) {
@@ -114,29 +162,28 @@ export class VoucherPackagesCustomersService {
     }
   }
 
-  mainQuery(): SelectQueryBuilder<VoucherPackageOrderDocument> {
-    const query = this.voucherPackageOrderRepository
-      .createQueryBuilder('voucher_package_order')
-      .leftJoinAndSelect(
-        'voucher_package_order.voucher_package',
-        'voucher_package',
-      )
-      .leftJoinAndSelect(
-        'voucher_package.voucher_package_master_vouchers',
-        'voucher_package_master_vouchers',
-      )
-      .leftJoinAndSelect(
-        'voucher_package_master_vouchers.master_voucher',
-        'master_voucher',
+  mainQuery(user: User): SelectQueryBuilder<VoucherPackageDocument> {
+    const query = this.voucherPackageService
+      .mainQuery()
+      .innerJoinAndSelect(
+        'voucher_package.voucher_package_orders',
+        'voucher_package_orders',
+        'voucher_package_orders.customer_id = :customer_id',
+        {
+          customer_id: user.id,
+        },
       );
     return query;
   }
 
-  async getList(params: ListVoucherPackageOrderDto): Promise<{
+  async getList(
+    params: ListVoucherPackageOrderDto,
+    user: User,
+  ): Promise<{
     current_page: number;
     total_item: number;
     limit: number;
-    items: VoucherPackageOrderDocument[];
+    items: VoucherPackageDocument[];
   }> {
     try {
       const page = params.page || 1;
@@ -146,11 +193,6 @@ export class VoucherPackagesCustomersService {
       let where = {};
 
       if (params.target) where = { ...where, target: params.target };
-      if (params.status) {
-        where = { ...where, status: params.status };
-      } else {
-        where = { ...where, status: StatusVoucherPackageOrder.WAITING };
-      }
       if (params.search) where = { ...where, name: Like(`%${params.search}%`) };
       if (params.periode_start) {
         where = { ...where, created_at: MoreThanOrEqual(params.periode_start) };
@@ -165,7 +207,18 @@ export class VoucherPackagesCustomersService {
         where = { ...where, price: LessThanOrEqual(params.price_max) };
       }
 
-      const query = this.mainQuery().where(where).take(limit).skip(offset);
+      const query = this.mainQuery(user).where(where);
+      if (params.status) {
+        query.andWhere('voucher_package_orders.status = :status', {
+          status: params.status,
+        });
+      } else {
+        query.andWhere('voucher_package_orders.status = :status', {
+          status: StatusVoucherPackageOrder.WAITING,
+        });
+      }
+
+      query.take(limit).skip(offset);
 
       const items = await query.getMany();
       const count = await query.getCount();
@@ -197,9 +250,12 @@ export class VoucherPackagesCustomersService {
     }
   }
 
-  async getDetail(id) {
+  async getDetail(
+    voucherPackageid: string,
+    user: User,
+  ): Promise<VoucherPackageDocument> {
     try {
-      const query = this.mainQuery().where({ id });
+      const query = this.mainQuery(user).where({ id: voucherPackageid });
       return query.getOne();
     } catch (error) {
       this.logger.log(error);

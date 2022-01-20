@@ -61,6 +61,8 @@ export class VoucherPackagesService {
       status: StatusVoucherPackage.SCHEDULED,
     };
     try {
+      //TODO: jika date_start di bawah waktu sekarang maka status = ACTIVE
+
       const voucherPackage = await this.voucherPackageRepository.save(
         createObj,
       );
@@ -331,7 +333,7 @@ export class VoucherPackagesService {
             value: voucherPackageId,
             property: 'id',
             constraint: [
-              this.messageService.get('general.general.id_notfound'),
+              this.messageService.get('general.voucher.id_notfound'),
             ],
           },
           'Bad Request',
@@ -341,6 +343,7 @@ export class VoucherPackagesService {
 
     return voucherPackage;
   }
+
   async getAndValidateAvailableVoucherPackageById(
     voucherPackageId: string,
   ): Promise<VoucherPackageDocument> {
@@ -357,7 +360,7 @@ export class VoucherPackagesService {
             value: voucherPackage.status,
             property: 'status',
             constraint: [
-              this.messageService.get('general.general.notAvailable'),
+              this.messageService.get('general.voucher.notAvailable'),
             ],
           },
           'Bad Request',

@@ -68,7 +68,7 @@ export class VoucherPackagesController {
       createVoucherPackageDto.date_end = new Date(
         `${createVoucherPackageDto.date_end} +${gmt_offset}`,
       );
-      this.dateTimeUtils.validateStartEndDateWithCurrentDate(
+      this.dateTimeUtils.validateStartEndDate(
         createVoucherPackageDto.date_start,
         createVoucherPackageDto.date_end,
       );
