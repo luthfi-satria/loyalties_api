@@ -79,6 +79,7 @@ export class VoucherPackageDocument {
   @OneToMany(
     () => VoucherPackageOrderDocument,
     (voucher_package_orders) => voucher_package_orders.voucher_package,
+    { cascade: true },
   )
   voucher_package_orders: VoucherPackageOrderDocument[];
 

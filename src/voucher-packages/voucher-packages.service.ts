@@ -62,7 +62,11 @@ export class VoucherPackagesService {
       status: StatusVoucherPackage.SCHEDULED,
     };
     try {
-      //TODO: jika date_start di bawah waktu sekarang maka status = ACTIVE
+      const now = new Date();
+      const startDate = new Date(params.date_start);
+      if (startDate <= now) {
+        createObj.status = StatusVoucherPackage.ACTIVE;
+      }
 
       const voucherPackage = await this.voucherPackageRepository.save(
         createObj,
@@ -334,7 +338,7 @@ export class VoucherPackagesService {
             value: voucherPackageId,
             property: 'id',
             constraint: [
-              this.messageService.get('general.voucher.id_notfound'),
+              this.messageService.get('general.general.dataNotFound'),
             ],
           },
           'Bad Request',
@@ -600,6 +604,43 @@ export class VoucherPackagesService {
             constraint: [
               this.messageService.get('general.update.fail'),
               error.message,
+            ],
+          },
+          'Bad Request',
+        ),
+      );
+    }
+  }
+
+  //FUNCTION
+  validateStartEndDate(dateStart: Date, dateEnd: Date) {
+    const now = new Date();
+    const startDate = new Date(dateStart);
+    const endDate = new Date(dateEnd);
+    if (endDate < now) {
+      throw new BadRequestException(
+        this.responseService.error(
+          HttpStatus.BAD_REQUEST,
+          {
+            value: dateEnd.toString(),
+            property: 'date_end',
+            constraint: [
+              this.messageService.get('general.general.invalidGreaterDate'),
+            ],
+          },
+          'Bad Request',
+        ),
+      );
+    }
+    if (startDate > endDate) {
+      throw new BadRequestException(
+        this.responseService.error(
+          HttpStatus.BAD_REQUEST,
+          {
+            value: [dateStart, dateEnd].join(','),
+            property: 'date',
+            constraint: [
+              this.messageService.get('general.general.invalidStartEndDate'),
             ],
           },
           'Bad Request',

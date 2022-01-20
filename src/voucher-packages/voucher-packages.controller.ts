@@ -35,7 +35,6 @@ export class VoucherPackagesController {
     private readonly voucherPackagesService: VoucherPackagesService,
     private readonly messageService: MessageService,
     private readonly responseService: ResponseService,
-    private readonly dateTimeUtils: DateTimeUtils,
     private readonly imageValidationService: ImageValidationService,
     private readonly storage: CommonStorageService,
   ) {}
@@ -68,7 +67,7 @@ export class VoucherPackagesController {
       createVoucherPackageDto.date_end = new Date(
         `${createVoucherPackageDto.date_end} +${gmt_offset}`,
       );
-      this.dateTimeUtils.validateStartEndDate(
+      this.voucherPackagesService.validateStartEndDate(
         createVoucherPackageDto.date_start,
         createVoucherPackageDto.date_end,
       );
