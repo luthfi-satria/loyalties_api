@@ -255,24 +255,28 @@ export class VoucherService {
           const date_start = new Date();
           const days = this.getDurationInt(master_voucher.duration);
           const date_end = moment(date_start).add(days, 'days');
-          const postVoucherData = {
-            voucher_code_id: voucherCode.id,
-            master_voucher_id: master_voucher.id,
-            customer_id,
-            code: voucherCode.code,
-            type: master_voucher.type,
-            order_type: master_voucher.order_type,
-            target: voucherCode.target,
-            status: StatusVoucherEnum.ACTIVE,
-            date_start,
-            date_end,
-            minimum_transaction: master_voucher.minimum_transaction,
-            discount_type: master_voucher.discount_type,
-            discount_value: master_voucher.discount_value,
-            discount_maximum: master_voucher.discount_maximum,
-            is_combinable: master_voucher.is_combinable,
-          };
-          postVoucherDatas.push(postVoucherData);
+
+          const quantity = master_voucher_voucher_code.quantity;
+          for (let y = 0; y < quantity; y++) {
+            const postVoucherData = {
+              voucher_code_id: voucherCode.id,
+              master_voucher_id: master_voucher.id,
+              customer_id,
+              code: voucherCode.code,
+              type: master_voucher.type,
+              order_type: master_voucher.order_type,
+              target: voucherCode.target,
+              status: StatusVoucherEnum.ACTIVE,
+              date_start,
+              date_end,
+              minimum_transaction: master_voucher.minimum_transaction,
+              discount_type: master_voucher.discount_type,
+              discount_value: master_voucher.discount_value,
+              discount_maximum: master_voucher.discount_maximum,
+              is_combinable: master_voucher.is_combinable,
+            };
+            postVoucherDatas.push(postVoucherData);
+          }
         }
         await this.createVoucherBulk(postVoucherDatas);
       }
