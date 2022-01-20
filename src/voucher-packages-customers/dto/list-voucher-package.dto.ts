@@ -1,6 +1,8 @@
 import { IsIn, IsNumberString, IsOptional, IsString } from 'class-validator';
-import { TargetVoucherPackage } from 'src/voucher-packages/entities/voucher-package.entity';
-import { StatusVoucherPackageOrder } from '../entities/voucher-packages-order.entity';
+import {
+  StatusVoucherPackage,
+  TargetVoucherPackage,
+} from 'src/voucher-packages/entities/voucher-package.entity';
 
 export class ListVoucherPackageOrderDto {
   @IsOptional()
@@ -23,8 +25,8 @@ export class ListVoucherPackageOrderDto {
   periode_end: Date;
 
   @IsOptional()
-  @IsIn(Object.values(StatusVoucherPackageOrder))
-  status: StatusVoucherPackageOrder;
+  @IsIn(Object.values(StatusVoucherPackage))
+  status: StatusVoucherPackage;
 
   @IsOptional()
   @IsNumberString()
