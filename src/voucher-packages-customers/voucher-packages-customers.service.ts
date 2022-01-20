@@ -78,13 +78,6 @@ export class VoucherPackagesCustomersService {
       );
     }
 
-    console.log(
-      '===========================Start Debug =================================\n',
-      new Date(Date.now()).toLocaleString(),
-      '\n',
-      paymentMethod,
-      '\n============================End Debug ==================================',
-    );
     const paramCreate: Partial<VoucherPackageOrderDocument> = {
       customer_id: user.id,
       voucher_package: undefined,
@@ -162,31 +155,71 @@ export class VoucherPackagesCustomersService {
     }
   }
 
-  mainQuery(
+  async cancelOrder(
+    voucherPackageOrderId: string,
     user: User,
-    status?: StatusVoucherPackageOrder,
-  ): SelectQueryBuilder<VoucherPackageDocument> {
-    const query = this.voucherPackageService.mainQuery();
-    if (status) {
-      query.leftJoinAndSelect(
-        'voucher_package.voucher_package_orders',
-        'voucher_package_orders',
-        'voucher_package_orders.customer_id = :customer_id AND voucher_package_orders.status = :order_status',
-        {
-          customer_id: user.id,
-          order_status: status,
-        },
-      );
-    } else {
-      query.leftJoinAndSelect(
-        'voucher_package.voucher_package_orders',
-        'voucher_package_orders',
-        'voucher_package_orders.customer_id = :customer_id',
-        {
-          customer_id: user.id,
-        },
+  ): Promise<VoucherPackageDocument> {
+    const voucherPackage = await this.getAndValidateVoucherPackageOrderById(
+      voucherPackageOrderId,
+      user,
+    );
+    if (
+      voucherPackage.voucher_package_orders.length &&
+      voucherPackage.voucher_package_orders[0].status !=
+        StatusVoucherPackageOrder.WAITING
+    ) {
+      throw new BadRequestException(
+        this.responseService.error(
+          HttpStatus.BAD_REQUEST,
+          {
+            value: voucherPackage.voucher_package_orders[0].status,
+            property: 'status',
+            constraint: [
+              this.messageService.get('general.voucher.notAvailable'),
+            ],
+          },
+          'Bad Request',
+        ),
       );
     }
+    voucherPackage.voucher_package_orders[0].status =
+      StatusVoucherPackageOrder.CANCELLED;
+    try {
+      await this.voucherPackageOrderRepository.save(
+        voucherPackage.voucher_package_orders[0],
+      );
+
+      return voucherPackage;
+    } catch (error) {
+      this.logger.log(error);
+      throw new BadRequestException(
+        this.responseService.error(
+          HttpStatus.BAD_REQUEST,
+          {
+            value: '',
+            property: '',
+            constraint: [
+              this.messageService.get('general.create.fail'),
+              error.message,
+            ],
+          },
+          'Bad Request',
+        ),
+      );
+    }
+  }
+
+  mainQuery(user: User): SelectQueryBuilder<VoucherPackageDocument> {
+    const query = this.voucherPackageService.mainQuery();
+    query.leftJoinAndSelect(
+      'voucher_package.voucher_package_orders',
+      'voucher_package_orders',
+      'voucher_package_orders.customer_id = :customer_id AND voucher_package_orders.status = :order_status',
+      {
+        customer_id: user.id,
+        order_status: StatusVoucherPackageOrder.WAITING,
+      },
+    );
 
     return query;
   }
@@ -208,6 +241,7 @@ export class VoucherPackagesCustomersService {
       let where = {};
 
       if (params.target) where = { ...where, target: params.target };
+      if (params.status) where = { ...where, status: params.status };
       if (params.search) where = { ...where, name: Like(`%${params.search}%`) };
       if (params.periode_start) {
         where = { ...where, created_at: MoreThanOrEqual(params.periode_start) };
@@ -222,7 +256,7 @@ export class VoucherPackagesCustomersService {
         where = { ...where, price: LessThanOrEqual(params.price_max) };
       }
 
-      const query = this.mainQuery(user, params.status).where(where);
+      const query = this.mainQuery(user).where(where);
 
       query.take(limit).skip(offset);
 
@@ -280,5 +314,33 @@ export class VoucherPackagesCustomersService {
         ),
       );
     }
+  }
+
+  async getAndValidateVoucherPackageOrderById(
+    voucherPackageId: string,
+    user: User,
+  ): Promise<VoucherPackageDocument> {
+    const voucherPackage = await this.getDetail(voucherPackageId, user).catch(
+      (error) => {
+        throw error;
+      },
+    );
+    if (!voucherPackage || !voucherPackage.voucher_package_orders.length) {
+      throw new BadRequestException(
+        this.responseService.error(
+          HttpStatus.BAD_REQUEST,
+          {
+            value: voucherPackageId,
+            property: 'id',
+            constraint: [
+              this.messageService.get('general.general.dataNotFound'),
+            ],
+          },
+          'Bad Request',
+        ),
+      );
+    }
+
+    return voucherPackage;
   }
 }

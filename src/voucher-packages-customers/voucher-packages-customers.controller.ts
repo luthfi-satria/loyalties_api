@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, Put } from '@nestjs/common';
 import { VoucherPackagesCustomersService } from './voucher-packages-customers.service';
 import { CreateVoucherPackagesCustomerDto } from './dto/create-voucher-packages-customer.dto';
 import { UserType } from 'src/auth/guard/user-type.decorator';
@@ -34,6 +34,29 @@ export class VoucherPackagesCustomersController {
       return this.responseService.success(
         true,
         this.messageService.get('general.create.success'),
+        result,
+      );
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+
+  @Put(':voucher_package_id/cancelled')
+  @UserType('customer')
+  @AuthJwtGuard()
+  async cancelOrder(
+    @GetUser() user: User,
+    @Param('voucher_package_id') voucherPackageId: string,
+  ): Promise<RSuccessMessage> {
+    try {
+      const result = await this.voucherPackagesCustomersService.cancelOrder(
+        voucherPackageId,
+        user,
+      );
+      return this.responseService.success(
+        true,
+        this.messageService.get('general.update.success'),
         result,
       );
     } catch (error) {

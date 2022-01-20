@@ -333,7 +333,7 @@ export class VoucherPackagesService {
             value: voucherPackageId,
             property: 'id',
             constraint: [
-              this.messageService.get('general.voucher.id_notfound'),
+              this.messageService.get('general.general.dataNotFound'),
             ],
           },
           'Bad Request',
