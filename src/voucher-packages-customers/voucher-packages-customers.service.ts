@@ -162,10 +162,23 @@ export class VoucherPackagesCustomersService {
     }
   }
 
-  mainQuery(user: User): SelectQueryBuilder<VoucherPackageDocument> {
-    const query = this.voucherPackageService
-      .mainQuery()
-      .innerJoinAndSelect(
+  mainQuery(
+    user: User,
+    status?: StatusVoucherPackageOrder,
+  ): SelectQueryBuilder<VoucherPackageDocument> {
+    const query = this.voucherPackageService.mainQuery();
+    if (status) {
+      query.leftJoinAndSelect(
+        'voucher_package.voucher_package_orders',
+        'voucher_package_orders',
+        'voucher_package_orders.customer_id = :customer_id AND voucher_package_orders.status = :order_status',
+        {
+          customer_id: user.id,
+          order_status: status,
+        },
+      );
+    } else {
+      query.leftJoinAndSelect(
         'voucher_package.voucher_package_orders',
         'voucher_package_orders',
         'voucher_package_orders.customer_id = :customer_id',
@@ -173,6 +186,8 @@ export class VoucherPackagesCustomersService {
           customer_id: user.id,
         },
       );
+    }
+
     return query;
   }
 
@@ -207,16 +222,7 @@ export class VoucherPackagesCustomersService {
         where = { ...where, price: LessThanOrEqual(params.price_max) };
       }
 
-      const query = this.mainQuery(user).where(where);
-      if (params.status) {
-        query.andWhere('voucher_package_orders.status = :status', {
-          status: params.status,
-        });
-      } else {
-        query.andWhere('voucher_package_orders.status = :status', {
-          status: StatusVoucherPackageOrder.WAITING,
-        });
-      }
+      const query = this.mainQuery(user, params.status).where(where);
 
       query.take(limit).skip(offset);
 
