@@ -7,6 +7,10 @@ import {
 import { User } from 'src/auth/guard/interface/user.interface';
 import { CreatePayment } from 'src/common/payment/interfaces/payment.interface';
 import { PaymentService } from 'src/common/payment/payment.service';
+import {
+  CallBackOrderExpiredDto,
+  CallBackOrderSuccessDto,
+} from 'src/internal/dto/order-voucher-package.dto';
 import { MessageService } from 'src/message/message.service';
 import { RMessage } from 'src/response/response.interface';
 import { ResponseService } from 'src/response/response.service';
@@ -316,6 +320,122 @@ export class VoucherPackagesCustomersService {
     }
   }
 
+  async orderVoucherPackageSuccess(
+    data: CallBackOrderSuccessDto,
+  ): Promise<any> {
+    try {
+      const orderId = data.order_id || null;
+
+      //=> cari order
+      const findOrder = await this.voucherPackageOrderRepository.findOneOrFail(
+        orderId,
+      );
+
+      //=> proteksi status order
+      if (findOrder.status != StatusVoucherPackageOrder.WAITING) {
+        this.errorGenerator(
+          findOrder.status,
+          'status',
+          'general.order.statusNotAllowed',
+        );
+      }
+
+      //=> update status ke paid. paid_at dng new date
+      findOrder.status = StatusVoucherPackageOrder.PAID;
+      findOrder.paid_at = new Date();
+      const updatedOrder = await this.voucherPackageOrderRepository.save(
+        findOrder,
+      );
+
+      //=> generate vouchers
+      await this.voucherPackageService.orderVoucherPackage(
+        findOrder.voucher_package_id,
+        findOrder.customer_id,
+      );
+
+      return updatedOrder;
+    } catch (error) {
+      this.errorReport(error, 'general.update.fail');
+    }
+  }
+
+  async orderVoucherPackageExpired(
+    data: CallBackOrderExpiredDto,
+  ): Promise<any> {
+    try {
+      //=> Get informasi order
+      const orderId = data.order_id || null;
+
+      //=> cari order
+      const findOrder = await this.voucherPackageOrderRepository.findOneOrFail(
+        orderId,
+      );
+
+      //=> proteksi status order
+      if (findOrder.status != StatusVoucherPackageOrder.WAITING) {
+        this.errorGenerator(
+          findOrder.status,
+          'status',
+          'general.order.statusNotAllowed',
+        );
+      }
+
+      //=> update status ke expired
+      findOrder.status = StatusVoucherPackageOrder.EXPIRED;
+      return this.voucherPackageOrderRepository.save(findOrder);
+    } catch (error) {
+      this.errorReport(error, 'general.update.fail');
+    }
+  }
+
+  errorReport(error: any, message: string) {
+    this.logger.error(error);
+    console.error(error);
+    if (error.message == 'Bad Request Exception') {
+      throw error;
+    } else {
+      const errors: RMessage = {
+        value: '',
+        property: '',
+        constraint: [this.messageService.get(message), error.message],
+      };
+      throw new BadRequestException(
+        this.responseService.error(
+          HttpStatus.BAD_REQUEST,
+          errors,
+          'Bad Request',
+        ),
+      );
+    }
+  }
+
+  errorGenerator(value: string, property: string, constraint: string | any[]) {
+    if (typeof constraint == 'string') {
+      throw new BadRequestException(
+        this.responseService.error(
+          HttpStatus.BAD_REQUEST,
+          {
+            value,
+            property,
+            constraint: [this.messageService.get(constraint)],
+          },
+          'Bad Request',
+        ),
+      );
+    } else {
+      throw new BadRequestException(
+        this.responseService.error(
+          HttpStatus.BAD_REQUEST,
+          {
+            value,
+            property,
+            constraint: constraint,
+          },
+          'Bad Request',
+        ),
+      );
+    }
+  }
   async getAndValidateVoucherPackageOrderById(
     voucherPackageId: string,
     user: User,
