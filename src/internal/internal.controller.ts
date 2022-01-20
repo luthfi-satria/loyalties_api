@@ -67,4 +67,24 @@ export class InternalController {
       throw error;
     }
   }
+
+  @Post(':order_id/payment-expired')
+  @ResponseStatusCode()
+  async orderVoucherPackageExpired(
+    @Param('order_id') order_id: string,
+  ): Promise<any> {
+    try {
+      const result = await this.internalService.orderVoucherPackageExpired({
+        order_id,
+      });
+      return this.responseService.success(
+        true,
+        this.messageService.get('general.general.success'),
+        result,
+      );
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
 }

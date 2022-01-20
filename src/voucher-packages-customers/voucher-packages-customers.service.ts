@@ -7,7 +7,10 @@ import {
 import { User } from 'src/auth/guard/interface/user.interface';
 import { CreatePayment } from 'src/common/payment/interfaces/payment.interface';
 import { PaymentService } from 'src/common/payment/payment.service';
-import { CallBackOrderSuccessDto } from 'src/internal/dto/order-voucher-package.dto';
+import {
+  CallBackOrderExpiredDto,
+  CallBackOrderSuccessDto,
+} from 'src/internal/dto/order-voucher-package.dto';
 import { MessageService } from 'src/message/message.service';
 import { RMessage } from 'src/response/response.interface';
 import { ResponseService } from 'src/response/response.service';
@@ -351,6 +354,35 @@ export class VoucherPackagesCustomersService {
       );
 
       return updatedOrder;
+    } catch (error) {
+      this.errorReport(error, 'general.update.fail');
+    }
+  }
+
+  async orderVoucherPackageExpired(
+    data: CallBackOrderExpiredDto,
+  ): Promise<any> {
+    try {
+      //=> Get informasi order
+      const orderId = data.order_id || null;
+
+      //=> cari order
+      const findOrder = await this.voucherPackageOrderRepository.findOneOrFail(
+        orderId,
+      );
+
+      //=> proteksi status order
+      if (findOrder.status != StatusVoucherPackageOrder.WAITING) {
+        this.errorGenerator(
+          findOrder.status,
+          'status',
+          'general.order.statusNotAllowed',
+        );
+      }
+
+      //=> update status ke expired
+      findOrder.status = StatusVoucherPackageOrder.EXPIRED;
+      return this.voucherPackageOrderRepository.save(findOrder);
     } catch (error) {
       this.errorReport(error, 'general.update.fail');
     }
