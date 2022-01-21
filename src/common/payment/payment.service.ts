@@ -6,6 +6,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { firstValueFrom, map } from 'rxjs';
+import { PaymentMethodDTO } from './dto/payment_method.dto';
 import { CreatePayment, GetPaymentsBulk } from './interfaces/payment.interface';
 
 @Injectable()
@@ -72,12 +73,12 @@ export class PaymentService {
     }
   }
 
-  async getPaymentsBulk(data: GetPaymentsBulk): Promise<any> {
+  async getPaymentsBulk(data: GetPaymentsBulk): Promise<PaymentMethodDTO[]> {
     try {
       const headerRequest = {
         'Content-Type': 'application/json',
       };
-      return await firstValueFrom(
+      const payments: { payments: PaymentMethodDTO[] } = await firstValueFrom(
         this.httpService
           .get(
             `${process.env.BASEURL_PAYMENTS_SERVICE}/api/v1/payments/internal/payments/bulk`,
@@ -85,6 +86,7 @@ export class PaymentService {
           )
           .pipe(map((resp) => resp.data)),
       );
+      return payments.payments;
     } catch (e) {
       this.logger.error(
         `${process.env.BASEURL_PAYMENTS_SERVICE}/api/v1/payments/internal/payments/bulk ${e.message}`,

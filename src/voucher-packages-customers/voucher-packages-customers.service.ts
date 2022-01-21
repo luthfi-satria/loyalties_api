@@ -4,6 +4,7 @@ import {
   Injectable,
   Logger,
 } from '@nestjs/common';
+import _ from 'lodash';
 import { User } from 'src/auth/guard/interface/user.interface';
 import { CreatePayment } from 'src/common/payment/interfaces/payment.interface';
 import { PaymentService } from 'src/common/payment/payment.service';
@@ -51,7 +52,7 @@ export class VoucherPackagesCustomersService {
         params.voucher_package_id,
       );
 
-    const { payments } = await this.paymentService.getPaymentsBulk({
+    const payments = await this.paymentService.getPaymentsBulk({
       ids: [params.payment_method_id],
       isIncludeDeleted: false,
     });
@@ -264,8 +265,10 @@ export class VoucherPackagesCustomersService {
 
       query.take(limit).skip(offset);
 
-      const items = await query.getMany();
+      let items = await query.getMany();
       const count = await query.getCount();
+
+      items = await this.assignObjectPaymentMethod(items);
 
       const listItems = {
         current_page: +page,
@@ -300,7 +303,11 @@ export class VoucherPackagesCustomersService {
   ): Promise<VoucherPackageDocument> {
     try {
       const query = this.mainQuery(user).where({ id: voucherPackageid });
-      return query.getOne();
+      const voucherPackage = await query.getOne();
+      const voucherPackages = await this.assignObjectPaymentMethod([
+        voucherPackage,
+      ]);
+      return voucherPackages[0];
     } catch (error) {
       this.logger.log(error);
       throw new BadRequestException(
@@ -386,6 +393,37 @@ export class VoucherPackagesCustomersService {
     } catch (error) {
       this.errorReport(error, 'general.update.fail');
     }
+  }
+
+  async assignObjectPaymentMethod(
+    voucherPackages: VoucherPackageDocument[],
+  ): Promise<VoucherPackageDocument[]> {
+    const paymentMethodIds = [];
+    for (let i = 0; i < voucherPackages.length; i++) {
+      const voucherPackage = voucherPackages[i];
+      for (let j = 0; j < voucherPackage.voucher_package_orders.length; j++) {
+        const voucherPackageOrder = voucherPackage.voucher_package_orders[j];
+        paymentMethodIds.push(voucherPackageOrder.payment_method_id);
+      }
+    }
+    if (!paymentMethodIds.length) {
+      return voucherPackages;
+    }
+    const paymentMethods = await this.paymentService.getPaymentsBulk({
+      ids: paymentMethodIds,
+      isIncludeDeleted: false,
+    });
+    for (let i = 0; i < voucherPackages.length; i++) {
+      const voucherPackage = voucherPackages[i];
+      for (let j = 0; j < voucherPackage.voucher_package_orders.length; j++) {
+        const voucherPackageOrder = voucherPackage.voucher_package_orders[j];
+        voucherPackageOrder.payment_method = _.find(paymentMethods, {
+          id: voucherPackageOrder.payment_method_id,
+        });
+      }
+    }
+
+    return voucherPackages;
   }
 
   errorReport(error: any, message: string) {

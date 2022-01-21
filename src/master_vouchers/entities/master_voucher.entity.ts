@@ -1,7 +1,6 @@
 import { MasterVoucherVoucherCodeDocument } from 'src/master_voucher_voucher_code/entities/master_voucher_voucher_code.entity';
 import { VoucherPackagesMasterVouchersDocument } from 'src/voucher-packages/entities/voucher-package-master-voucher.entity';
 import { VoucherDocument } from 'src/voucher/entities/voucher.entity';
-import { VoucherCodeDocument } from 'src/voucher_code/entities/voucher_code.entity';
 import {
   Column,
   CreateDateColumn,

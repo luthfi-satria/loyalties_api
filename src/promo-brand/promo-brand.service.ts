@@ -277,7 +277,7 @@ export class PromoBrandService {
       }
 
       if (isQuotaAvailable) {
-        query.leftJoinAndSelect(
+        query.leftJoin(
           (qb) =>
             qb
               .select(
@@ -295,7 +295,11 @@ export class PromoBrandService {
         );
 
         query.andWhere(
-          'usage.used_count < pbrand.quota OR pbrand.quota IS NULL OR pbrand.quota = 0',
+          new Brackets((qb) => {
+            qb.where('usage.used_count < pbrand.quota');
+            qb.orWhere('pbrand.quota IS NULL');
+            qb.orWhere('pbrand.quota = 0');
+          }),
         );
       }
 
@@ -493,10 +497,12 @@ export class PromoBrandService {
 
   async getActivePromoBrands(data: GetPromoBrandsDto): Promise<any> {
     try {
-      const targetList = ['ALL'];
+      const targetList = [];
       const status = 'ACTIVE';
 
-      targetList.push(data.target);
+      if (data.target) {
+        targetList.push(...['ALL', data.target]);
+      }
 
       const { items } = await this.fetchPromoBrandsFromDb({
         promo_brand_id: '',

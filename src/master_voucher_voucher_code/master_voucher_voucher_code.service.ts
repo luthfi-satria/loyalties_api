@@ -19,8 +19,6 @@ export class MasterVoucherVoucherCodeService {
     try {
       const loyaltiesMasterVoucherId = data.loyaltiesMasterVoucherId || null;
       const loyaltiesVoucherCodeId = data.loyaltiesVoucherCodeId || null;
-      console.log(this.masterVoucherVoucherCodeRepository, 'exis?');
-      this.logger.debug('test');
 
       const query = this.masterVoucherVoucherCodeRepository
         .createQueryBuilder('tab')

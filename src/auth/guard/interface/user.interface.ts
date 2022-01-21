@@ -20,4 +20,5 @@ export interface User {
   user_type: UserType;
   role: Role;
   level: Level;
+  created_at?: Date;
 }
