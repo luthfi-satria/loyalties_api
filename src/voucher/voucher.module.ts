@@ -1,3 +1,4 @@
+import { VoucherPackagesMasterVouchersRepository } from './../voucher-packages/repository/voucher_package._master_voucher.repository';
 import { VoucherController } from './voucher.controller';
 import { VoucherCodesRepository } from './../voucher_code/repository/voucher_code.repository';
 import { forwardRef, Module } from '@nestjs/common';
@@ -13,7 +14,11 @@ import { VoucherCodeModule } from 'src/voucher_code/voucher_code.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([VouchersRepository, VoucherCodesRepository]),
+    TypeOrmModule.forFeature([
+      VouchersRepository,
+      VoucherCodesRepository,
+      VoucherPackagesMasterVouchersRepository,
+    ]),
     ConfigModule,
     HttpModule,
     forwardRef(() => CommonModule),
