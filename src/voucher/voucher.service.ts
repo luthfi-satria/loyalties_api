@@ -72,14 +72,24 @@ export class VoucherService {
     data: GetActiveTargetVouchersDto,
   ): Promise<VoucherDocument[]> {
     try {
-      const targetList = ['ALL', data.target];
-      return this.vouchersRepository.find({
-        where: {
-          customer_id: data.customer_id,
-          status: 'ACTIVE',
-          target: Any(targetList),
-        },
-      });
+      const targetList = ['ALL'];
+      if (data.target) {
+        targetList.push(data.target);
+        return this.vouchersRepository.find({
+          where: {
+            customer_id: data.customer_id,
+            status: 'ACTIVE',
+            target: Any(targetList),
+          },
+        });
+      } else {
+        return this.vouchersRepository.find({
+          where: {
+            customer_id: data.customer_id,
+            status: 'ACTIVE',
+          },
+        });
+      }
     } catch (error) {
       this.logger.log(error);
       throw new BadRequestException(

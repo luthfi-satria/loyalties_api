@@ -18,6 +18,7 @@ import { PromoBrandModule } from './promo-brand/promo-brand.module';
 import { VoucherPackagesCustomersModule } from './voucher-packages-customers/voucher-packages-customers.module';
 import { PromoProviderUsageModule } from './promo-provider-usage/promo-provider-usage.module';
 import { PromoBrandUsageModule } from './promo-brand-usage/promo-brand-usage.module';
+import { PromoVoucherModule } from './promo-voucher/promo-voucher.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { PromoBrandUsageModule } from './promo-brand-usage/promo-brand-usage.mod
     InternalModule,
     VoucherPackagesModule,
     PromoBrandModule,
+    PromoVoucherModule,
     VoucherPackagesCustomersModule,
     PromoProviderUsageModule,
     PromoBrandUsageModule,

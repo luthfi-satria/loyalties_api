@@ -286,7 +286,7 @@ export class PromoProviderService {
       }
 
       if (isQuotaAvailable) {
-        query.leftJoinAndSelect(
+        query.leftJoin(
           (qb) =>
             qb
               .select(
@@ -304,7 +304,11 @@ export class PromoProviderService {
         );
 
         query.andWhere(
-          'usage.used_count < ppro.quota OR ppro.quota IS NULL OR ppro.quota = 0',
+          new Brackets((qb) => {
+            qb.where('usage.used_count < ppro.quota');
+            qb.orWhere('ppro.quota IS NULL');
+            qb.orWhere('ppro.quota = 0');
+          }),
         );
       }
 
@@ -312,8 +316,6 @@ export class PromoProviderService {
         .orderBy('ppro.created_at', 'DESC')
         .skip((currentPage - 1) * perPage)
         .take(perPage);
-
-      console.log(await query.getRawMany());
 
       const [items, count] = await query.getManyAndCount();
 
@@ -744,16 +746,12 @@ export class PromoProviderService {
 
   async getActivePromoProviders(data: GetPromoProvidersDto): Promise<any> {
     try {
-      const targetList = ['ALL'];
-      // const orderTypeList = ['DELIVERY_AND_PICKUP'];
-      // const cartTotal = data.cart_total || null;
+      const targetList = [];
       const status = 'ACTIVE';
 
-      targetList.push(data.target);
-
-      // const orderType =
-      //   data.order_type === 'DELIVERY' ? 'DELIVERY_ONLY' : 'PICKUP_ONLY';
-      // orderTypeList.push(orderType);
+      if (data.target) {
+        targetList.push(...['ALL', data.target]);
+      }
 
       const { items } = await this.fetchPromoProvidersFromDb({
         promo_provider_id: '',
