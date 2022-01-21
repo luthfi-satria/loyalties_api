@@ -130,6 +130,10 @@ export default {
       code: 'CANCEL_OUT_OF_TIME',
       message: 'Tidak dapat membatalkan order diluar batas waktu pembatalan.',
     },
+    getTargetFail: {
+      code: 'GET_DATA_TARGET_FAILED',
+      message: 'Tidak dapat mengambil data.',
+    },
   },
   merchant: {
     storeClosed: {

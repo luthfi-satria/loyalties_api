@@ -27,6 +27,7 @@ import { PaymentService } from './payment/payment.service';
 import { VoucherModule } from 'src/voucher/voucher.module';
 import { PromoProviderUsageModule } from 'src/promo-provider-usage/promo-provider-usage.module';
 import { PromoBrandUsageModule } from 'src/promo-brand-usage/promo-brand-usage.module';
+import { OrderService } from './order/order.service';
 
 @Global()
 @Module({
@@ -82,6 +83,7 @@ import { PromoBrandUsageModule } from 'src/promo-brand-usage/promo-brand-usage.m
     VoucherPackagesService,
     MasterVoucherService,
     PaymentService,
+    OrderService,
   ],
   exports: [
     RedisPromoProviderService,
@@ -94,6 +96,7 @@ import { PromoBrandUsageModule } from 'src/promo-brand-usage/promo-brand-usage.m
     RedisPromoBrandProcessor,
     CommonStorageService,
     PaymentService,
+    OrderService,
   ],
   controllers: [NatsController],
 })
