@@ -35,6 +35,7 @@ import {
 import {
   DetailPromoBrandDto,
   ExtendedListPromoBrandDto,
+  GetPromoBrandsDto,
   ListPromoBrandDto,
 } from './dto/list-promo-brand.dto';
 import {
@@ -490,211 +491,35 @@ export class PromoBrandService {
     }
   }
 
-  // async getPromoVouchers(data: GetPromoVouchersDto): Promise<any> {
-  //   try {
-  //     const target = data.target;
-  //     const orderType = data.order_type;
-  //     const cartTotal = data.cart_total || null;
-  //     const customerId = data.customer_id;
-  //     const deliveryFee = data.delivery_fee || 0;
+  async getActivePromoBrands(data: GetPromoBrandsDto): Promise<any> {
+    try {
+      const targetList = ['ALL'];
+      const status = 'ACTIVE';
 
-  //     const promoProviders = await this.getPromoProviders({
-  //       target: target,
-  //     });
+      targetList.push(data.target);
 
-  //     const vouchers = await this.voucherService.getActiveTargetVouchers({
-  //       customer_id: customerId,
-  //       target: target,
-  //     });
+      const { items } = await this.fetchPromoBrandsFromDb({
+        promo_brand_id: '',
+        limit: 9999,
+        page: 1,
+        target: '',
+        type: '',
+        periode_start: '',
+        periode_end: '',
+        status: status,
+        order_type: '',
+        cart_total: null,
+        target_list: targetList,
+        order_type_list: null,
+        is_quota_available: true,
+        merchant_id: data.merchant_id,
+      });
 
-  //     //=> cari promoProviders terbesar relatif ke order || delivery_fee
-  //     const maxNotCombineablePromo: {
-  //       promo: PromoProviderDocument;
-  //       discount: number;
-  //     } = {
-  //       promo: null,
-  //       discount: 0,
-  //     };
-  //     let accumulatedCombineablePromo = 0;
-  //     const notAvailablePromos = [];
-  //     const combineablePromos = [];
-  //     const leftoverPromos = [];
-  //     promoProviders.forEach((promo: PromoProviderDocument) => {
-  //       //=> check apakah promo bisa dipakai
-  //       if (!this.checkUsablePromo(promo, cartTotal, orderType)) {
-  //         notAvailablePromos.push(promo);
-  //       } else {
-  //         const discount = this.calculatePromoDiscount(
-  //           promo,
-  //           cartTotal,
-  //           deliveryFee,
-  //         );
-  //         if (promo.is_combinable) {
-  //           accumulatedCombineablePromo += discount;
-  //           combineablePromos.push(promo);
-  //         } else {
-  //           if (discount > maxNotCombineablePromo.discount) {
-  //             if (maxNotCombineablePromo.promo) {
-  //               leftoverPromos.push(maxNotCombineablePromo.promo);
-  //             }
-  //             maxNotCombineablePromo.promo = promo;
-  //             maxNotCombineablePromo.discount = discount;
-  //           } else {
-  //             leftoverPromos.push(promo);
-  //           }
-  //         }
-  //       }
-  //     });
-
-  //     //=> cari vouchers terbesar relatif ke order
-  //     const maxNotCombineableVoucher: {
-  //       voucher: VoucherDocument;
-  //       discount: number;
-  //     } = {
-  //       voucher: null,
-  //       discount: 0,
-  //     };
-  //     let accumulatedCombineableVoucher = 0;
-  //     const notAvailableVouchers = [];
-  //     const combineableVouchers = [];
-  //     const leftoverVouchers = [];
-  //     vouchers.forEach((voucher: VoucherDocument) => {
-  //       //=> check apakah voucher bisa dipakai
-  //       if (
-  //         !this.voucherService.checkUsableVoucher(voucher, cartTotal, orderType)
-  //       ) {
-  //         notAvailableVouchers.push();
-  //       } else {
-  //         const discount = this.voucherService.calculateVoucherDiscount(
-  //           voucher,
-  //           cartTotal,
-  //           deliveryFee,
-  //         );
-  //         if (voucher.is_combinable) {
-  //           accumulatedCombineableVoucher += discount;
-  //           combineableVouchers.push(voucher);
-  //         } else {
-  //           if (discount > maxNotCombineableVoucher.discount) {
-  //             if (maxNotCombineableVoucher.voucher) {
-  //               leftoverVouchers.push(maxNotCombineableVoucher.voucher);
-  //             }
-  //             maxNotCombineableVoucher.voucher = voucher;
-  //             maxNotCombineableVoucher.discount = discount;
-  //           } else {
-  //             leftoverVouchers.push(voucher);
-  //           }
-  //         }
-  //       }
-  //     });
-
-  //     const recommended = {
-  //       promos: [],
-  //       vouchers: [],
-  //     };
-  //     const available = {
-  //       promos: [],
-  //       vouchers: [],
-  //     };
-
-  //     //merge discount dan voucher
-  //     const totalCombineableDiscount =
-  //       accumulatedCombineablePromo + accumulatedCombineableVoucher;
-  //     const maxUncombineDiscount = this.findMaxPromoVoucher(
-  //       maxNotCombineablePromo,
-  //       maxNotCombineableVoucher,
-  //     );
-  //     if (maxUncombineDiscount?.item.discount >= totalCombineableDiscount) {
-  //       if (
-  //         maxUncombineDiscount.type == 'PROMO' &&
-  //         maxUncombineDiscount.item.promo
-  //       ) {
-  //         recommended.promos.push(maxUncombineDiscount.item.promo);
-  //         if (maxNotCombineableVoucher.voucher) {
-  //           leftoverVouchers.push(maxNotCombineableVoucher.voucher);
-  //         }
-  //       } else if (maxUncombineDiscount.type == 'VOUCHER') {
-  //         recommended.vouchers.push(maxUncombineDiscount.item.voucher);
-  //         if (maxNotCombineablePromo.promo) {
-  //           leftoverVouchers.push(maxNotCombineablePromo.promo);
-  //         }
-  //       }
-  //       available.promos.push(
-  //         ...combineablePromos,
-  //         ...leftoverPromos,
-  //         ...notAvailablePromos,
-  //       );
-  //       available.vouchers.push(
-  //         ...combineableVouchers,
-  //         ...leftoverVouchers,
-  //         ...notAvailableVouchers,
-  //       );
-  //     } else {
-  //       recommended.promos.push(...combineablePromos);
-  //       if (maxNotCombineablePromo.promo) {
-  //         available.promos.push(
-  //           maxNotCombineablePromo.promo,
-  //           ...leftoverPromos,
-  //           ...notAvailablePromos,
-  //         );
-  //       } else {
-  //         available.promos.push(...notAvailablePromos);
-  //       }
-
-  //       recommended.vouchers.push(...combineableVouchers);
-  //       if (maxNotCombineableVoucher.voucher) {
-  //         available.vouchers.push(
-  //           maxNotCombineableVoucher.voucher,
-  //           ...leftoverVouchers,
-  //           ...notAvailableVouchers,
-  //         );
-  //       } else {
-  //         available.vouchers.push(...notAvailableVouchers);
-  //       }
-  //     }
-
-  //     return {
-  //       recommended,
-  //       available,
-  //     };
-  //   } catch (error) {
-  //     this.errorReport(error, 'general.list.fail');
-  //   }
-  // }
-
-  // async getActivePromoProviders(data: GetPromoProvidersDto): Promise<any> {
-  //   try {
-  //     const targetList = ['ALL'];
-  //     // const orderTypeList = ['DELIVERY_AND_PICKUP'];
-  //     // const cartTotal = data.cart_total || null;
-  //     const status = 'ACTIVE';
-
-  //     targetList.push(data.target);
-
-  //     // const orderType =
-  //     //   data.order_type === 'DELIVERY' ? 'DELIVERY_ONLY' : 'PICKUP_ONLY';
-  //     // orderTypeList.push(orderType);
-
-  //     const { items } = await this.fetchPromoProvidersFromDb({
-  //       promo_provider_id: '',
-  //       limit: 9999,
-  //       page: 1,
-  //       target: '',
-  //       type: '',
-  //       periode_start: '',
-  //       periode_end: '',
-  //       status: status,
-  //       order_type: '',
-  //       cart_total: null,
-  //       target_list: targetList,
-  //       order_type_list: null,
-  //       is_quota_available: true,
-  //     });
-
-  //     return items;
-  //   } catch (error) {
-  //     this.errorReport(error, 'general.list.fail');
-  //   }
-  // }
+      return items;
+    } catch (error) {
+      this.errorReport(error, 'general.list.fail');
+    }
+  }
 
   async getRecommendedPromos(data: GetRecommendedPromosDto): Promise<any> {
     try {
@@ -775,8 +600,6 @@ export class PromoBrandService {
   }
 
   //=> Utility services. Only Services called internally defined here.
-
-  // generateRecommendedPromoVoucers()
 
   checkMaxUncombineableOrCombineable(
     promo: { promo: any; discount: number },

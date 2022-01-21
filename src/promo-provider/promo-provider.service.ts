@@ -11,6 +11,7 @@ import {
   CreateAutoStartPromoProviderDto,
 } from 'src/common/redis/dto/redis-promo-provider.dto';
 import { RedisPromoProviderService } from 'src/common/redis/promo-provider/redis-promo-provider.service';
+import { PromoBrandDocument } from 'src/database/entities/promo-brand.entity';
 import { PromoProviderUsageDocument } from 'src/database/entities/promo-provider-usage.entity';
 import {
   EnumPromoProviderDiscountType,
@@ -22,6 +23,7 @@ import {
 import { PromoProviderRepository } from 'src/database/repository/promo-provider.repository';
 import { GetPromoVouchersDto } from 'src/internal/dto/get-promo-vouchers.dto';
 import { MessageService } from 'src/message/message.service';
+import { PromoBrandService } from 'src/promo-brand/promo-brand.service';
 import { RMessage } from 'src/response/response.interface';
 import { ResponseService } from 'src/response/response.service';
 import { DateTimeUtils } from 'src/utils/date-time-utils';
@@ -54,6 +56,7 @@ export class PromoProviderService {
     private readonly promoProviderRepository: PromoProviderRepository,
     private readonly redisPromoProviderService: RedisPromoProviderService,
     private readonly voucherService: VoucherService,
+    private readonly promoBrandService: PromoBrandService,
   ) {}
 
   private readonly logger = new Logger(PromoProviderService.name);
@@ -542,9 +545,15 @@ export class PromoProviderService {
       const cartTotal = data.cart_total || null;
       const customerId = data.customer_id;
       const deliveryFee = data.delivery_fee || 0;
+      const merchantId = data.merchant_id;
 
       const promoProviders = await this.getActivePromoProviders({
         target: target,
+      });
+
+      const promoBrands = await this.promoBrandService.getActivePromoBrands({
+        target,
+        merchant_id: merchantId,
       });
 
       const vouchers = await this.voucherService.getActiveTargetVouchers({
@@ -554,7 +563,7 @@ export class PromoProviderService {
 
       //=> cari promoProviders terbesar relatif ke order || delivery_fee
       const maxNotCombineablePromo: {
-        promo: PromoProviderDocument;
+        promo: PromoProviderDocument | PromoBrandDocument;
         discount: number;
       } = {
         promo: null,
@@ -565,6 +574,33 @@ export class PromoProviderService {
       const combineablePromos = [];
       const leftoverPromos = [];
       promoProviders.forEach((promo: PromoProviderDocument) => {
+        //=> check apakah promo bisa dipakai
+        if (!this.checkUsablePromo(promo, cartTotal, orderType)) {
+          notAvailablePromos.push(promo);
+        } else {
+          const discount = this.calculatePromoDiscount(
+            promo,
+            cartTotal,
+            deliveryFee,
+          );
+          if (promo.is_combinable) {
+            accumulatedCombineablePromo += discount;
+            combineablePromos.push(promo);
+          } else {
+            if (discount > maxNotCombineablePromo.discount) {
+              if (maxNotCombineablePromo.promo) {
+                leftoverPromos.push(maxNotCombineablePromo.promo);
+              }
+              maxNotCombineablePromo.promo = promo;
+              maxNotCombineablePromo.discount = discount;
+            } else {
+              leftoverPromos.push(promo);
+            }
+          }
+        }
+      });
+
+      promoBrands.forEach((promo: PromoBrandDocument) => {
         //=> check apakah promo bisa dipakai
         if (!this.checkUsablePromo(promo, cartTotal, orderType)) {
           notAvailablePromos.push(promo);

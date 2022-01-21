@@ -1,11 +1,19 @@
 import { Type } from 'class-transformer';
-import { IsOptional, IsNumber, IsString, IsEnum } from 'class-validator';
+import {
+  IsOptional,
+  IsNumber,
+  IsString,
+  IsEnum,
+  IsUUID,
+  ValidateIf,
+} from 'class-validator';
 import {
   EnumPromoBrandTarget,
   EnumPromoBrandType,
   EnumPromoBrandStatus,
   EnumPromoBrandOrderType,
 } from 'src/database/entities/promo-brand.entity';
+import { EnumGetPromoProviderTarget } from 'src/internal/dto/get-promo-vouchers.dto';
 // import { EnumGetPromoBrandTarget } from 'src/internal/dto/get-promo-vouchers.dto';
 
 export class ListPromoBrandDto {
@@ -67,17 +75,14 @@ export class ExtendedListPromoBrandDto extends ListPromoBrandDto {
   is_quota_available: boolean;
 }
 
-// export class GetPromoBrandsDto {
-// @IsOptional()
-// @IsString()
-// @IsEnum(EnumGetPromoBrandTarget)
-// target: string;
-// @IsOptional()
-// @IsString()
-// @IsEnum(EnumGetPromoBrandOrderType)
-// order_type: string;
-// @IsOptional()
-// @IsNumber()
-// @Type(() => Number)
-// cart_total: number;
-// }
+export class GetPromoBrandsDto {
+  @IsOptional()
+  @IsString()
+  @IsEnum(EnumGetPromoProviderTarget)
+  target: string;
+
+  @IsOptional()
+  @IsUUID()
+  @ValidateIf((o) => o.merchant_id !== '')
+  merchant_id: string;
+}

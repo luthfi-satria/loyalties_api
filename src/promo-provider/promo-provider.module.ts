@@ -11,6 +11,7 @@ import { PromoProviderRepository } from 'src/database/repository/promo-provider.
 import { CommonModule } from 'src/common/common.module';
 import { VouchersRepository } from 'src/voucher/repository/voucher.repository';
 import { VoucherModule } from 'src/voucher/voucher.module';
+import { PromoBrandModule } from 'src/promo-brand/promo-brand.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { VoucherModule } from 'src/voucher/voucher.module';
     HttpModule,
     forwardRef(() => CommonModule),
     VoucherModule,
+    forwardRef(() => PromoBrandModule),
   ],
   controllers: [PromoProviderController],
   providers: [PromoProviderService, MessageService, ResponseService],
