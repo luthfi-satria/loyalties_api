@@ -1,3 +1,4 @@
+import { PaymentMethodDTO } from 'src/common/payment/dto/payment_method.dto';
 import { VoucherPackageDocument } from 'src/voucher-packages/entities/voucher-package.entity';
 import {
   Column,
@@ -40,6 +41,7 @@ export class VoucherPackageOrderDocument {
 
   @Column({ nullable: true })
   payment_method_id: string;
+  payment_method: PaymentMethodDTO;
 
   @Column({ nullable: true })
   admin_fee: number;

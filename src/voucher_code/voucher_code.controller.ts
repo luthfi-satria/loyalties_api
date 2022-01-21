@@ -10,6 +10,7 @@ import {
   CancelVoucherCodeDto,
   CreateVoucherCodeDto,
   ListVoucherCodeDto,
+  StopVoucherCodeDto,
 } from './dto/voucher_code.dto';
 
 @Controller('/api/v1/loyalties/voucher-codes')
@@ -106,6 +107,23 @@ export class VoucherCodeController {
   ) {
     data.id = voucher_code_id;
     const result = await this.voucherCodeService.cancelVoucherCode(data);
+    return this.responseService.success(
+      true,
+      this.messageService.get('general.general.success'),
+      result,
+    );
+  }
+
+  @Put(':voucher_code_id/stopped')
+  @UserType('admin')
+  @AuthJwtGuard()
+  @ResponseStatusCode()
+  async stopVoucherCode(
+    @Param('voucher_code_id') voucher_code_id: string,
+    @Body() data: StopVoucherCodeDto,
+  ) {
+    data.id = voucher_code_id;
+    const result = await this.voucherCodeService.stopVoucherCode(data);
     return this.responseService.success(
       true,
       this.messageService.get('general.general.success'),
