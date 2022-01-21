@@ -84,9 +84,7 @@ export class VoucherPackageDocument {
   )
   voucher_package_orders: VoucherPackageOrderDocument[];
 
-  @OneToMany(() => VoucherDocument, (voucher) => voucher.voucher_package, {
-    cascade: true,
-  })
+  @OneToMany(() => VoucherDocument, (vouchers) => vouchers.voucher_package)
   vouchers: VoucherDocument[];
 
   @CreateDateColumn({ type: 'timestamptz', default: () => 'LOCALTIMESTAMP' })

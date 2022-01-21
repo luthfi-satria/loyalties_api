@@ -1,9 +1,10 @@
-import { Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { MessageService } from 'src/message/message.service';
 import { ResponseStatusCode } from 'src/response/response.decorator';
 import { ResponseService } from 'src/response/response.service';
 import { GetPromoVouchersDto } from './dto/get-promo-vouchers.dto';
 import { GetRecommendedPromosDto } from './dto/get-recommended-promos.dto';
+import { GetVoucherPackageBulkDto } from './dto/get-voucher-package.dto';
 import { InternalService } from './internal.service';
 
 @Controller('api/v1/internal/loyalties')
@@ -84,6 +85,25 @@ export class InternalController {
       );
     } catch (error) {
       console.error(error);
+      throw error;
+    }
+  }
+
+  @Post('voucher-packages-bulk')
+  @ResponseStatusCode()
+  async getVoucherPackages(
+    @Body() getVoucherPackageBulkDto: GetVoucherPackageBulkDto,
+  ) {
+    try {
+      const result = await this.internalService.getVoucherPackagesBulk(
+        getVoucherPackageBulkDto,
+      );
+      return this.responseService.success(
+        true,
+        this.messageService.get('general.general.success'),
+        result,
+      );
+    } catch (error) {
       throw error;
     }
   }
