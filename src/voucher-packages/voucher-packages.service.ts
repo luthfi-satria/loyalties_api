@@ -10,7 +10,6 @@ import {
   CreateAutoStartVoucherPackageDto,
 } from 'src/common/redis/dto/redis-voucher-package.dto';
 import { RedisVoucherPackageService } from 'src/common/redis/voucher_package/redis-voucher_package.service';
-import { MasterVouchersDocument } from 'src/master_vouchers/entities/master_voucher.entity';
 import { MasterVoucherService } from 'src/master_vouchers/master_voucher.service';
 import { MessageService } from 'src/message/message.service';
 import { RMessage } from 'src/response/response.interface';
@@ -19,6 +18,7 @@ import { DateTimeUtils } from 'src/utils/date-time-utils';
 import { StatusVoucherEnum } from 'src/voucher/entities/voucher.entity';
 import { VoucherService } from 'src/voucher/voucher.service';
 import {
+  In,
   LessThanOrEqual,
   Like,
   MoreThanOrEqual,
@@ -196,9 +196,32 @@ export class VoucherPackagesService {
     }
   }
 
-  async getDetail(id) {
+  async getDetailBulk(voucherPackageIds: string[]) {
     try {
-      const query = this.mainQuery().where({ id });
+      const query = this.mainQuery().where({ id: In(voucherPackageIds) });
+      return query.getMany();
+    } catch (error) {
+      this.logger.log(error);
+      throw new BadRequestException(
+        this.responseService.error(
+          HttpStatus.BAD_REQUEST,
+          {
+            value: '',
+            property: '',
+            constraint: [
+              this.messageService.get('general.get.fail'),
+              error.message,
+            ],
+          },
+          'Bad Request',
+        ),
+      );
+    }
+  }
+
+  async getDetail(voucherPackageIds: string) {
+    try {
+      const query = this.mainQuery().where({ id: voucherPackageIds });
       return query.getOne();
     } catch (error) {
       this.logger.log(error);
@@ -399,7 +422,7 @@ export class VoucherPackagesService {
     target: string,
     voucherPackageId: string,
   ) {
-    let vouchersTotal = 0;
+    // let vouchersTotal = 0;
     const postVoucherDatas = [];
 
     for (const vpmv of voucherPackagesMasterVouchers) {
@@ -410,7 +433,7 @@ export class VoucherPackagesService {
       const date_end = moment(date_start).add(days, 'days');
 
       for (let y = 0; y < quantity; y++) {
-        vouchersTotal += 1;
+        // vouchersTotal += 1;
         const postVoucherData = {
           voucher_package_id: voucherPackageId,
           master_voucher_id: master_voucher.id,

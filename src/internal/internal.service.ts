@@ -10,8 +10,10 @@ import { PromoProviderService } from 'src/promo-provider/promo-provider.service'
 import { RMessage } from 'src/response/response.interface';
 import { ResponseService } from 'src/response/response.service';
 import { VoucherPackagesCustomersService } from 'src/voucher-packages-customers/voucher-packages-customers.service';
+import { VoucherPackagesService } from 'src/voucher-packages/voucher-packages.service';
 import { GetPromoVouchersDto } from './dto/get-promo-vouchers.dto';
 import { GetRecommendedPromosDto } from './dto/get-recommended-promos.dto';
+import { GetVoucherPackageBulkDto } from './dto/get-voucher-package.dto';
 import {
   CallBackOrderExpiredDto,
   CallBackOrderSuccessDto,
@@ -25,6 +27,7 @@ export class InternalService {
     private readonly promoProviderService: PromoProviderService,
     private readonly promoBrandService: PromoBrandService,
     private readonly voucherPackagesCustomersService: VoucherPackagesCustomersService,
+    private readonly voucherPackagesService: VoucherPackagesService,
   ) {}
 
   private readonly logger = new Logger(InternalService.name);
@@ -63,6 +66,18 @@ export class InternalService {
     try {
       return this.voucherPackagesCustomersService.orderVoucherPackageExpired(
         data,
+      );
+    } catch (error) {
+      this.errorReport(error, 'general.general.fail');
+    }
+  }
+
+  async getVoucherPackagesBulk(
+    getVoucherPackageBulkDto: GetVoucherPackageBulkDto,
+  ) {
+    try {
+      return this.voucherPackagesService.getDetailBulk(
+        getVoucherPackageBulkDto.voucher_package_ids,
       );
     } catch (error) {
       this.errorReport(error, 'general.general.fail');
