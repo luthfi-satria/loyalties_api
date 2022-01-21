@@ -143,7 +143,11 @@ export class VoucherService {
     // NOT AUTO GENERATE
     let voucherCode = await this.voucherCodesRepository.findOne({
       where: { code: data.code, status: StatusVoucherCodeGroup.ACTIVE },
-      relations: ['master_voucher_voucher_code', 'vouchers'],
+      relations: [
+        'master_voucher_voucher_code',
+        'vouchers',
+        'master_voucher_voucher_code.master_voucher',
+      ],
     });
 
     let voucherCodeId = voucherCode?.id;
