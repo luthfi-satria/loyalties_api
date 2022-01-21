@@ -44,4 +44,9 @@ export class GetPromoVouchersDto {
   @IsNumber()
   @Type(() => Number)
   delivery_fee: number;
+
+  @IsOptional()
+  @IsUUID()
+  @ValidateIf((o) => o.merchant_id !== '')
+  merchant_id: string;
 }
