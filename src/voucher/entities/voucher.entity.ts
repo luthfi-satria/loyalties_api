@@ -9,6 +9,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { VoucherPackageDocument } from 'src/voucher-packages/entities/voucher-package.entity';
 
 export enum TargetVoucherEnum {
   ALL = 'ALL',
@@ -121,6 +122,13 @@ export class VoucherDocument {
   @ManyToOne(() => VoucherCodeDocument, (voucher_code) => voucher_code.vouchers)
   @JoinColumn({ name: 'voucher_code_id', referencedColumnName: 'id' })
   vouchers: VoucherCodeDocument;
+
+  @ManyToOne(
+    () => VoucherPackageDocument,
+    (voucher_package) => voucher_package.vouchers,
+  )
+  @JoinColumn({ name: 'voucher_package_id', referencedColumnName: 'id' })
+  voucher_package: VoucherPackageDocument;
 
   constructor(init?: Partial<VoucherDocument>) {
     Object.assign(this, init);

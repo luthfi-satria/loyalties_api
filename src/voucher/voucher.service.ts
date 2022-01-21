@@ -25,6 +25,7 @@ import { MasterVoucherVoucherCodeRepository } from 'src/master_voucher_voucher_c
 import { FetchMasterVoucherVoucherCodesDto } from 'src/master_voucher_voucher_code/dto/get_master_voucher_voucher_code.dto';
 import { MasterVoucherVoucherCodeDocument } from 'src/master_voucher_voucher_code/entities/master_voucher_voucher_code.entity';
 import { RMessage } from 'src/response/response.interface';
+import { VoucherPackagesMasterVouchersRepository } from 'src/voucher-packages/repository/voucher_package._master_voucher.repository';
 
 @Injectable()
 export class VoucherService {
@@ -35,6 +36,7 @@ export class VoucherService {
     private readonly voucherCodesRepository: VoucherCodesRepository,
     private readonly voucherCodeService: VoucherCodeService,
     private readonly masterVoucherVoucherCodeRepository: MasterVoucherVoucherCodeRepository,
+    private readonly voucherPackagesMasterVouchersRepository: VoucherPackagesMasterVouchersRepository,
   ) {}
   private readonly logger = new Logger(VoucherService.name);
 
@@ -358,7 +360,7 @@ export class VoucherService {
       //   where: { customer_id, status: StatusVoucherEnum.ACTIVE },
       // });
 
-      const [items, count] = await this.masterVoucherVoucherCodeRepository
+      const query = await this.masterVoucherVoucherCodeRepository
         .createQueryBuilder('mvvc')
         .innerJoinAndSelect('mvvc.master_voucher', 'master_voucher')
         .innerJoinAndSelect('mvvc.voucher_code', 'voucher_code')
@@ -367,16 +369,53 @@ export class VoucherService {
           'vouchers',
           'vouchers.customer_id = :customer_id and vouchers.status = :status',
           { customer_id, status: StatusVoucherEnum.ACTIVE },
-        )
-        .take(limit)
-        .skip(offset)
-        .getManyAndCount();
+        );
+      // .take(limit);
+
+      const [items, count] = await query.getManyAndCount();
+      // .skip(offset)
+      // const countPackage = 0;
+
+      // const total_page = Math.floor(count / limit) + 1;
+
+      // if (page >= total_page) {
+      // const offset_last_page = (total_page - 1) * limit;
+      // const count_last_page = await query.skip(offset_last_page).getCount();
+      // const offsetPackage =
+      //   page >= total_page
+      //     ? page - total_page == 1
+      //       ? (limit - count_last_page) * (page - total_page)
+      //       : limit * (page - total_page - 1) + (limit - count_last_page)
+      //     : 0;
+      // const limitPackage = page == total_page ? limit - count_last_page : limit;
+
+      // const count_last_page = await.
+      const [packageVoucher, countPackage] =
+        await this.voucherPackagesMasterVouchersRepository
+          .createQueryBuilder('vpmv')
+          .innerJoinAndSelect('vpmv.master_voucher', 'master_voucher')
+          .innerJoinAndSelect('vpmv.voucher_package', 'voucher_package')
+          .innerJoinAndSelect(
+            'voucher_package.vouchers',
+            'vouchers',
+            'vouchers.customer_id = :customer_id and vouchers.status = :status',
+            { customer_id, status: StatusVoucherEnum.ACTIVE },
+          )
+          // .take(limitPackage)
+          // .skip(offsetPackage)
+          .getManyAndCount();
+      // }
+
+      let arr = [];
+
+      arr = arr.concat(items);
+      arr = arr.concat(packageVoucher);
 
       const listItems = {
         current_page: parseInt(page),
-        total_item: count,
+        total_item: count + countPackage,
         limit: parseInt(limit),
-        items: items,
+        items: arr,
       };
 
       return listItems;
