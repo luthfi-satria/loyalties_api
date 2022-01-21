@@ -381,7 +381,7 @@ export class VoucherService {
         .innerJoinAndSelect(
           'voucher_code.vouchers',
           'vouchers',
-          'vouchers.customer_id = :customer_id and vouchers.status = :status',
+          'vouchers.customer_id = :customer_id and vouchers.status = :status and vouchers.master_voucher_id = master_voucher.id',
           { customer_id, status: StatusVoucherEnum.ACTIVE },
         );
       // .take(limit);
@@ -412,7 +412,7 @@ export class VoucherService {
           .innerJoinAndSelect(
             'voucher_package.vouchers',
             'vouchers',
-            'vouchers.customer_id = :customer_id and vouchers.status = :status',
+            'vouchers.customer_id = :customer_id and vouchers.status = :status and vouchers.master_voucher_id = master_voucher.id',
             { customer_id, status: StatusVoucherEnum.ACTIVE },
           )
           // .take(limitPackage)
