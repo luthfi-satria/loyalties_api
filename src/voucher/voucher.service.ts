@@ -383,29 +383,29 @@ export class VoucherService {
           'vouchers',
           'vouchers.customer_id = :customer_id and vouchers.status = :status and vouchers.master_voucher_id = master_voucher.id',
           { customer_id, status: StatusVoucherEnum.ACTIVE },
-        );
-      // .take(limit);
+        )
+        .take(limit);
 
-      const [items, count] = await query.getManyAndCount();
-      // .skip(offset)
-      // const countPackage = 0;
+      const [items, count] = await query.skip(offset).getManyAndCount();
+      let countPackage = 0;
+      let packageVoucher = [];
 
-      // const total_page = Math.floor(count / limit) + 1;
+      const total_page = Math.floor(count / limit) + 1;
 
-      // if (page >= total_page) {
-      // const offset_last_page = (total_page - 1) * limit;
-      // const count_last_page = await query.skip(offset_last_page).getCount();
-      // const offsetPackage =
-      //   page >= total_page
-      //     ? page - total_page == 1
-      //       ? (limit - count_last_page) * (page - total_page)
-      //       : limit * (page - total_page - 1) + (limit - count_last_page)
-      //     : 0;
-      // const limitPackage = page == total_page ? limit - count_last_page : limit;
+      if (page >= total_page) {
+        const offset_last_page = (total_page - 1) * limit;
+        const count_last_page = await query.skip(offset_last_page).getCount();
+        const offsetPackage =
+          page > total_page
+            ? page - total_page == 1
+              ? (limit - count_last_page) * (page - total_page)
+              : limit * (page - total_page - 1) + (limit - count_last_page)
+            : 0;
 
-      // const count_last_page = await.
-      const [packageVoucher, countPackage] =
-        await this.voucherPackagesMasterVouchersRepository
+        const limitPackage =
+          page == total_page ? limit - count_last_page : limit;
+
+        const queryPackage = await this.voucherPackagesMasterVouchersRepository
           .createQueryBuilder('vpmv')
           .innerJoinAndSelect('vpmv.master_voucher', 'master_voucher')
           .innerJoinAndSelect('vpmv.voucher_package', 'voucher_package')
@@ -415,10 +415,12 @@ export class VoucherService {
             'vouchers.customer_id = :customer_id and vouchers.status = :status and vouchers.master_voucher_id = master_voucher.id',
             { customer_id, status: StatusVoucherEnum.ACTIVE },
           )
-          // .take(limitPackage)
-          // .skip(offsetPackage)
-          .getManyAndCount();
-      // }
+          .take(limitPackage)
+          .skip(offsetPackage);
+
+        packageVoucher = await queryPackage.getMany();
+        countPackage = await queryPackage.getCount();
+      }
 
       let arr = [];
 
