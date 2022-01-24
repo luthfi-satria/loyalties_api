@@ -103,4 +103,19 @@ export class DateTimeUtils {
     const now = momenttz(new Date());
     return momenttz.duration(target.diff(now)).asMilliseconds();
   };
+
+  /**
+   *
+   * @param time1 time 1 as minuend
+   * @param time2 time 2 as subtrahend
+   * @returns time different in days
+   */
+  static getDaysDiffer(time1: Date, time2: Date): number {
+    if (!time1 || !time2) {
+      return null;
+    }
+    const timeH1 = momenttz(time1);
+    const timeH2 = momenttz(time2);
+    return momenttz.duration(timeH1.diff(timeH2)).asDays();
+  }
 }

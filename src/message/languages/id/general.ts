@@ -94,6 +94,10 @@ export default {
       code: 'INVALID_GREATER_DATE',
       message: 'Tanggal harus lebih besar dari sekarang.',
     },
+    voucherTargetNotMatch: {
+      code: 'VOUCHER_TARGET_NOT_MATCH',
+      message: 'Target voucher tidak sesuai.',
+    },
   },
   delivery: {
     outOfRange: {

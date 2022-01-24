@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import _ from 'lodash';
 import { User } from 'src/auth/guard/interface/user.interface';
+import { OrderService } from 'src/common/order/order.service';
 import { CreatePayment } from 'src/common/payment/interfaces/payment.interface';
 import { PaymentService } from 'src/common/payment/payment.service';
 import {
@@ -15,7 +16,7 @@ import {
 import { MessageService } from 'src/message/message.service';
 import { RMessage } from 'src/response/response.interface';
 import { ResponseService } from 'src/response/response.service';
-import { VoucherPackageDocument } from 'src/voucher-packages/entities/voucher-package.entity';
+import { TargetVoucherPackage, VoucherPackageDocument } from 'src/voucher-packages/entities/voucher-package.entity';
 import { VoucherPackagesService } from 'src/voucher-packages/voucher-packages.service';
 import {
   LessThanOrEqual,
@@ -39,6 +40,7 @@ export class VoucherPackagesCustomersService {
     private readonly voucherPackageOrderRepository: VoucherPackageOrderRepository,
     private readonly voucherPackageService: VoucherPackagesService,
     private readonly paymentService: PaymentService,
+    private readonly orderService: OrderService,
   ) {}
   private readonly logger = new Logger(VoucherPackagesCustomersService.name);
 
@@ -51,6 +53,22 @@ export class VoucherPackagesCustomersService {
       await this.voucherPackageService.getAndValidateAvailableVoucherPackageById(
         params.voucher_package_id,
       );
+
+    const { data: customerTarget } =
+      await this.orderService.getCostumerTargetLoyalties({
+        customer_id: user.id,
+        created_at: user.created_at,
+      });
+    if (
+      voucherPackage.target != TargetVoucherPackage.ALL &&
+      voucherPackage.target != customerTarget.target
+    ) {
+      this.errorGenerator(
+        customerTarget.target,
+        'target',
+        'general.general.voucherTargetNotMatch',
+      );
+    }
 
     const payments = await this.paymentService.getPaymentsBulk({
       ids: [params.payment_method_id],
