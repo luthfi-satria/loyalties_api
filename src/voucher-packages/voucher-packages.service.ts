@@ -544,12 +544,15 @@ export class VoucherPackagesService {
           where: { id: data.voucher_package_id },
         });
 
-      if (findVoucherPackage.status !== StatusVoucherPackage.SCHEDULED) {
+      if (
+        findVoucherPackage.status !== StatusVoucherPackage.SCHEDULED &&
+        findVoucherPackage.status !== StatusVoucherPackage.FINISHED
+      ) {
         throw new BadRequestException(
           this.responseService.error(
             HttpStatus.BAD_REQUEST,
             {
-              value: 'status',
+              value: findVoucherPackage.status,
               property: 'status',
               constraint: [
                 this.messageService.get('general.general.statusNotAllowed'),
@@ -562,6 +565,7 @@ export class VoucherPackagesService {
       }
 
       findVoucherPackage.status = StatusVoucherPackage.ACTIVE;
+      findVoucherPackage.cancellation_reason = null;
 
       const updatedVoucherPackage = await this.voucherPackageRepository.save(
         findVoucherPackage,
@@ -612,6 +616,9 @@ export class VoucherPackagesService {
       }
 
       findVoucherPackage.status = StatusVoucherPackage.FINISHED;
+      if (data.cancellation_reason) {
+        findVoucherPackage.cancellation_reason = data.cancellation_reason;
+      }
 
       const updatedVoucherPackage = await this.voucherPackageRepository.save(
         findVoucherPackage,

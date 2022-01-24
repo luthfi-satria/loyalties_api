@@ -16,9 +16,13 @@ import {
 import { MessageService } from 'src/message/message.service';
 import { RMessage } from 'src/response/response.interface';
 import { ResponseService } from 'src/response/response.service';
-import { TargetVoucherPackage, VoucherPackageDocument } from 'src/voucher-packages/entities/voucher-package.entity';
+import {
+  TargetVoucherPackage,
+  VoucherPackageDocument,
+} from 'src/voucher-packages/entities/voucher-package.entity';
 import { VoucherPackagesService } from 'src/voucher-packages/voucher-packages.service';
 import {
+  In,
   LessThanOrEqual,
   Like,
   MoreThanOrEqual,
@@ -117,7 +121,6 @@ export class VoucherPackagesCustomersService {
         paramCreate,
       );
 
-      //=>Tembak create payment
       const item: CreatePayment = {
         order_id: voucherPackageOrder.id,
         payment_method_id: voucherPackageOrder.payment_method_id,
@@ -153,10 +156,11 @@ export class VoucherPackagesCustomersService {
           );
         });
 
-      //=>Update order with payment expirate at, ongkir, total,
       voucherPackageOrder.payment_expired_at = payment.data.expired_at;
       voucherPackageOrder.payment_info = payment.data;
       await this.voucherPackageOrderRepository.save(voucherPackageOrder);
+
+      await this.updateStatusForPayment(voucherPackageOrder.voucher_package_id);
 
       return voucherPackageOrder;
     } catch (error) {
@@ -377,6 +381,7 @@ export class VoucherPackagesCustomersService {
         findOrder.voucher_package_id,
         findOrder.customer_id,
       );
+      await this.updateStatusForPayment(findOrder.voucher_package_id);
 
       return updatedOrder;
     } catch (error) {
@@ -407,6 +412,7 @@ export class VoucherPackagesCustomersService {
 
       //=> update status ke expired
       findOrder.status = StatusVoucherPackageOrder.EXPIRED;
+      await this.updateStatusForPayment(findOrder.voucher_package_id);
       return this.voucherPackageOrderRepository.save(findOrder);
     } catch (error) {
       this.errorReport(error, 'general.update.fail');
@@ -492,6 +498,7 @@ export class VoucherPackagesCustomersService {
       );
     }
   }
+
   async getAndValidateVoucherPackageOrderById(
     voucherPackageId: string,
     user: User,
@@ -518,5 +525,30 @@ export class VoucherPackagesCustomersService {
     }
 
     return voucherPackage;
+  }
+
+  async updateStatusForPayment(voucherPackageId: string) {
+    const countSold = await this.voucherPackageOrderRepository.count({
+      voucher_package_id: voucherPackageId,
+      status: In([
+        StatusVoucherPackageOrder.WAITING,
+        StatusVoucherPackageOrder.PAID,
+      ]),
+    });
+
+    const voucherPackage = await this.voucherPackageService.getDetail(
+      voucherPackageId,
+    );
+
+    if (voucherPackage.quota <= countSold) {
+      await this.voucherPackageService.updateVoucherPackageStatusFinished({
+        voucher_package_id: voucherPackageId,
+        cancellation_reason: 'Kuota telah habis',
+      });
+    } else {
+      await this.voucherPackageService.updateVoucherPackageStatusActive({
+        voucher_package_id: voucherPackageId,
+      });
+    }
   }
 }
