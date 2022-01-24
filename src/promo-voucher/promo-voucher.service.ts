@@ -49,7 +49,7 @@ export class PromoVoucherService {
         merchant_id: merchantId,
       });
 
-      const promos = [...promoProviders, ...promoBrands];
+      const promos = [...promoBrands, ...promoProviders];
       let vouchers = [];
 
       if (customer) {
