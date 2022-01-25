@@ -54,7 +54,7 @@ export class VoucherPackagesCustomersService {
     params: CreateVoucherPackagesCustomerDto,
   ): Promise<VoucherPackageOrderDocument> {
     const voucherPackage =
-      await this.voucherPackageService.getAndValidateAvailableVoucherPackageById(
+      await this.getAndValidateVoucherPackageAvailableQuota(
         params.voucher_package_id,
       );
 
@@ -523,7 +523,18 @@ export class VoucherPackagesCustomersService {
     return voucherPackage;
   }
 
-  async updateStatusForPayment(voucherPackageId: string) {
+  async getAndValidateVoucherPackageAvailableQuota(
+    voucherPackageId: string,
+  ): Promise<VoucherPackageDocument> {
+    const voucherPackage =
+      await this.voucherPackageService.getAndValidateAvailableVoucherPackageById(
+        voucherPackageId,
+      );
+
+    if (!voucherPackage.quota) {
+      return voucherPackage;
+    }
+
     const countSold = await this.voucherPackageOrderRepository.count({
       voucher_package_id: voucherPackageId,
       status: In([
@@ -532,19 +543,10 @@ export class VoucherPackagesCustomersService {
       ]),
     });
 
-    const voucherPackage = await this.voucherPackageService.getDetail(
-      voucherPackageId,
-    );
-
     if (voucherPackage.quota <= countSold) {
-      await this.voucherPackageService.updateVoucherPackageStatusFinished({
-        voucher_package_id: voucherPackageId,
-        cancellation_reason: 'Kuota telah habis',
-      });
-    } else {
-      await this.voucherPackageService.updateVoucherPackageStatusActive({
-        voucher_package_id: voucherPackageId,
-      });
+      this.errorGenerator('0', 'quota', 'general.voucher.quotaReached');
     }
+
+    return voucherPackage;
   }
 }
