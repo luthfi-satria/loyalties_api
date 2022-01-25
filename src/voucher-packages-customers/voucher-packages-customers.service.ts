@@ -160,8 +160,6 @@ export class VoucherPackagesCustomersService {
       voucherPackageOrder.payment_info = payment.data;
       await this.voucherPackageOrderRepository.save(voucherPackageOrder);
 
-      await this.updateStatusForPayment(voucherPackageOrder.voucher_package_id);
-
       return voucherPackageOrder;
     } catch (error) {
       this.logger.log(error);
@@ -381,7 +379,6 @@ export class VoucherPackagesCustomersService {
         findOrder.voucher_package_id,
         findOrder.customer_id,
       );
-      await this.updateStatusForPayment(findOrder.voucher_package_id);
 
       return updatedOrder;
     } catch (error) {
@@ -412,7 +409,6 @@ export class VoucherPackagesCustomersService {
 
       //=> update status ke expired
       findOrder.status = StatusVoucherPackageOrder.EXPIRED;
-      await this.updateStatusForPayment(findOrder.voucher_package_id);
       return this.voucherPackageOrderRepository.save(findOrder);
     } catch (error) {
       this.errorReport(error, 'general.update.fail');
