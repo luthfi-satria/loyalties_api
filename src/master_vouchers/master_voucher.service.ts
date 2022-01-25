@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { MessageService } from 'src/message/message.service';
 import { ResponseService } from 'src/response/response.service';
-import { Like } from 'typeorm';
+import { ILike } from 'typeorm';
 import { CreateMasterVoucherDto } from './dto/master_voucher.dto';
 import { MasterVouchersDocument } from './entities/master_voucher.entity';
 import { MasterVouchersRepository } from './repository/master_voucher.repository';
@@ -74,7 +74,7 @@ export class MasterVoucherService {
       if (data.duration) qry = { ...qry, duration: data.duration };
       if (data.type) qry = { ...qry, type: data.type };
       if (data.order_type) qry = { ...qry, order_type: data.order_type };
-      if (data.search) qry = { ...qry, name: Like(`%${data.search}%`) };
+      if (data.search) qry = { ...qry, name: ILike(`%${data.search}%`) };
 
       const [items, count] = await this.masterVouchersRepository.findAndCount({
         take: limit,
