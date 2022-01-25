@@ -17,11 +17,13 @@ import { MessageService } from 'src/message/message.service';
 import { RMessage } from 'src/response/response.interface';
 import { ResponseService } from 'src/response/response.service';
 import {
+  StatusVoucherPackage,
   TargetVoucherPackage,
   VoucherPackageDocument,
 } from 'src/voucher-packages/entities/voucher-package.entity';
 import { VoucherPackagesService } from 'src/voucher-packages/voucher-packages.service';
 import {
+  Brackets,
   In,
   LessThanOrEqual,
   Like,
@@ -266,7 +268,6 @@ export class VoucherPackagesCustomersService {
       let where = {};
 
       if (params.target) where = { ...where, target: params.target };
-      if (params.status) where = { ...where, status: params.status };
       if (params.search) where = { ...where, name: Like(`%${params.search}%`) };
       if (params.periode_start) {
         where = { ...where, created_at: MoreThanOrEqual(params.periode_start) };
@@ -281,7 +282,35 @@ export class VoucherPackagesCustomersService {
         where = { ...where, price: LessThanOrEqual(params.price_max) };
       }
 
+      if (params.status) {
+        where = { ...where, status: params.status };
+      }
       const query = this.mainQuery(user).where(where);
+      if (!params.status) {
+        query.andWhere(
+          new Brackets((qb) => {
+            qb.where('voucher_package.status = :status', {
+              status: StatusVoucherPackage.ACTIVE,
+            });
+            qb.orWhere(
+              new Brackets((qb2) => {
+                qb2
+                  .where('voucher_package.status = :status_finished', {
+                    status_finished: StatusVoucherPackage.FINISHED,
+                  })
+                  .andWhere(
+                    'voucher_package_orders.status = :order_status_waiting',
+                    {
+                      order_status_waiting: StatusVoucherPackageOrder.WAITING,
+                    },
+                  );
+              }),
+            );
+          }),
+        );
+        where = { ...where, status: StatusVoucherPackage.ACTIVE };
+        // const query = this.mainQuery(user).where(where);
+      }
 
       query.take(limit).skip(offset);
 
@@ -429,10 +458,18 @@ export class VoucherPackagesCustomersService {
     if (!paymentMethodIds.length) {
       return voucherPackages;
     }
-    const paymentMethods = await this.paymentService.getPaymentsBulk({
-      ids: paymentMethodIds,
-      isIncludeDeleted: false,
-    });
+    const paymentMethods = await this.paymentService
+      .getPaymentsBulk({
+        ids: paymentMethodIds,
+        isIncludeDeleted: false,
+      })
+      .catch((error) => {
+        this.logger.error(error);
+      });
+    if (!paymentMethods) {
+      return voucherPackages;
+    }
+
     for (let i = 0; i < voucherPackages.length; i++) {
       const voucherPackage = voucherPackages[i];
       for (let j = 0; j < voucherPackage.voucher_package_orders.length; j++) {
