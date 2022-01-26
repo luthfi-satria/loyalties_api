@@ -221,6 +221,14 @@ export class PromoProviderService {
 
       const isQuotaAvailable = data.is_quota_available || null;
 
+      if ((dateStart && !dateEnd) || (dateEnd && !dateStart)) {
+        this.errorGenerator(
+          '',
+          'date',
+          'general.promoProvider.dateFilterMissing',
+        );
+      }
+
       const query = this.promoProviderRepository.createQueryBuilder('ppro');
 
       if (promoProviderId) {
@@ -239,16 +247,58 @@ export class PromoProviderService {
         });
       }
 
-      if (dateStart) {
-        query.andWhere('ppro.date_start >= :dateStart', {
-          dateStart,
-        });
-      }
+      // if (dateStart) {
+      //   query.andWhere('ppro.date_start >= :dateStart', {
+      //     dateStart,
+      //   });
+      // }
 
-      if (dateEnd) {
-        query.andWhere('ppro.date_end <= :dateEnd', {
-          dateEnd,
-        });
+      // if (dateEnd) {
+      //   query.andWhere('ppro.date_end <= :dateEnd', {
+      //     dateEnd,
+      //   });
+      // }
+
+      if (dateStart && dateEnd) {
+        query.andWhere(
+          new Brackets((qb) => {
+            qb.where(
+              new Brackets((iqb) => {
+                iqb
+                  .where('ppro.date_end >= :dateStart', {
+                    dateStart,
+                  })
+                  .andWhere('ppro.date_end <= :dateEnd', {
+                    dateEnd,
+                  });
+              }),
+            );
+
+            qb.orWhere(
+              new Brackets((iqb) => {
+                iqb
+                  .where('ppro.date_start >= :dateStart', {
+                    dateStart,
+                  })
+                  .andWhere('ppro.date_start <= :dateEnd', {
+                    dateEnd,
+                  });
+              }),
+            );
+
+            qb.orWhere(
+              new Brackets((iqb) => {
+                iqb
+                  .where('ppro.date_start <= :dateStart', {
+                    dateStart,
+                  })
+                  .andWhere('ppro.date_end >= :dateEnd', {
+                    dateEnd,
+                  });
+              }),
+            );
+          }),
+        );
       }
 
       if (status) {

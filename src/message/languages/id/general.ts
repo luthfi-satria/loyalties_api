@@ -206,6 +206,10 @@ export default {
       code: 'DISCOUNT_MAXIMUM_REQUIRED',
       message: 'Harus menambahkan maksimum discount untuk jenis promo ini.',
     },
+    dateFilterMissing: {
+      code: 'DATE_FILTER_MISSING',
+      message: 'Harap memasukan dateEnd dan dateStart untuk filter periode.',
+    },
   },
   promoBrand: {
     errorBackDate: {
@@ -223,6 +227,10 @@ export default {
     errorDiscountMaximum: {
       code: 'DISCOUNT_MAXIMUM_REQUIRED',
       message: 'Harus menambahkan maksimum discount untuk jenis promo ini.',
+    },
+    dateFilterMissing: {
+      code: 'DATE_FILTER_MISSING',
+      message: 'Harap memasukan dateEnd dan dateStart untuk filter periode.',
     },
   },
   voucher: {
