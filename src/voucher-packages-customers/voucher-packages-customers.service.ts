@@ -286,7 +286,7 @@ export class VoucherPackagesCustomersService {
         where = { ...where, status: params.status };
       }
       const query = this.mainQuery(user).where(where);
-      if (!params.status) {
+      if (params.status == StatusVoucherPackage.ACTIVE) {
         query.andWhere(
           new Brackets((qb) => {
             qb.where('voucher_package.status = :status', {
