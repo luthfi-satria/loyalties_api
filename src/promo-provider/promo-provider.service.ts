@@ -556,14 +556,17 @@ export class PromoProviderService {
       const customerId = data.customer_id;
       const deliveryFee = data.delivery_fee || 0;
       const merchantId = data.merchant_id;
+      const isQuotaAvailable = data.is_quota_available == 'true' ? true : false;
 
       const promoProviders = await this.getActivePromoProviders({
         target: target,
+        is_quota_available: isQuotaAvailable,
       });
 
       const promoBrands = await this.promoBrandService.getActivePromoBrands({
         target,
         merchant_id: merchantId,
+        is_quota_available: isQuotaAvailable,
       });
 
       const vouchers = await this.voucherService.getActiveTargetVouchers({
@@ -756,6 +759,7 @@ export class PromoProviderService {
     try {
       const targetList = [];
       const status = 'ACTIVE';
+      const isQuotaAvailable = data.is_quota_available || null;
 
       if (data.target) {
         targetList.push(...['ALL', data.target]);
@@ -774,7 +778,7 @@ export class PromoProviderService {
         cart_total: null,
         target_list: targetList,
         order_type_list: null,
-        is_quota_available: true,
+        is_quota_available: isQuotaAvailable,
       });
 
       return items;

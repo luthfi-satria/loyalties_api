@@ -49,4 +49,7 @@ export class GetPromoVouchersDto {
   @IsUUID()
   @ValidateIf((o) => o.merchant_id !== '')
   merchant_id: string;
+
+  @IsOptional()
+  is_quota_available: string;
 }

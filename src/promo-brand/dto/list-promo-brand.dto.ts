@@ -6,6 +6,7 @@ import {
   IsEnum,
   IsUUID,
   ValidateIf,
+  IsBoolean,
 } from 'class-validator';
 import {
   EnumPromoBrandTarget,
@@ -85,4 +86,8 @@ export class GetPromoBrandsDto {
   @IsUUID()
   @ValidateIf((o) => o.merchant_id !== '')
   merchant_id: string;
+
+  @IsOptional()
+  @IsBoolean()
+  is_quota_available?: boolean;
 }
