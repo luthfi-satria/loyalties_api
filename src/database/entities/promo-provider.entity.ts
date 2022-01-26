@@ -90,4 +90,6 @@ export class PromoProviderDocument {
 
   @DeleteDateColumn({ nullable: true })
   deleted_at: Date;
+
+  quota_left?: number;
 }
