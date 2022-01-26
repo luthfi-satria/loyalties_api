@@ -4,6 +4,7 @@ import {
   Injectable,
   Logger,
 } from '@nestjs/common';
+import _ from 'lodash';
 import moment from 'moment';
 import {
   CreateAutoFinishVoucherPackageDto,
@@ -15,13 +16,13 @@ import { MessageService } from 'src/message/message.service';
 import { RMessage } from 'src/response/response.interface';
 import { ResponseService } from 'src/response/response.service';
 import { DateTimeUtils } from 'src/utils/date-time-utils';
+import { VoucherPackageOrderDocument } from 'src/voucher-packages-customers/entities/voucher-packages-order.entity';
 import { StatusVoucherEnum } from 'src/voucher/entities/voucher.entity';
 import { VoucherService } from 'src/voucher/voucher.service';
 import {
   ILike,
   In,
   LessThanOrEqual,
-  Like,
   MoreThanOrEqual,
   SelectQueryBuilder,
 } from 'typeorm';
@@ -132,6 +133,17 @@ export class VoucherPackagesService {
       .leftJoinAndSelect(
         'voucher_package_master_vouchers.master_voucher',
         'master_voucher',
+      )
+      .leftJoinAndSelect(
+        (qb) =>
+          qb
+            .select(
+              'COUNT(voucher_package_order_quota.id) AS used_count, voucher_package_order_quota.voucher_package_id AS order_voucher_package_id',
+            )
+            .from(VoucherPackageOrderDocument, 'voucher_package_order_quota')
+            .groupBy('voucher_package_order_quota.voucher_package_id'),
+        'voucher_package_order_quota',
+        'voucher_package.id = voucher_package_order_quota.order_voucher_package_id',
       );
     return query;
   }
@@ -168,14 +180,33 @@ export class VoucherPackagesService {
 
       const query = this.mainQuery().where(where).take(limit).skip(offset);
 
-      const items = await query.getMany();
+      // const items = await query.getMany();
       const count = await query.getCount();
+      const { entities, raw } = await query.getRawAndEntities();
+      for (let i = 0; i < entities.length; i++) {
+        const voucherPackage = entities[i];
+        const rawVoucherPackage = _.find(raw, {
+          voucher_package_id: voucherPackage.id,
+        });
+
+        voucherPackage.quota_left = voucherPackage.quota;
+        if (!voucherPackage.quota) {
+          voucherPackage.quota_left = null;
+          continue;
+        }
+        if (rawVoucherPackage) {
+          voucherPackage.quota_left =
+            voucherPackage.quota - rawVoucherPackage.used_count;
+          voucherPackage.quota_left =
+            voucherPackage.quota_left < 0 ? 0 : voucherPackage.quota_left;
+        }
+      }
 
       const listItems = {
         current_page: +page,
         total_item: count,
         limit: +limit,
-        items: items,
+        items: entities,
       };
 
       return listItems;
