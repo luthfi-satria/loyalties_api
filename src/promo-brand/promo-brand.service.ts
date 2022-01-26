@@ -507,6 +507,7 @@ export class PromoBrandService {
     try {
       const targetList = [];
       const status = 'ACTIVE';
+      const isQuotaAvailable = data.is_quota_available || null;
 
       if (data.target) {
         targetList.push(...['ALL', data.target]);
@@ -525,7 +526,7 @@ export class PromoBrandService {
         cart_total: null,
         target_list: targetList,
         order_type_list: null,
-        is_quota_available: true,
+        is_quota_available: isQuotaAvailable,
         merchant_id: data.merchant_id,
       });
 

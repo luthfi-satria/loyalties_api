@@ -1,5 +1,11 @@
 import { Type } from 'class-transformer';
-import { IsOptional, IsNumber, IsString, IsEnum } from 'class-validator';
+import {
+  IsOptional,
+  IsNumber,
+  IsString,
+  IsEnum,
+  IsBoolean,
+} from 'class-validator';
 import {
   EnumPromoProviderTarget,
   EnumPromoProviderType,
@@ -69,6 +75,10 @@ export class GetPromoProvidersDto {
   @IsString()
   @IsEnum(EnumGetPromoProviderTarget)
   target: string;
+
+  @IsOptional()
+  @IsBoolean()
+  is_quota_available?: boolean;
 
   // @IsOptional()
   // @IsString()
