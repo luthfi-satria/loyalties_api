@@ -208,6 +208,14 @@ export class PromoBrandService {
 
       const isQuotaAvailable = data.is_quota_available || null;
 
+      if ((dateStart && !dateEnd) || (dateEnd && !dateStart)) {
+        this.errorGenerator(
+          '',
+          'date',
+          'general.promoProvider.dateFilterMissing',
+        );
+      }
+
       const query = this.promoBrandRepository.createQueryBuilder('pbrand');
 
       if (promoBrandId) {
@@ -230,16 +238,46 @@ export class PromoBrandService {
         });
       }
 
-      if (dateStart) {
-        query.andWhere('pbrand.date_start >= :dateStart', {
-          dateStart,
-        });
-      }
+      if (dateStart && dateEnd) {
+        query.andWhere(
+          new Brackets((qb) => {
+            qb.where(
+              new Brackets((iqb) => {
+                iqb
+                  .where('pbrand.date_end >= :dateStart', {
+                    dateStart,
+                  })
+                  .andWhere('pbrand.date_end <= :dateEnd', {
+                    dateEnd,
+                  });
+              }),
+            );
 
-      if (dateEnd) {
-        query.andWhere('pbrand.date_end <= :dateEnd', {
-          dateEnd,
-        });
+            qb.orWhere(
+              new Brackets((iqb) => {
+                iqb
+                  .where('pbrand.date_start >= :dateStart', {
+                    dateStart,
+                  })
+                  .andWhere('pbrand.date_start <= :dateEnd', {
+                    dateEnd,
+                  });
+              }),
+            );
+
+            qb.orWhere(
+              new Brackets((iqb) => {
+                iqb
+                  .where('pbrand.date_start <= :dateStart', {
+                    dateStart,
+                  })
+                  .andWhere('pbrand.date_end >= :dateEnd', {
+                    dateEnd,
+                  });
+              }),
+            );
+          }),
+        );
       }
 
       if (status) {
