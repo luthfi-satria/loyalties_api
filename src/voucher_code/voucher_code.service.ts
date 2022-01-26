@@ -80,6 +80,7 @@ export class VoucherCodeService {
           'master_voucher',
         )
         .where(qry)
+        .orderBy('vc.created_at', 'DESC')
         .take(limit)
         .skip(offset);
 
