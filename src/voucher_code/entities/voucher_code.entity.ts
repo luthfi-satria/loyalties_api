@@ -67,10 +67,13 @@ export class VoucherCodeDocument {
   @OneToMany(
     () => MasterVoucherVoucherCodeDocument,
     (master_voucher_voucher_code) => master_voucher_voucher_code.voucher_code,
+    { eager: true },
   )
   master_voucher_voucher_code: MasterVoucherVoucherCodeDocument[];
 
-  @OneToMany(() => VoucherDocument, (voucher) => voucher.vouchers)
+  @OneToMany(() => VoucherDocument, (voucher) => voucher.vouchers, {
+    eager: true,
+  })
   vouchers: VoucherDocument[];
 
   @Column({ nullable: true })
