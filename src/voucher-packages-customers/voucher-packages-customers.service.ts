@@ -282,9 +282,6 @@ export class VoucherPackagesCustomersService {
         where = { ...where, price: LessThanOrEqual(params.price_max) };
       }
 
-      if (params.status) {
-        where = { ...where, status: params.status };
-      }
       const query = this.mainQuery(user).where(where);
       if (params.status == StatusVoucherPackage.ACTIVE) {
         query.andWhere(
@@ -308,8 +305,10 @@ export class VoucherPackagesCustomersService {
             );
           }),
         );
-        where = { ...where, status: StatusVoucherPackage.ACTIVE };
-        // const query = this.mainQuery(user).where(where);
+      } else if (params.status) {
+        query.andWhere('voucher_package.status = :status', {
+          status: params.status,
+        });
       }
 
       query.take(limit).skip(offset);
