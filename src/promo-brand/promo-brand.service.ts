@@ -276,24 +276,24 @@ export class PromoBrandService {
         });
       }
 
-      if (isQuotaAvailable) {
-        query.leftJoin(
-          (qb) =>
-            qb
-              .select(
-                'COUNT(DISTINCT(usg.id)) AS used_count, pbrand.id AS promo_brand_id',
-              )
-              .from(PromoBrandDocument, 'pbrand')
-              .leftJoin(
-                PromoBrandUsageDocument,
-                'usg',
-                `usg.promo_brand_id = pbrand.id AND usg.status = 'USED'`,
-              )
-              .groupBy('pbrand.id'),
-          'usage',
-          'usage.promo_brand_id = pbrand.id',
-        );
+      query.leftJoin(
+        (qb) =>
+          qb
+            .select(
+              'COUNT(DISTINCT(usg.id)) AS used_count, pbrand.id AS promo_brand_id',
+            )
+            .from(PromoBrandDocument, 'pbrand')
+            .leftJoin(
+              PromoBrandUsageDocument,
+              'usg',
+              `usg.promo_brand_id = pbrand.id AND usg.status = 'USED'`,
+            )
+            .groupBy('pbrand.id'),
+        'usage',
+        'usage.promo_brand_id = pbrand.id',
+      );
 
+      if (isQuotaAvailable) {
         query.andWhere(
           new Brackets((qb) => {
             qb.where('usage.used_count < pbrand.quota');
@@ -308,13 +308,21 @@ export class PromoBrandService {
         .skip((currentPage - 1) * perPage)
         .take(perPage);
 
-      const [items, count] = await query.getManyAndCount();
+      const count = await query.getCount();
+
+      const { entities, raw } = await query.getRawAndEntities();
+
+      entities?.forEach((promo, i) => {
+        promo.quota_left = promo.quota
+          ? promo.quota - Number(raw[i].used_count)
+          : null;
+      });
 
       return {
         total_item: count,
         limit: perPage,
         current_page: currentPage,
-        items: items,
+        items: entities,
       };
     } catch (error) {
       this.errorReport(error, 'general.list.fail');
