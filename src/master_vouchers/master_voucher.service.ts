@@ -80,6 +80,9 @@ export class MasterVoucherService {
         take: limit,
         skip: offset,
         where: qry,
+        order: {
+          created_at: 'DESC',
+        },
       });
 
       const listItems = {
