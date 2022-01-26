@@ -18,6 +18,7 @@ import { DateTimeUtils } from 'src/utils/date-time-utils';
 import { StatusVoucherEnum } from 'src/voucher/entities/voucher.entity';
 import { VoucherService } from 'src/voucher/voucher.service';
 import {
+  ILike,
   In,
   LessThanOrEqual,
   Like,
@@ -150,7 +151,8 @@ export class VoucherPackagesService {
 
       if (params.target) where = { ...where, target: params.target };
       if (params.status) where = { ...where, status: params.status };
-      if (params.search) where = { ...where, name: Like(`%${params.search}%`) };
+      if (params.search)
+        where = { ...where, name: ILike(`%${params.search}%`) };
       if (params.periode_start) {
         where = { ...where, date_start: MoreThanOrEqual(params.periode_start) };
       }
