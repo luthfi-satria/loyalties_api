@@ -16,7 +16,7 @@ import {
 } from '@nestjs/common';
 import { MessageService } from 'src/message/message.service';
 import { ResponseService } from 'src/response/response.service';
-import { Like } from 'typeorm';
+import { ILike, LessThan, MoreThan } from 'typeorm';
 import {
   CancelVoucherCodeDto,
   CreateVoucherCodeDto,
@@ -64,7 +64,11 @@ export class VoucherCodeService {
 
       if (data.target) qry = { ...qry, target: data.target };
       if (data.status) qry = { ...qry, status: data.status };
-      if (data.search) qry = { ...qry, code: Like(`%${data.search}%`) };
+      if (data.search) qry = { ...qry, code: ILike(`%${data.search}%`) };
+      if (data.periode_start)
+        qry = { ...qry, date_start: MoreThan(data.periode_start) };
+      if (data.periode_end)
+        qry = { ...qry, date_end: LessThan(data.periode_end) };
 
       const query = this.voucherCodesRepository
         .createQueryBuilder('vc')

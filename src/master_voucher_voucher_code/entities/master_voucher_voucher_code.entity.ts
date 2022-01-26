@@ -13,7 +13,7 @@ export class MasterVoucherVoucherCodeDocument {
   @Column({ nullable: true })
   quantity: number;
 
-  @ManyToOne(() => VoucherCodeDocument)
+  @ManyToOne(() => VoucherCodeDocument, { orphanedRowAction: 'delete' })
   @JoinColumn({
     name: 'loyaltiesVoucherCodeId',
     referencedColumnName: 'id',
