@@ -292,8 +292,11 @@ export class VoucherPackagesCustomersService {
             qb.orWhere(
               new Brackets((qb2) => {
                 qb2
-                  .where('voucher_package.status = :status_finished', {
-                    status_finished: StatusVoucherPackage.FINISHED,
+                  .where('voucher_package.status IN (:...status_end)', {
+                    status_end: [
+                      StatusVoucherPackage.FINISHED,
+                      StatusVoucherPackage.STOPPED,
+                    ],
                   })
                   .andWhere(
                     'voucher_package_orders.status = :order_status_waiting',
