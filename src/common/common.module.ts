@@ -28,6 +28,8 @@ import { VoucherModule } from 'src/voucher/voucher.module';
 import { PromoProviderUsageModule } from 'src/promo-provider-usage/promo-provider-usage.module';
 import { PromoBrandUsageModule } from 'src/promo-brand-usage/promo-brand-usage.module';
 import { OrderService } from './order/order.service';
+import { RedisVoucherService } from './redis/voucher/redis-voucher.service';
+import { RedisVoucherProcessor } from './redis/voucher/redis-voucher.processor';
 
 @Global()
 @Module({
@@ -73,6 +75,8 @@ import { OrderService } from './order/order.service';
     RedisPromoProviderProcessor,
     RedisVoucherCodeService,
     RedisVoucherCodeProcessor,
+    RedisVoucherService,
+    RedisVoucherProcessor,
     RedisVoucherPackageService,
     RedisVoucherPackageProcessor,
     RedisPromoBrandService,
@@ -90,6 +94,8 @@ import { OrderService } from './order/order.service';
     RedisPromoProviderProcessor,
     RedisVoucherCodeService,
     RedisVoucherCodeProcessor,
+    RedisVoucherService,
+    RedisVoucherProcessor,
     RedisVoucherPackageService,
     RedisVoucherPackageProcessor,
     RedisPromoBrandService,

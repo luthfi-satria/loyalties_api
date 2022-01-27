@@ -8,3 +8,7 @@ export class GetActiveTargetVouchersDto {
   @IsOptional()
   target: string;
 }
+
+export class UpdateVoucherStatusExpireDto {
+  voucher_id: string;
+}
