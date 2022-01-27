@@ -313,8 +313,10 @@ export class VoucherPackagesCustomersService {
 
       query.take(limit).skip(offset);
 
-      let items = await query.getMany();
+      // let items = await query.getMany();
       const count = await query.getCount();
+      const { entities, raw } = await query.getRawAndEntities();
+      let items = this.voucherPackageService.assignQuotaLeft(entities, raw);
 
       items = await this.assignObjectPaymentMethod(items);
 
@@ -351,11 +353,16 @@ export class VoucherPackagesCustomersService {
   ): Promise<VoucherPackageDocument> {
     try {
       const query = this.mainQuery(user).where({ id: voucherPackageid });
-      const voucherPackage = await query.getOne();
+      let voucherPackage = await query.getOne();
       const voucherPackages = await this.assignObjectPaymentMethod([
         voucherPackage,
       ]);
-      return voucherPackages[0];
+      const raw = await query.getRawOne();
+      voucherPackage = this.voucherPackageService.assignQuotaLeft(
+        voucherPackages,
+        [raw],
+      )[0];
+      return voucherPackage;
     } catch (error) {
       this.logger.log(error);
       throw new BadRequestException(
