@@ -282,9 +282,6 @@ export class VoucherPackagesCustomersService {
         where = { ...where, price: LessThanOrEqual(params.price_max) };
       }
 
-      if (params.status) {
-        where = { ...where, status: params.status };
-      }
       const query = this.mainQuery(user).where(where);
       if (params.status == StatusVoucherPackage.ACTIVE) {
         query.andWhere(
@@ -295,8 +292,11 @@ export class VoucherPackagesCustomersService {
             qb.orWhere(
               new Brackets((qb2) => {
                 qb2
-                  .where('voucher_package.status = :status_finished', {
-                    status_finished: StatusVoucherPackage.FINISHED,
+                  .where('voucher_package.status IN (:...status_end)', {
+                    status_end: [
+                      StatusVoucherPackage.FINISHED,
+                      StatusVoucherPackage.STOPPED,
+                    ],
                   })
                   .andWhere(
                     'voucher_package_orders.status = :order_status_waiting',
@@ -308,14 +308,18 @@ export class VoucherPackagesCustomersService {
             );
           }),
         );
-        where = { ...where, status: StatusVoucherPackage.ACTIVE };
-        // const query = this.mainQuery(user).where(where);
+      } else if (params.status) {
+        query.andWhere('voucher_package.status = :status', {
+          status: params.status,
+        });
       }
 
       query.take(limit).skip(offset);
 
-      let items = await query.getMany();
+      // let items = await query.getMany();
       const count = await query.getCount();
+      const { entities, raw } = await query.getRawAndEntities();
+      let items = this.voucherPackageService.assignQuotaLeft(entities, raw);
 
       items = await this.assignObjectPaymentMethod(items);
 
@@ -352,11 +356,16 @@ export class VoucherPackagesCustomersService {
   ): Promise<VoucherPackageDocument> {
     try {
       const query = this.mainQuery(user).where({ id: voucherPackageid });
-      const voucherPackage = await query.getOne();
+      let voucherPackage = await query.getOne();
       const voucherPackages = await this.assignObjectPaymentMethod([
         voucherPackage,
       ]);
-      return voucherPackages[0];
+      const raw = await query.getRawOne();
+      voucherPackage = this.voucherPackageService.assignQuotaLeft(
+        voucherPackages,
+        [raw],
+      )[0];
+      return voucherPackage;
     } catch (error) {
       this.logger.log(error);
       throw new BadRequestException(

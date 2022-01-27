@@ -71,10 +71,14 @@ export class VoucherPackagesController {
         createVoucherPackageDto.date_end,
       );
 
-      this.imageValidationService.setFilter('photo', 'required');
-      await this.imageValidationService.validate(req);
-      const path_photo = '/upload_loyalties/' + file.filename;
-      createVoucherPackageDto.photo = await this.storage.store(path_photo);
+      if (createVoucherPackageDto.photo_url) {
+        createVoucherPackageDto.photo = createVoucherPackageDto.photo_url;
+      } else {
+        this.imageValidationService.setFilter('photo', 'required');
+        await this.imageValidationService.validate(req);
+        const path_photo = '/upload_loyalties/' + file.filename;
+        createVoucherPackageDto.photo = await this.storage.store(path_photo);
+      }
 
       const result = await this.voucherPackagesService.create(
         createVoucherPackageDto,

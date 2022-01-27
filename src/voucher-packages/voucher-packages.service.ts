@@ -187,30 +187,13 @@ export class VoucherPackagesService {
       // const items = await query.getMany();
       const count = await query.getCount();
       const { entities, raw } = await query.getRawAndEntities();
-      for (let i = 0; i < entities.length; i++) {
-        const voucherPackage = entities[i];
-        const rawVoucherPackage = _.find(raw, {
-          voucher_package_id: voucherPackage.id,
-        });
 
-        voucherPackage.quota_left = voucherPackage.quota;
-        if (!voucherPackage.quota) {
-          voucherPackage.quota_left = null;
-          continue;
-        }
-        if (rawVoucherPackage) {
-          voucherPackage.quota_left =
-            voucherPackage.quota - rawVoucherPackage.used_count;
-          voucherPackage.quota_left =
-            voucherPackage.quota_left < 0 ? 0 : voucherPackage.quota_left;
-        }
-      }
-
+      const items = this.assignQuotaLeft(entities, raw);
       const listItems = {
         current_page: +page,
         total_item: count,
         limit: +limit,
-        items: entities,
+        items: items,
       };
 
       return listItems;
@@ -259,7 +242,10 @@ export class VoucherPackagesService {
   async getDetail(voucherPackageIds: string) {
     try {
       const query = this.mainQuery().where({ id: voucherPackageIds });
-      return query.getOne();
+      let voucherPackage = await query.getOne();
+      const raw = await query.getRawOne();
+      voucherPackage = this.assignQuotaLeft([voucherPackage], [raw])[0];
+      return voucherPackage;
     } catch (error) {
       this.logger.log(error);
       throw new BadRequestException(
@@ -493,6 +479,31 @@ export class VoucherPackagesService {
     }
 
     await this.voucherService.createVoucherBulk(postVoucherDatas);
+  }
+
+  assignQuotaLeft(
+    entities: VoucherPackageDocument[],
+    raw: any[],
+  ): VoucherPackageDocument[] {
+    for (let i = 0; i < entities.length; i++) {
+      const voucherPackage = entities[i];
+      const rawVoucherPackage = _.find(raw, {
+        voucher_package_id: voucherPackage.id,
+      });
+
+      voucherPackage.quota_left = voucherPackage.quota;
+      if (!voucherPackage.quota) {
+        voucherPackage.quota_left = null;
+        continue;
+      }
+      if (rawVoucherPackage) {
+        voucherPackage.quota_left =
+          voucherPackage.quota - rawVoucherPackage.used_count;
+        voucherPackage.quota_left =
+          voucherPackage.quota_left < 0 ? 0 : voucherPackage.quota_left;
+      }
+    }
+    return entities;
   }
 
   errorReport(error: any, message: string) {
