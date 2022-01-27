@@ -21,5 +21,9 @@ export class UpdateVoucherPackageStatusActiveDto {
 }
 
 export class UpdateVoucherPackageStatusFinishDto {
+  @IsNotEmpty()
+  @IsString()
   voucher_package_id: string;
+
+  cancellation_reason?: string;
 }

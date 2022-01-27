@@ -84,6 +84,8 @@ export class VoucherPackageDocument {
   )
   voucher_package_orders: VoucherPackageOrderDocument[];
 
+  quota_left: number;
+
   @OneToMany(() => VoucherDocument, (vouchers) => vouchers.voucher_package)
   vouchers: VoucherDocument[];
 

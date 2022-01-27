@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import _ from 'lodash';
 import { User } from 'src/auth/guard/interface/user.interface';
+import { OrderService } from 'src/common/order/order.service';
 import { CreatePayment } from 'src/common/payment/interfaces/payment.interface';
 import { PaymentService } from 'src/common/payment/payment.service';
 import {
@@ -15,9 +16,15 @@ import {
 import { MessageService } from 'src/message/message.service';
 import { RMessage } from 'src/response/response.interface';
 import { ResponseService } from 'src/response/response.service';
-import { VoucherPackageDocument } from 'src/voucher-packages/entities/voucher-package.entity';
+import {
+  StatusVoucherPackage,
+  TargetVoucherPackage,
+  VoucherPackageDocument,
+} from 'src/voucher-packages/entities/voucher-package.entity';
 import { VoucherPackagesService } from 'src/voucher-packages/voucher-packages.service';
 import {
+  Brackets,
+  In,
   LessThanOrEqual,
   Like,
   MoreThanOrEqual,
@@ -39,6 +46,7 @@ export class VoucherPackagesCustomersService {
     private readonly voucherPackageOrderRepository: VoucherPackageOrderRepository,
     private readonly voucherPackageService: VoucherPackagesService,
     private readonly paymentService: PaymentService,
+    private readonly orderService: OrderService,
   ) {}
   private readonly logger = new Logger(VoucherPackagesCustomersService.name);
 
@@ -48,9 +56,25 @@ export class VoucherPackagesCustomersService {
     params: CreateVoucherPackagesCustomerDto,
   ): Promise<VoucherPackageOrderDocument> {
     const voucherPackage =
-      await this.voucherPackageService.getAndValidateAvailableVoucherPackageById(
+      await this.getAndValidateVoucherPackageAvailableQuota(
         params.voucher_package_id,
       );
+
+    const { data: customerTarget } =
+      await this.orderService.getCostumerTargetLoyalties({
+        customer_id: user.id,
+        created_at: user.created_at,
+      });
+    if (
+      voucherPackage.target != TargetVoucherPackage.ALL &&
+      voucherPackage.target != customerTarget.target
+    ) {
+      this.errorGenerator(
+        customerTarget.target,
+        'target',
+        'general.general.voucherTargetNotMatch',
+      );
+    }
 
     const payments = await this.paymentService.getPaymentsBulk({
       ids: [params.payment_method_id],
@@ -99,7 +123,6 @@ export class VoucherPackagesCustomersService {
         paramCreate,
       );
 
-      //=>Tembak create payment
       const item: CreatePayment = {
         order_id: voucherPackageOrder.id,
         payment_method_id: voucherPackageOrder.payment_method_id,
@@ -135,7 +158,6 @@ export class VoucherPackagesCustomersService {
           );
         });
 
-      //=>Update order with payment expirate at, ongkir, total,
       voucherPackageOrder.payment_expired_at = payment.data.expired_at;
       voucherPackageOrder.payment_info = payment.data;
       await this.voucherPackageOrderRepository.save(voucherPackageOrder);
@@ -246,7 +268,6 @@ export class VoucherPackagesCustomersService {
       let where = {};
 
       if (params.target) where = { ...where, target: params.target };
-      if (params.status) where = { ...where, status: params.status };
       if (params.search) where = { ...where, name: Like(`%${params.search}%`) };
       if (params.periode_start) {
         where = { ...where, created_at: MoreThanOrEqual(params.periode_start) };
@@ -262,11 +283,43 @@ export class VoucherPackagesCustomersService {
       }
 
       const query = this.mainQuery(user).where(where);
+      if (params.status == StatusVoucherPackage.ACTIVE) {
+        query.andWhere(
+          new Brackets((qb) => {
+            qb.where('voucher_package.status = :status', {
+              status: StatusVoucherPackage.ACTIVE,
+            });
+            qb.orWhere(
+              new Brackets((qb2) => {
+                qb2
+                  .where('voucher_package.status IN (:...status_end)', {
+                    status_end: [
+                      StatusVoucherPackage.FINISHED,
+                      StatusVoucherPackage.STOPPED,
+                    ],
+                  })
+                  .andWhere(
+                    'voucher_package_orders.status = :order_status_waiting',
+                    {
+                      order_status_waiting: StatusVoucherPackageOrder.WAITING,
+                    },
+                  );
+              }),
+            );
+          }),
+        );
+      } else if (params.status) {
+        query.andWhere('voucher_package.status = :status', {
+          status: params.status,
+        });
+      }
 
       query.take(limit).skip(offset);
 
-      let items = await query.getMany();
+      // let items = await query.getMany();
       const count = await query.getCount();
+      const { entities, raw } = await query.getRawAndEntities();
+      let items = this.voucherPackageService.assignQuotaLeft(entities, raw);
 
       items = await this.assignObjectPaymentMethod(items);
 
@@ -303,11 +356,16 @@ export class VoucherPackagesCustomersService {
   ): Promise<VoucherPackageDocument> {
     try {
       const query = this.mainQuery(user).where({ id: voucherPackageid });
-      const voucherPackage = await query.getOne();
+      let voucherPackage = await query.getOne();
       const voucherPackages = await this.assignObjectPaymentMethod([
         voucherPackage,
       ]);
-      return voucherPackages[0];
+      const raw = await query.getRawOne();
+      voucherPackage = this.voucherPackageService.assignQuotaLeft(
+        voucherPackages,
+        [raw],
+      )[0];
+      return voucherPackage;
     } catch (error) {
       this.logger.log(error);
       throw new BadRequestException(
@@ -409,10 +467,18 @@ export class VoucherPackagesCustomersService {
     if (!paymentMethodIds.length) {
       return voucherPackages;
     }
-    const paymentMethods = await this.paymentService.getPaymentsBulk({
-      ids: paymentMethodIds,
-      isIncludeDeleted: false,
-    });
+    const paymentMethods = await this.paymentService
+      .getPaymentsBulk({
+        ids: paymentMethodIds,
+        isIncludeDeleted: false,
+      })
+      .catch((error) => {
+        this.logger.error(error);
+      });
+    if (!paymentMethods) {
+      return voucherPackages;
+    }
+
     for (let i = 0; i < voucherPackages.length; i++) {
       const voucherPackage = voucherPackages[i];
       for (let j = 0; j < voucherPackage.voucher_package_orders.length; j++) {
@@ -474,6 +540,7 @@ export class VoucherPackagesCustomersService {
       );
     }
   }
+
   async getAndValidateVoucherPackageOrderById(
     voucherPackageId: string,
     user: User,
@@ -497,6 +564,33 @@ export class VoucherPackagesCustomersService {
           'Bad Request',
         ),
       );
+    }
+
+    return voucherPackage;
+  }
+
+  async getAndValidateVoucherPackageAvailableQuota(
+    voucherPackageId: string,
+  ): Promise<VoucherPackageDocument> {
+    const voucherPackage =
+      await this.voucherPackageService.getAndValidateAvailableVoucherPackageById(
+        voucherPackageId,
+      );
+
+    if (!voucherPackage.quota) {
+      return voucherPackage;
+    }
+
+    const countSold = await this.voucherPackageOrderRepository.count({
+      voucher_package_id: voucherPackageId,
+      status: In([
+        StatusVoucherPackageOrder.WAITING,
+        StatusVoucherPackageOrder.PAID,
+      ]),
+    });
+
+    if (voucherPackage.quota <= countSold) {
+      this.errorGenerator('0', 'quota', 'general.voucher.quotaReached');
     }
 
     return voucherPackage;

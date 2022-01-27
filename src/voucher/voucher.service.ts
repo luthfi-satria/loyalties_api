@@ -654,7 +654,7 @@ export class VoucherService {
 
   async cancelVoucher(data: any) {
     try {
-      const voucherIds = data.data.voucher_ids || null;
+      const voucherIds = data.voucher_ids || null;
       const customerId = data.customer_id || null;
 
       if (voucherIds?.length) {

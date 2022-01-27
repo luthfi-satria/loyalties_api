@@ -4,6 +4,7 @@ import {
   Injectable,
   Logger,
 } from '@nestjs/common';
+import _ from 'lodash';
 import moment from 'moment';
 import {
   CreateAutoFinishVoucherPackageDto,
@@ -15,12 +16,13 @@ import { MessageService } from 'src/message/message.service';
 import { RMessage } from 'src/response/response.interface';
 import { ResponseService } from 'src/response/response.service';
 import { DateTimeUtils } from 'src/utils/date-time-utils';
+import { VoucherPackageOrderDocument } from 'src/voucher-packages-customers/entities/voucher-packages-order.entity';
 import { StatusVoucherEnum } from 'src/voucher/entities/voucher.entity';
 import { VoucherService } from 'src/voucher/voucher.service';
 import {
+  ILike,
   In,
   LessThanOrEqual,
-  Like,
   MoreThanOrEqual,
   SelectQueryBuilder,
 } from 'typeorm';
@@ -131,6 +133,17 @@ export class VoucherPackagesService {
       .leftJoinAndSelect(
         'voucher_package_master_vouchers.master_voucher',
         'master_voucher',
+      )
+      .leftJoinAndSelect(
+        (qb) =>
+          qb
+            .select(
+              'COUNT(voucher_package_order_quota.id) AS used_count, voucher_package_order_quota.voucher_package_id AS order_voucher_package_id',
+            )
+            .from(VoucherPackageOrderDocument, 'voucher_package_order_quota')
+            .groupBy('voucher_package_order_quota.voucher_package_id'),
+        'voucher_package_order_quota',
+        'voucher_package.id = voucher_package_order_quota.order_voucher_package_id',
       );
     return query;
   }
@@ -150,7 +163,8 @@ export class VoucherPackagesService {
 
       if (params.target) where = { ...where, target: params.target };
       if (params.status) where = { ...where, status: params.status };
-      if (params.search) where = { ...where, name: Like(`%${params.search}%`) };
+      if (params.search)
+        where = { ...where, name: ILike(`%${params.search}%`) };
       if (params.periode_start) {
         where = { ...where, date_start: MoreThanOrEqual(params.periode_start) };
       }
@@ -166,9 +180,11 @@ export class VoucherPackagesService {
 
       const query = this.mainQuery().where(where).take(limit).skip(offset);
 
-      const items = await query.getMany();
+      // const items = await query.getMany();
       const count = await query.getCount();
+      const { entities, raw } = await query.getRawAndEntities();
 
+      const items = this.assignQuotaLeft(entities, raw);
       const listItems = {
         current_page: +page,
         total_item: count,
@@ -222,7 +238,10 @@ export class VoucherPackagesService {
   async getDetail(voucherPackageIds: string) {
     try {
       const query = this.mainQuery().where({ id: voucherPackageIds });
-      return query.getOne();
+      let voucherPackage = await query.getOne();
+      const raw = await query.getRawOne();
+      voucherPackage = this.assignQuotaLeft([voucherPackage], [raw])[0];
+      return voucherPackage;
     } catch (error) {
       this.logger.log(error);
       throw new BadRequestException(
@@ -458,6 +477,31 @@ export class VoucherPackagesService {
     await this.voucherService.createVoucherBulk(postVoucherDatas);
   }
 
+  assignQuotaLeft(
+    entities: VoucherPackageDocument[],
+    raw: any[],
+  ): VoucherPackageDocument[] {
+    for (let i = 0; i < entities.length; i++) {
+      const voucherPackage = entities[i];
+      const rawVoucherPackage = _.find(raw, {
+        voucher_package_id: voucherPackage.id,
+      });
+
+      voucherPackage.quota_left = voucherPackage.quota;
+      if (!voucherPackage.quota) {
+        voucherPackage.quota_left = null;
+        continue;
+      }
+      if (rawVoucherPackage) {
+        voucherPackage.quota_left =
+          voucherPackage.quota - rawVoucherPackage.used_count;
+        voucherPackage.quota_left =
+          voucherPackage.quota_left < 0 ? 0 : voucherPackage.quota_left;
+      }
+    }
+    return entities;
+  }
+
   errorReport(error: any, message: string) {
     this.logger.error(error);
     console.error(error);
@@ -544,12 +588,15 @@ export class VoucherPackagesService {
           where: { id: data.voucher_package_id },
         });
 
-      if (findVoucherPackage.status !== StatusVoucherPackage.SCHEDULED) {
+      if (
+        findVoucherPackage.status !== StatusVoucherPackage.SCHEDULED &&
+        findVoucherPackage.status !== StatusVoucherPackage.FINISHED
+      ) {
         throw new BadRequestException(
           this.responseService.error(
             HttpStatus.BAD_REQUEST,
             {
-              value: 'status',
+              value: findVoucherPackage.status,
               property: 'status',
               constraint: [
                 this.messageService.get('general.general.statusNotAllowed'),
@@ -562,6 +609,7 @@ export class VoucherPackagesService {
       }
 
       findVoucherPackage.status = StatusVoucherPackage.ACTIVE;
+      findVoucherPackage.cancellation_reason = null;
 
       const updatedVoucherPackage = await this.voucherPackageRepository.save(
         findVoucherPackage,
@@ -612,6 +660,9 @@ export class VoucherPackagesService {
       }
 
       findVoucherPackage.status = StatusVoucherPackage.FINISHED;
+      if (data.cancellation_reason) {
+        findVoucherPackage.cancellation_reason = data.cancellation_reason;
+      }
 
       const updatedVoucherPackage = await this.voucherPackageRepository.save(
         findVoucherPackage,

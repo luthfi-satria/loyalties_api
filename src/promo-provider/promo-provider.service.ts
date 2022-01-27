@@ -221,6 +221,14 @@ export class PromoProviderService {
 
       const isQuotaAvailable = data.is_quota_available || null;
 
+      if ((dateStart && !dateEnd) || (dateEnd && !dateStart)) {
+        this.errorGenerator(
+          '',
+          'date',
+          'general.promoProvider.dateFilterMissing',
+        );
+      }
+
       const query = this.promoProviderRepository.createQueryBuilder('ppro');
 
       if (promoProviderId) {
@@ -239,16 +247,58 @@ export class PromoProviderService {
         });
       }
 
-      if (dateStart) {
-        query.andWhere('ppro.date_start >= :dateStart', {
-          dateStart,
-        });
-      }
+      // if (dateStart) {
+      //   query.andWhere('ppro.date_start >= :dateStart', {
+      //     dateStart,
+      //   });
+      // }
 
-      if (dateEnd) {
-        query.andWhere('ppro.date_end <= :dateEnd', {
-          dateEnd,
-        });
+      // if (dateEnd) {
+      //   query.andWhere('ppro.date_end <= :dateEnd', {
+      //     dateEnd,
+      //   });
+      // }
+
+      if (dateStart && dateEnd) {
+        query.andWhere(
+          new Brackets((qb) => {
+            qb.where(
+              new Brackets((iqb) => {
+                iqb
+                  .where('ppro.date_end >= :dateStart', {
+                    dateStart,
+                  })
+                  .andWhere('ppro.date_end <= :dateEnd', {
+                    dateEnd,
+                  });
+              }),
+            );
+
+            qb.orWhere(
+              new Brackets((iqb) => {
+                iqb
+                  .where('ppro.date_start >= :dateStart', {
+                    dateStart,
+                  })
+                  .andWhere('ppro.date_start <= :dateEnd', {
+                    dateEnd,
+                  });
+              }),
+            );
+
+            qb.orWhere(
+              new Brackets((iqb) => {
+                iqb
+                  .where('ppro.date_start <= :dateStart', {
+                    dateStart,
+                  })
+                  .andWhere('ppro.date_end >= :dateEnd', {
+                    dateEnd,
+                  });
+              }),
+            );
+          }),
+        );
       }
 
       if (status) {
@@ -285,24 +335,24 @@ export class PromoProviderService {
         });
       }
 
-      if (isQuotaAvailable) {
-        query.leftJoin(
-          (qb) =>
-            qb
-              .select(
-                'COUNT(DISTINCT(usg.id)) AS used_count, ppro.id AS promo_provider_id',
-              )
-              .from(PromoProviderDocument, 'ppro')
-              .leftJoin(
-                PromoProviderUsageDocument,
-                'usg',
-                `usg.promo_provider_id = ppro.id AND usg.status = 'USED'`,
-              )
-              .groupBy('ppro.id'),
-          'usage',
-          'usage.promo_provider_id = ppro.id',
-        );
+      query.leftJoinAndSelect(
+        (qb) =>
+          qb
+            .select(
+              'COUNT(DISTINCT(usg.id)) AS used_count, ppro.id AS promo_provider_id',
+            )
+            .from(PromoProviderDocument, 'ppro')
+            .leftJoin(
+              PromoProviderUsageDocument,
+              'usg',
+              `usg.promo_provider_id = ppro.id AND usg.status = 'USED'`,
+            )
+            .groupBy('ppro.id'),
+        'usage',
+        'usage.promo_provider_id = ppro.id',
+      );
 
+      if (isQuotaAvailable) {
         query.andWhere(
           new Brackets((qb) => {
             qb.where('usage.used_count < ppro.quota');
@@ -317,13 +367,21 @@ export class PromoProviderService {
         .skip((currentPage - 1) * perPage)
         .take(perPage);
 
-      const [items, count] = await query.getManyAndCount();
+      const count = await query.getCount();
+
+      const { entities, raw } = await query.getRawAndEntities();
+
+      entities?.forEach((promo, i) => {
+        promo.quota_left = promo.quota
+          ? promo.quota - Number(raw[i].used_count)
+          : null;
+      });
 
       return {
         total_item: count,
         limit: perPage,
         current_page: currentPage,
-        items: items,
+        items: entities,
       };
     } catch (error) {
       this.errorReport(error, 'general.list.fail');
@@ -548,14 +606,17 @@ export class PromoProviderService {
       const customerId = data.customer_id;
       const deliveryFee = data.delivery_fee || 0;
       const merchantId = data.merchant_id;
+      const isQuotaAvailable = data.is_quota_available == 'true' ? true : false;
 
       const promoProviders = await this.getActivePromoProviders({
         target: target,
+        is_quota_available: isQuotaAvailable,
       });
 
       const promoBrands = await this.promoBrandService.getActivePromoBrands({
         target,
         merchant_id: merchantId,
+        is_quota_available: isQuotaAvailable,
       });
 
       const vouchers = await this.voucherService.getActiveTargetVouchers({
@@ -748,6 +809,7 @@ export class PromoProviderService {
     try {
       const targetList = [];
       const status = 'ACTIVE';
+      const isQuotaAvailable = data.is_quota_available || null;
 
       if (data.target) {
         targetList.push(...['ALL', data.target]);
@@ -766,7 +828,7 @@ export class PromoProviderService {
         cart_total: null,
         target_list: targetList,
         order_type_list: null,
-        is_quota_available: true,
+        is_quota_available: isQuotaAvailable,
       });
 
       return items;

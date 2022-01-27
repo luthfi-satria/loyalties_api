@@ -21,7 +21,7 @@ export class OrderService {
       const headerRequest = {
         'Content-Type': 'application/json',
       };
-      return await firstValueFrom(
+      const targetStatus = await firstValueFrom(
         this.httpService
           .get(
             `${process.env.BASEURL_ORDERS_SERVICE}/api/v1/orders/internal/orders/customers/target`,
@@ -29,6 +29,7 @@ export class OrderService {
           )
           .pipe(map((resp) => resp.data)),
       );
+      return targetStatus;
     } catch (e) {
       this.logger.error(
         `${process.env.BASEURL_ORDERS_SERVICE}/api/v1/orders/internal/orders/customers/target ${e.message}`,

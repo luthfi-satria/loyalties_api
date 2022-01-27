@@ -35,6 +35,9 @@ export class CreateVoucherPackageDto {
   price: number;
 
   photo: string;
+  @IsOptional()
+  @IsString()
+  photo_url: string;
 
   @IsObject()
   master_vouchers: any;

@@ -208,6 +208,14 @@ export class PromoBrandService {
 
       const isQuotaAvailable = data.is_quota_available || null;
 
+      if ((dateStart && !dateEnd) || (dateEnd && !dateStart)) {
+        this.errorGenerator(
+          '',
+          'date',
+          'general.promoProvider.dateFilterMissing',
+        );
+      }
+
       const query = this.promoBrandRepository.createQueryBuilder('pbrand');
 
       if (promoBrandId) {
@@ -230,16 +238,46 @@ export class PromoBrandService {
         });
       }
 
-      if (dateStart) {
-        query.andWhere('pbrand.date_start >= :dateStart', {
-          dateStart,
-        });
-      }
+      if (dateStart && dateEnd) {
+        query.andWhere(
+          new Brackets((qb) => {
+            qb.where(
+              new Brackets((iqb) => {
+                iqb
+                  .where('pbrand.date_end >= :dateStart', {
+                    dateStart,
+                  })
+                  .andWhere('pbrand.date_end <= :dateEnd', {
+                    dateEnd,
+                  });
+              }),
+            );
 
-      if (dateEnd) {
-        query.andWhere('pbrand.date_end <= :dateEnd', {
-          dateEnd,
-        });
+            qb.orWhere(
+              new Brackets((iqb) => {
+                iqb
+                  .where('pbrand.date_start >= :dateStart', {
+                    dateStart,
+                  })
+                  .andWhere('pbrand.date_start <= :dateEnd', {
+                    dateEnd,
+                  });
+              }),
+            );
+
+            qb.orWhere(
+              new Brackets((iqb) => {
+                iqb
+                  .where('pbrand.date_start <= :dateStart', {
+                    dateStart,
+                  })
+                  .andWhere('pbrand.date_end >= :dateEnd', {
+                    dateEnd,
+                  });
+              }),
+            );
+          }),
+        );
       }
 
       if (status) {
@@ -276,24 +314,24 @@ export class PromoBrandService {
         });
       }
 
-      if (isQuotaAvailable) {
-        query.leftJoin(
-          (qb) =>
-            qb
-              .select(
-                'COUNT(DISTINCT(usg.id)) AS used_count, pbrand.id AS promo_brand_id',
-              )
-              .from(PromoBrandDocument, 'pbrand')
-              .leftJoin(
-                PromoBrandUsageDocument,
-                'usg',
-                `usg.promo_brand_id = pbrand.id AND usg.status = 'USED'`,
-              )
-              .groupBy('pbrand.id'),
-          'usage',
-          'usage.promo_brand_id = pbrand.id',
-        );
+      query.leftJoin(
+        (qb) =>
+          qb
+            .select(
+              'COUNT(DISTINCT(usg.id)) AS used_count, pbrand.id AS promo_brand_id',
+            )
+            .from(PromoBrandDocument, 'pbrand')
+            .leftJoin(
+              PromoBrandUsageDocument,
+              'usg',
+              `usg.promo_brand_id = pbrand.id AND usg.status = 'USED'`,
+            )
+            .groupBy('pbrand.id'),
+        'usage',
+        'usage.promo_brand_id = pbrand.id',
+      );
 
+      if (isQuotaAvailable) {
         query.andWhere(
           new Brackets((qb) => {
             qb.where('usage.used_count < pbrand.quota');
@@ -308,13 +346,21 @@ export class PromoBrandService {
         .skip((currentPage - 1) * perPage)
         .take(perPage);
 
-      const [items, count] = await query.getManyAndCount();
+      const count = await query.getCount();
+
+      const { entities, raw } = await query.getRawAndEntities();
+
+      entities?.forEach((promo, i) => {
+        promo.quota_left = promo.quota
+          ? promo.quota - Number(raw[i].used_count)
+          : null;
+      });
 
       return {
         total_item: count,
         limit: perPage,
         current_page: currentPage,
-        items: items,
+        items: entities,
       };
     } catch (error) {
       this.errorReport(error, 'general.list.fail');
@@ -499,6 +545,7 @@ export class PromoBrandService {
     try {
       const targetList = [];
       const status = 'ACTIVE';
+      const isQuotaAvailable = data.is_quota_available || null;
 
       if (data.target) {
         targetList.push(...['ALL', data.target]);
@@ -517,7 +564,7 @@ export class PromoBrandService {
         cart_total: null,
         target_list: targetList,
         order_type_list: null,
-        is_quota_available: true,
+        is_quota_available: isQuotaAvailable,
         merchant_id: data.merchant_id,
       });
 
