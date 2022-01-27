@@ -180,7 +180,7 @@ export class VoucherPackagesService {
 
       const query = this.mainQuery()
         .where(where)
-        .orderBy('created_at', 'DESC')
+        .orderBy('voucher_package.created_at', 'DESC')
         .take(limit)
         .skip(offset);
 
