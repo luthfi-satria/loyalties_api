@@ -1,3 +1,4 @@
+import { RedisVoucherService } from './../common/redis/voucher/redis-voucher.service';
 import { VoucherCodesRepository } from './../voucher_code/repository/voucher_code.repository';
 import { VouchersRepository } from './repository/voucher.repository';
 import {
@@ -18,7 +19,10 @@ import {
 } from './entities/voucher.entity';
 import moment from 'moment';
 import { StatusVoucherCodeGroup } from 'src/voucher_code/entities/voucher_code.entity';
-import { GetActiveTargetVouchersDto } from './dto/get-vouchers.dto';
+import {
+  GetActiveTargetVouchersDto,
+  UpdateVoucherStatusExpireDto,
+} from './dto/get-vouchers.dto';
 import { Any } from 'typeorm';
 import { VoucherCodeService } from 'src/voucher_code/voucher_code.service';
 import { MasterVoucherVoucherCodeRepository } from 'src/master_voucher_voucher_code/repository/master_voucher_voucher_code.repository';
@@ -26,6 +30,8 @@ import { FetchMasterVoucherVoucherCodesDto } from 'src/master_voucher_voucher_co
 import { MasterVoucherVoucherCodeDocument } from 'src/master_voucher_voucher_code/entities/master_voucher_voucher_code.entity';
 import { RMessage } from 'src/response/response.interface';
 import { VoucherPackagesMasterVouchersRepository } from 'src/voucher-packages/repository/voucher_package._master_voucher.repository';
+import { DateTimeUtils } from 'src/utils/date-time-utils';
+import { CreateAutoExpireVoucherDto } from 'src/common/redis/dto/redis-voucher.dto';
 
 @Injectable()
 export class VoucherService {
@@ -37,6 +43,7 @@ export class VoucherService {
     private readonly voucherCodeService: VoucherCodeService,
     private readonly masterVoucherVoucherCodeRepository: MasterVoucherVoucherCodeRepository,
     private readonly voucherPackagesMasterVouchersRepository: VoucherPackagesMasterVouchersRepository,
+    private readonly redisVoucherService: RedisVoucherService,
   ) {}
   private readonly logger = new Logger(VoucherService.name);
 
@@ -44,7 +51,7 @@ export class VoucherService {
 
   async createVoucherBulk(data: VoucherDocument[]) {
     try {
-      await this.vouchersRepository
+      return await this.vouchersRepository
         .createQueryBuilder()
         .insert()
         .values(data)
@@ -231,7 +238,15 @@ export class VoucherService {
           // };
           // postVoucherDatas.push(postVoucherData);
         }
-        await this.createVoucherBulk(postVoucherDatas);
+        const createdVouchers = await this.createVoucherBulk(postVoucherDatas);
+        for (const identifier of createdVouchers.identifiers) {
+          const createdVoucher = await this.vouchersRepository.findOne({
+            where: { id: identifier.id },
+          });
+
+          await this.createVoucherQueue(createdVoucher);
+        }
+
         // } else {
         //   throw new BadRequestException(
         //     this.responseService.error(
@@ -326,7 +341,8 @@ export class VoucherService {
           voucher.date_end = date_end.toDate();
           voucher.date_start = date_start;
         }
-        await this.vouchersRepository.save(voucher);
+        const createdVoucher = await this.vouchersRepository.save(voucher);
+        await this.createVoucherQueue(createdVoucher);
 
         //=> update quota jika habis ketika di redeem
         if (voucherCode) {
@@ -687,6 +703,61 @@ export class VoucherService {
           ),
         );
       }
+    }
+  }
+
+  async createVoucherQueue(createdVoucher: VoucherDocument) {
+    const payloadExpire: CreateAutoExpireVoucherDto = {
+      voucher_id: createdVoucher.id,
+      delay: DateTimeUtils.nowToDatetimeMilis(createdVoucher.date_end),
+    };
+    await this.redisVoucherService.createAutoExpireVoucherQueue(payloadExpire);
+  }
+
+  async updateVoucherStatusExpired(
+    data: UpdateVoucherStatusExpireDto,
+  ): Promise<VoucherDocument> {
+    try {
+      const findVoucher = await this.vouchersRepository.findOneOrFail({
+        where: { id: data.voucher_id },
+      });
+
+      if (findVoucher.status !== StatusVoucherEnum.ACTIVE) {
+        throw new BadRequestException(
+          this.responseService.error(
+            HttpStatus.BAD_REQUEST,
+            {
+              value: 'status',
+              property: 'status',
+              constraint: [
+                this.messageService.get('general.general.statusNotAllowed'),
+                '',
+              ],
+            },
+            'Bad Request',
+          ),
+        );
+      }
+
+      findVoucher.status = StatusVoucherEnum.EXPIRED;
+
+      const updatedVoucher = await this.vouchersRepository.save(findVoucher);
+      return updatedVoucher;
+    } catch (error) {
+      throw new BadRequestException(
+        this.responseService.error(
+          HttpStatus.BAD_REQUEST,
+          {
+            value: 'status',
+            property: 'status',
+            constraint: [
+              this.messageService.get('general.update.fail'),
+              error.message,
+            ],
+          },
+          'Bad Request',
+        ),
+      );
     }
   }
 }
