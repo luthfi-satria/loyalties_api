@@ -151,7 +151,11 @@ export class VoucherService {
   async redeemVoucher(data, customer_id): Promise<any[]> {
     // NOT AUTO GENERATE
     let voucherCode = await this.voucherCodesRepository.findOne({
-      where: { code: data.code, status: StatusVoucherCodeGroup.ACTIVE },
+      where: {
+        code: data.code,
+        status: StatusVoucherCodeGroup.ACTIVE,
+        is_prepopulated: false,
+      },
       relations: [
         'master_voucher_voucher_code',
         'vouchers',
