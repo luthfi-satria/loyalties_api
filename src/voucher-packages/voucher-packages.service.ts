@@ -178,7 +178,11 @@ export class VoucherPackagesService {
         where = { ...where, price: LessThanOrEqual(params.price_max) };
       }
 
-      const query = this.mainQuery().where(where).take(limit).skip(offset);
+      const query = this.mainQuery()
+        .where(where)
+        .orderBy('voucher_package.created_at', 'DESC')
+        .take(limit)
+        .skip(offset);
 
       // const items = await query.getMany();
       const count = await query.getCount();
