@@ -17,9 +17,13 @@ import {
   StatusVoucherEnum,
   VoucherDocument,
   TypeVoucherEnum,
+  TargetVoucherEnum,
 } from './entities/voucher.entity';
 import moment from 'moment';
-import { StatusVoucherCodeGroup } from 'src/voucher_code/entities/voucher_code.entity';
+import {
+  StatusVoucherCodeGroup,
+  TargetGroup,
+} from 'src/voucher_code/entities/voucher_code.entity';
 import {
   GetActiveTargetVouchersDto,
   UpdateVoucherStatusExpireDto,
@@ -243,7 +247,7 @@ export class VoucherService {
         code: data.code,
         status: StatusVoucherCodeGroup.ACTIVE,
         is_prepopulated: false,
-        target: target,
+        // target: target,
       },
       relations: [
         'master_voucher_voucher_code',
@@ -251,6 +255,22 @@ export class VoucherService {
         'master_voucher_voucher_code.master_voucher',
       ],
     });
+
+    if (voucherCode && voucherCode.target != TargetGroup.ALL) {
+      voucherCode = await this.voucherCodesRepository.findOne({
+        where: {
+          code: data.code,
+          status: StatusVoucherCodeGroup.ACTIVE,
+          is_prepopulated: false,
+          target: target,
+        },
+        relations: [
+          'master_voucher_voucher_code',
+          'vouchers',
+          'master_voucher_voucher_code.master_voucher',
+        ],
+      });
+    }
 
     let voucherCodeId = voucherCode?.id;
 
@@ -406,9 +426,15 @@ export class VoucherService {
       }
     } else {
       // AUTO GENERATE
-      const vouchers = await this.vouchersRepository.find({
-        where: { code: data.code, customer_id: null, target: target },
+      let vouchers = await this.vouchersRepository.find({
+        where: { code: data.code, customer_id: null },
       });
+
+      if (vouchers.length > 0 && vouchers[0]?.target != TargetVoucherEnum.ALL) {
+        vouchers = await this.vouchersRepository.find({
+          where: { code: data.code, customer_id: null, target: target },
+        });
+      }
 
       if (vouchers.length > 0) {
         voucherCodeId = vouchers[0]?.voucher_code_id;
