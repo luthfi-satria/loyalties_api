@@ -239,8 +239,12 @@ export default {
       message: 'Voucher sudah di-redeem.',
     },
     quotaReached: {
-      code: 'QUOTA_REACHED',
-      message: 'Kuota voucher telah habis.',
+      code: 'VOUCHER_CODE_QUOTA_REACHED',
+      message: 'Kuota telah habis.',
+    },
+    voucherCodeInvalid: {
+      code: 'VOUCHER_CODE_INVALID',
+      message: 'Kode voucher tidak ditemukan',
     },
     notAvailable: {
       code: 'VOUCHER_NOT_AVAILABLE',

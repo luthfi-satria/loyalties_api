@@ -1,3 +1,4 @@
+import { OrderService } from 'src/common/order/order.service';
 import { RedisVoucherService } from './../common/redis/voucher/redis-voucher.service';
 import { VoucherCodesRepository } from './../voucher_code/repository/voucher_code.repository';
 import { VouchersRepository } from './repository/voucher.repository';
@@ -32,6 +33,7 @@ import { RMessage } from 'src/response/response.interface';
 import { VoucherPackagesMasterVouchersRepository } from 'src/voucher-packages/repository/voucher_package._master_voucher.repository';
 import { DateTimeUtils } from 'src/utils/date-time-utils';
 import { CreateAutoExpireVoucherDto } from 'src/common/redis/dto/redis-voucher.dto';
+import { GetCustomerTargetLoyaltiesDto } from 'src/common/order/dto/get-customer-target-loyalty.dto';
 
 @Injectable()
 export class VoucherService {
@@ -44,6 +46,7 @@ export class VoucherService {
     private readonly masterVoucherVoucherCodeRepository: MasterVoucherVoucherCodeRepository,
     private readonly voucherPackagesMasterVouchersRepository: VoucherPackagesMasterVouchersRepository,
     private readonly redisVoucherService: RedisVoucherService,
+    private readonly orderService: OrderService,
   ) {}
   private readonly logger = new Logger(VoucherService.name);
 
@@ -148,13 +151,99 @@ export class VoucherService {
     return days;
   }
 
+  errorGenerator(value: string, property: string, constraint: string | any[]) {
+    if (typeof constraint == 'string') {
+      throw new BadRequestException(
+        this.responseService.error(
+          HttpStatus.BAD_REQUEST,
+          {
+            value,
+            property,
+            constraint: [this.messageService.get(constraint)],
+          },
+          'Bad Request',
+        ),
+      );
+    } else {
+      throw new BadRequestException(
+        this.responseService.error(
+          HttpStatus.BAD_REQUEST,
+          {
+            value,
+            property,
+            constraint: constraint,
+          },
+          'Bad Request',
+        ),
+      );
+    }
+  }
+
+  async getCostumerTargetLoyalties(
+    data: GetCustomerTargetLoyaltiesDto,
+  ): Promise<string> {
+    try {
+      if (!data.created_at || !data.customer_id) {
+        return null;
+      }
+
+      const { data: response } =
+        await this.orderService.getCostumerTargetLoyalties(data);
+
+      return response?.target;
+    } catch (error) {
+      this.errorGenerator('', 'target', 'general.order.getTargetFail');
+    }
+  }
+
+  async checkValidCode(code) {
+    const voucherCode = await this.voucherCodesRepository.findOne({
+      where: { code: code },
+    });
+    const voucher = await this.vouchersRepository.findOne({
+      where: { code: code },
+    });
+
+    return voucherCode || voucher ? true : false;
+  }
+
   async redeemVoucher(data, customer_id): Promise<any[]> {
     // NOT AUTO GENERATE
+    const validCode = await this.checkValidCode(data.code);
+    if (!validCode) {
+      throw new BadRequestException(
+        this.responseService.error(
+          HttpStatus.BAD_REQUEST,
+          {
+            value: data.code,
+            property: 'code',
+            constraint: [
+              this.messageService.get('general.voucher.voucherCodeInvalid'),
+            ],
+          },
+          'Bad Request',
+        ),
+      );
+    }
+    console.log(data);
+
+    const customer = data.customer || null;
+    console.log(customer);
+
+    const target = customer
+      ? await this.getCostumerTargetLoyalties({
+          customer_id: customer.id,
+          created_at: customer.created_at,
+        })
+      : null;
+    console.log(target);
+
     let voucherCode = await this.voucherCodesRepository.findOne({
       where: {
         code: data.code,
         status: StatusVoucherCodeGroup.ACTIVE,
         is_prepopulated: false,
+        target: target,
       },
       relations: [
         'master_voucher_voucher_code',
@@ -318,7 +407,7 @@ export class VoucherService {
     } else {
       // AUTO GENERATE
       const vouchers = await this.vouchersRepository.find({
-        where: { code: data.code, customer_id: null },
+        where: { code: data.code, customer_id: null, target: target },
       });
 
       if (vouchers.length > 0) {

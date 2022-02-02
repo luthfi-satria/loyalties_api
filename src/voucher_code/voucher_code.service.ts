@@ -160,6 +160,15 @@ export class VoucherCodeService {
     }
   }
 
+  async generateUniqueCode(quota, code) {
+    var arr = [];
+    while (arr.length < quota) {
+      var r = code + Math.floor(Math.random() * 100) + 1;
+      if (arr.indexOf(r) === -1) arr.push(r);
+    }
+    return arr;
+  }
+
   async createVoucherCode(data: CreateVoucherCodeDto) {
     try {
       // const voucherCodes = await this.voucherCodesRepository.find({
@@ -257,18 +266,22 @@ export class VoucherCodeService {
       await this.createVoucherCodeQueue(voucherCodeStatus, createdVoucher);
 
       if (data.is_prepopulated && data.quota) {
+        const uniqueCodes = await this.generateUniqueCode(
+          data.quota,
+          createdVoucher.code,
+        );
         const vouchers = [];
         for (let i = 0; i < listVoucher.length; i++) {
           const masterVoucher: MasterVouchersDocument = listVoucher[i];
-          for (let j = 0; j < data.quota; j++) {
+          for (let j = 0; j < uniqueCodes.length; j++) {
             const dataVoucher = {
               voucher_code_id: createdVoucher.id,
               master_voucher_id: masterVoucher.id,
               customer_id: null,
-              code:
-                createdVoucher.code +
-                Math.floor(Math.random() * (100 - 1 + 1)) +
-                1,
+              code: uniqueCodes[j],
+              // createdVoucher.code +
+              // Math.floor(Math.random() * (100 - 1 + 1)) +
+              // 1,
               type: masterVoucher.type,
               order_type: masterVoucher.order_type,
               target: createdVoucher.target,
