@@ -1,6 +1,7 @@
 import { VoucherService } from './voucher.service';
 import { Body, Controller, Get, Post, Query, Req } from '@nestjs/common';
-import { AuthJwtGuard } from 'src/auth/auth.decorators';
+import { AuthJwtGuard, GetUser } from 'src/auth/auth.decorators';
+import { User } from 'src/auth/guard/interface/user.interface';
 import { UserType } from 'src/auth/guard/user-type.decorator';
 import { MessageService } from 'src/message/message.service';
 import { ResponseStatusCode } from 'src/response/response.decorator';
@@ -22,9 +23,13 @@ export class VoucherController {
   async redeemVoucher(
     @Body() data: any,
     @Req() req: any,
+    @GetUser() user: User,
   ): Promise<RSuccessMessage> {
     try {
-      const result = await this.voucherService.redeemVoucher(data, req.user.id);
+      const result = await this.voucherService.redeemVoucher(
+        { ...data, customer: user },
+        req.user.id,
+      );
       return this.responseService.success(
         true,
         this.messageService.get('general.list.success'),
