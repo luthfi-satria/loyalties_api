@@ -427,7 +427,11 @@ export class VoucherService {
     } else {
       // AUTO GENERATE
       let vouchers = await this.vouchersRepository.find({
-        where: { code: data.code, customer_id: null },
+        where: {
+          code: data.code,
+          customer_id: null,
+          status: StatusVoucherEnum.CREATED,
+        },
       });
 
       if (vouchers.length > 0 && vouchers[0]?.target != TargetVoucherEnum.ALL) {
