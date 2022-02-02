@@ -437,40 +437,43 @@ export class VoucherService {
       }
 
       if (vouchers.length > 0) {
-        voucherCodeId = vouchers[0]?.voucher_code_id;
-        const voucher = vouchers[0];
-        voucher.status = StatusVoucherEnum.ACTIVE;
-        voucher.customer_id = customer_id;
+        for (const voucher of vouchers) {
+          voucherCodeId = voucher?.voucher_code_id;
+          // voucherCodeId = vouchers[0]?.voucher_code_id;
+          // const voucher = vouchers[0];
+          voucher.status = StatusVoucherEnum.ACTIVE;
+          voucher.customer_id = customer_id;
 
-        voucherCode = await this.voucherCodesRepository.findOne({
-          where: { id: voucher.voucher_code_id },
-        });
-
-        const mvvcs = await this.fetchMasterVoucherVoucherCodes({
-          loyaltiesVoucherCodeId: voucherCodeId,
-          loyaltiesMasterVoucherId: voucher.master_voucher_id,
-        });
-
-        for (let i = 0; i < mvvcs.length; i++) {
-          const master_voucher_voucher_code = mvvcs[i];
-          const master_voucher = master_voucher_voucher_code.master_voucher;
-          const date_start = new Date();
-          const days = this.getDurationInt(master_voucher.duration);
-          const date_end = moment(date_start).add(days, 'days');
-          voucher.date_end = date_end.toDate();
-          voucher.date_start = date_start;
-        }
-        const createdVoucher = await this.vouchersRepository.save(voucher);
-        await this.createVoucherQueue(createdVoucher);
-
-        //=> update quota jika habis ketika di redeem
-        if (voucherCode) {
-          const countVouchersLeft = await this.vouchersRepository.find({
-            where: { voucher_code_id: voucherCode.id, customer_id: null },
+          voucherCode = await this.voucherCodesRepository.findOne({
+            where: { id: voucher.voucher_code_id },
           });
 
-          if (!countVouchersLeft) {
-            await this.updateVoucherCodeEmpty(voucherCode.id);
+          const mvvcs = await this.fetchMasterVoucherVoucherCodes({
+            loyaltiesVoucherCodeId: voucherCodeId,
+            loyaltiesMasterVoucherId: voucher.master_voucher_id,
+          });
+
+          for (let i = 0; i < mvvcs.length; i++) {
+            const master_voucher_voucher_code = mvvcs[i];
+            const master_voucher = master_voucher_voucher_code.master_voucher;
+            const date_start = new Date();
+            const days = this.getDurationInt(master_voucher.duration);
+            const date_end = moment(date_start).add(days, 'days');
+            voucher.date_end = date_end.toDate();
+            voucher.date_start = date_start;
+          }
+          const createdVoucher = await this.vouchersRepository.save(voucher);
+          await this.createVoucherQueue(createdVoucher);
+
+          //=> update quota jika habis ketika di redeem
+          if (voucherCode) {
+            const countVouchersLeft = await this.vouchersRepository.find({
+              where: { voucher_code_id: voucherCode.id, customer_id: null },
+            });
+
+            if (!countVouchersLeft) {
+              await this.updateVoucherCodeEmpty(voucherCode.id);
+            }
           }
         }
       } else {
