@@ -314,7 +314,7 @@ export class PromoBrandService {
         });
       }
 
-      query.leftJoin(
+      query.leftJoinAndSelect(
         (qb) =>
           qb
             .select(
