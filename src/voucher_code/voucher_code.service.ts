@@ -160,9 +160,9 @@ export class VoucherCodeService {
     }
   }
 
-  async generateUniqueCode(quota, code) {
+  async generateUniqueCode(len, code) {
     var arr = [];
-    while (arr.length < quota) {
+    while (arr.length < len) {
       var r = code + Math.floor(Math.random() * 100) + 1;
       if (arr.indexOf(r) === -1) arr.push(r);
     }
@@ -267,18 +267,20 @@ export class VoucherCodeService {
 
       if (data.is_prepopulated && data.quota) {
         const uniqueCodes = await this.generateUniqueCode(
-          data.quota,
+          // data.quota,
+          listVoucher.length * data.quota,
           createdVoucher.code,
         );
+        let indexUniqueCodes = 0;
         const vouchers = [];
         for (let i = 0; i < listVoucher.length; i++) {
           const masterVoucher: MasterVouchersDocument = listVoucher[i];
-          for (let j = 0; j < uniqueCodes.length; j++) {
+          for (let j = 0; j < data.quota; j++) {
             const dataVoucher = {
               voucher_code_id: createdVoucher.id,
               master_voucher_id: masterVoucher.id,
               customer_id: null,
-              code: uniqueCodes[j],
+              code: uniqueCodes[indexUniqueCodes],
               // createdVoucher.code +
               // Math.floor(Math.random() * (100 - 1 + 1)) +
               // 1,
@@ -293,6 +295,7 @@ export class VoucherCodeService {
               discount_maximum: masterVoucher.discount_maximum,
               is_combinable: masterVoucher.is_combinable,
             };
+            indexUniqueCodes++;
             vouchers.push(dataVoucher);
           }
         }
