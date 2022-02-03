@@ -615,6 +615,7 @@ export class PromoBrandService {
 
         if (!recommendedGlobalPromo.promo) {
           recommendedGlobalPromo.promo = promo;
+          recommendedGlobalPromo.discountVal = discountVal;
         }
 
         if (discountVal > recommendedGlobalPromo.discountVal) {
@@ -624,6 +625,7 @@ export class PromoBrandService {
         if (promo.type == EnumPromoBrandType.SHOPPING_COST) {
           if (!recommendedShoppingDiscountPromo.promo) {
             recommendedShoppingDiscountPromo.promo = promo;
+            recommendedShoppingDiscountPromo.discountVal = promo;
           }
 
           if (discountVal > recommendedShoppingDiscountPromo.discountVal) {
@@ -632,6 +634,7 @@ export class PromoBrandService {
         } else {
           if (!recommendedDeliveryDiscoutPromo.promo) {
             recommendedDeliveryDiscoutPromo.promo = promo;
+            recommendedDeliveryDiscoutPromo.discountVal = promo;
           }
 
           if (discountVal > recommendedDeliveryDiscoutPromo.discountVal) {
