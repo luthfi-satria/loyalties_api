@@ -229,7 +229,7 @@ export class VoucherService {
         ),
       );
     }
-    console.log(data);
+    let masterVoucherId = null;
 
     const customer = data.customer || null;
     console.log(customer);
@@ -476,6 +476,8 @@ export class VoucherService {
           loyaltiesMasterVoucherId: voucher.master_voucher_id,
         });
 
+        masterVoucherId = voucher.master_voucher_id;
+
         for (let i = 0; i < mvvcs.length; i++) {
           const master_voucher_voucher_code = mvvcs[i];
           const master_voucher = master_voucher_voucher_code.master_voucher;
@@ -519,7 +521,7 @@ export class VoucherService {
     //=> Response api
     return this.fetchMasterVoucherVoucherCodes({
       loyaltiesVoucherCodeId: voucherCodeId,
-      loyaltiesMasterVoucherId: null,
+      loyaltiesMasterVoucherId: masterVoucherId || null,
     });
   }
 
