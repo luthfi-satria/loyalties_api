@@ -332,24 +332,6 @@ export class VoucherService {
             };
             postVoucherDatas.push(postVoucherData);
           }
-          // const postVoucherData = {
-          //   voucher_code_id: voucherCode.id,
-          //   customer_id,
-          //   code:
-          //     voucherCode.code + Math.floor(Math.random() * (100 - 1 + 1)) + 1,
-          //   type: master_voucher.type,
-          //   order_type: master_voucher.order_type,
-          //   target: voucherCode.target,
-          //   status: StatusVoucherEnum.ACTIVE,
-          //   date_start,
-          //   date_end,
-          //   minimum_transaction: master_voucher.minimum_transaction,
-          //   discount_type: master_voucher.discount_type,
-          //   discount_value: master_voucher.discount_value,
-          //   discount_maximum: master_voucher.discount_maximum,
-          //   is_combinable: master_voucher.is_combinable,
-          // };
-          // postVoucherDatas.push(postVoucherData);
         }
         const createdVouchers = await this.createVoucherBulk(postVoucherDatas);
         for (const identifier of createdVouchers.identifiers) {
@@ -359,23 +341,6 @@ export class VoucherService {
 
           await this.createVoucherQueue(createdVoucher);
         }
-
-        // } else {
-        //   throw new BadRequestException(
-        //     this.responseService.error(
-        //       HttpStatus.BAD_REQUEST,
-        //       {
-        //         value: `${voucherCode.quota}`,
-        //         property: 'quota',
-        //         constraint: [
-        //           this.messageService.get('general.create.fail'),
-        //           'quota full',
-        //         ],
-        //       },
-        //       'Bad Request',
-        //     ),
-        //   );
-        // }
 
         //=> update quota jika habis ketika di redeem
         if (
@@ -422,7 +387,14 @@ export class VoucherService {
             postVoucherDatas.push(postVoucherData);
           }
         }
-        await this.createVoucherBulk(postVoucherDatas);
+        const createdVouchers = await this.createVoucherBulk(postVoucherDatas);
+        for (const identifier of createdVouchers.identifiers) {
+          const createdVoucher = await this.vouchersRepository.findOne({
+            where: { id: identifier.id },
+          });
+
+          await this.createVoucherQueue(createdVoucher);
+        }
       }
     } else {
       // AUTO GENERATE
