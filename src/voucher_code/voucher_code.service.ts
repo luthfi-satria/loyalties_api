@@ -163,7 +163,7 @@ export class VoucherCodeService {
   async generateUniqueCode(len, code) {
     var arr = [];
     while (arr.length < len) {
-      var r = code + Math.floor(Math.random() * 100) + 1;
+      var r = code + Math.floor(Math.random() * len) + 1;
       if (arr.indexOf(r) === -1) arr.push(r);
     }
     return arr;
