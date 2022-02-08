@@ -212,6 +212,17 @@ export class VoucherService {
   }
 
   async redeemVoucher(data, customer_id): Promise<any[]> {
+    const customer = data.customer || null;
+    console.log(customer);
+
+    const target = customer
+      ? await this.getCostumerTargetLoyalties({
+          customer_id: customer.id,
+          created_at: customer.created_at,
+        })
+      : null;
+    console.log(target);
+
     // NOT AUTO GENERATE
     const validCode = await this.checkValidCode(data.code);
     if (!validCode) {
@@ -231,17 +242,6 @@ export class VoucherService {
     }
     let masterVoucherId = null;
 
-    const customer = data.customer || null;
-    console.log(customer);
-
-    const target = customer
-      ? await this.getCostumerTargetLoyalties({
-          customer_id: customer.id,
-          created_at: customer.created_at,
-        })
-      : null;
-    console.log(target);
-
     let voucherCode = await this.voucherCodesRepository.findOne({
       where: {
         code: data.code,
@@ -257,6 +257,21 @@ export class VoucherService {
     });
 
     if (voucherCode && voucherCode.target != TargetGroup.ALL) {
+      if (voucherCode.target != target) {
+        throw new BadRequestException(
+          this.responseService.error(
+            HttpStatus.BAD_REQUEST,
+            {
+              value: data.code,
+              property: 'code',
+              constraint: [
+                this.messageService.get('general.voucher.voucherCodeInvalid'),
+              ],
+            },
+            'Bad Request',
+          ),
+        );
+      }
       voucherCode = await this.voucherCodesRepository.findOne({
         where: {
           code: data.code,
