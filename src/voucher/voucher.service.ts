@@ -422,6 +422,21 @@ export class VoucherService {
       });
 
       if (vouchers.length > 0 && vouchers[0]?.target != TargetVoucherEnum.ALL) {
+        if (vouchers[0]?.target != target) {
+          throw new BadRequestException(
+            this.responseService.error(
+              HttpStatus.BAD_REQUEST,
+              {
+                value: data.code,
+                property: 'code',
+                constraint: [
+                  this.messageService.get('general.voucher.voucherCodeInvalid'),
+                ],
+              },
+              'Bad Request',
+            ),
+          );
+        }
         vouchers = await this.vouchersRepository.find({
           where: { code: data.code, customer_id: null, target: target },
         });
