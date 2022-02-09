@@ -202,7 +202,7 @@ export class VoucherService {
 
   async checkValidCode(code) {
     const voucherCode = await this.voucherCodesRepository.findOne({
-      where: { code: code },
+      where: { code: code, is_prepopulated: false },
     });
     const voucher = await this.vouchersRepository.findOne({
       where: { code: code },
