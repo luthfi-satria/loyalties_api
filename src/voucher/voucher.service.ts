@@ -615,6 +615,8 @@ export class VoucherService {
 
       return listItems;
     } catch (error) {
+      this.logger.log(error);
+
       throw new BadRequestException(
         this.responseService.error(
           HttpStatus.BAD_REQUEST,
