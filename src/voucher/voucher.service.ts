@@ -555,7 +555,7 @@ export class VoucherService {
         .innerJoinAndSelect(
           'voucher_code.vouchers',
           'vouchers',
-          'vouchers.customer_id = :customer_id and vouchers.status = :status and vouchers.master_voucher_id = master_voucher.id and (target == :target OR target == :allTarget)',
+          'vouchers.customer_id = :customer_id and vouchers.status = :status and vouchers.master_voucher_id = master_voucher.id and (vouchers.target == :target OR vouchers.target == :allTarget)',
           {
             customer_id,
             status: StatusVoucherEnum.ACTIVE,
@@ -591,8 +591,13 @@ export class VoucherService {
           .innerJoinAndSelect(
             'voucher_package.vouchers',
             'vouchers',
-            'vouchers.customer_id = :customer_id and vouchers.status = :status and vouchers.master_voucher_id = master_voucher.id',
-            { customer_id, status: StatusVoucherEnum.ACTIVE },
+            'vouchers.customer_id = :customer_id and vouchers.status = :status and vouchers.master_voucher_id = master_voucher.id and (vouchers.target == :target OR vouchers.target == :allTarget)',
+            {
+              customer_id,
+              status: StatusVoucherEnum.ACTIVE,
+              target: target,
+              allTarget: TargetVoucherEnum.ALL,
+            },
           )
           .take(limitPackage)
           .skip(offsetPackage);
@@ -615,6 +620,8 @@ export class VoucherService {
 
       return listItems;
     } catch (error) {
+      this.logger.log(error);
+
       throw new BadRequestException(
         this.responseService.error(
           HttpStatus.BAD_REQUEST,
