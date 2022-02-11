@@ -707,7 +707,7 @@ export class PromoProviderService {
         if (
           !this.voucherService.checkUsableVoucher(voucher, cartTotal, orderType)
         ) {
-          notAvailableVouchers.push();
+          notAvailableVouchers.push(voucher);
         } else {
           const discount = this.voucherService.calculateVoucherDiscount(
             voucher,
