@@ -532,6 +532,15 @@ export class VoucherService {
       const page = data.page || 1;
       const limit = data.limit || 10;
       const offset = (page - 1) * limit;
+      const customer = data.customer || null;
+      const target = customer
+        ? await this.getCostumerTargetLoyalties({
+            customer_id: customer.id,
+            created_at: customer.created_at,
+          })
+        : null;
+      console.log(customer);
+      console.log(target);
 
       // const [items, count] = await this.vouchersRepository.findAndCount({
       //   take: limit,
@@ -546,8 +555,13 @@ export class VoucherService {
         .innerJoinAndSelect(
           'voucher_code.vouchers',
           'vouchers',
-          'vouchers.customer_id = :customer_id and vouchers.status = :status and vouchers.master_voucher_id = master_voucher.id',
-          { customer_id, status: StatusVoucherEnum.ACTIVE },
+          'vouchers.customer_id = :customer_id and vouchers.status = :status and vouchers.master_voucher_id = master_voucher.id and (target == :target OR target == :allTarget)',
+          {
+            customer_id,
+            status: StatusVoucherEnum.ACTIVE,
+            target: target,
+            allTarget: TargetVoucherEnum.ALL,
+          },
         )
         .take(limit);
 
