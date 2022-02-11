@@ -202,7 +202,7 @@ export class VoucherService {
 
   async checkValidCode(code) {
     const voucherCode = await this.voucherCodesRepository.findOne({
-      where: { code: code },
+      where: { code: code, is_prepopulated: false },
     });
     const voucher = await this.vouchersRepository.findOne({
       where: { code: code },
@@ -212,6 +212,17 @@ export class VoucherService {
   }
 
   async redeemVoucher(data, customer_id): Promise<any[]> {
+    const customer = data.customer || null;
+    console.log(customer);
+
+    const target = customer
+      ? await this.getCostumerTargetLoyalties({
+          customer_id: customer.id,
+          created_at: customer.created_at,
+        })
+      : null;
+    console.log(target);
+
     // NOT AUTO GENERATE
     const validCode = await this.checkValidCode(data.code);
     if (!validCode) {
@@ -231,17 +242,6 @@ export class VoucherService {
     }
     let masterVoucherId = null;
 
-    const customer = data.customer || null;
-    console.log(customer);
-
-    const target = customer
-      ? await this.getCostumerTargetLoyalties({
-          customer_id: customer.id,
-          created_at: customer.created_at,
-        })
-      : null;
-    console.log(target);
-
     let voucherCode = await this.voucherCodesRepository.findOne({
       where: {
         code: data.code,
@@ -257,6 +257,21 @@ export class VoucherService {
     });
 
     if (voucherCode && voucherCode.target != TargetGroup.ALL) {
+      if (voucherCode.target != target) {
+        throw new BadRequestException(
+          this.responseService.error(
+            HttpStatus.BAD_REQUEST,
+            {
+              value: data.code,
+              property: 'code',
+              constraint: [
+                this.messageService.get('general.voucher.voucherCodeInvalid'),
+              ],
+            },
+            'Bad Request',
+          ),
+        );
+      }
       voucherCode = await this.voucherCodesRepository.findOne({
         where: {
           code: data.code,
@@ -332,24 +347,6 @@ export class VoucherService {
             };
             postVoucherDatas.push(postVoucherData);
           }
-          // const postVoucherData = {
-          //   voucher_code_id: voucherCode.id,
-          //   customer_id,
-          //   code:
-          //     voucherCode.code + Math.floor(Math.random() * (100 - 1 + 1)) + 1,
-          //   type: master_voucher.type,
-          //   order_type: master_voucher.order_type,
-          //   target: voucherCode.target,
-          //   status: StatusVoucherEnum.ACTIVE,
-          //   date_start,
-          //   date_end,
-          //   minimum_transaction: master_voucher.minimum_transaction,
-          //   discount_type: master_voucher.discount_type,
-          //   discount_value: master_voucher.discount_value,
-          //   discount_maximum: master_voucher.discount_maximum,
-          //   is_combinable: master_voucher.is_combinable,
-          // };
-          // postVoucherDatas.push(postVoucherData);
         }
         const createdVouchers = await this.createVoucherBulk(postVoucherDatas);
         for (const identifier of createdVouchers.identifiers) {
@@ -359,23 +356,6 @@ export class VoucherService {
 
           await this.createVoucherQueue(createdVoucher);
         }
-
-        // } else {
-        //   throw new BadRequestException(
-        //     this.responseService.error(
-        //       HttpStatus.BAD_REQUEST,
-        //       {
-        //         value: `${voucherCode.quota}`,
-        //         property: 'quota',
-        //         constraint: [
-        //           this.messageService.get('general.create.fail'),
-        //           'quota full',
-        //         ],
-        //       },
-        //       'Bad Request',
-        //     ),
-        //   );
-        // }
 
         //=> update quota jika habis ketika di redeem
         if (
@@ -422,7 +402,14 @@ export class VoucherService {
             postVoucherDatas.push(postVoucherData);
           }
         }
-        await this.createVoucherBulk(postVoucherDatas);
+        const createdVouchers = await this.createVoucherBulk(postVoucherDatas);
+        for (const identifier of createdVouchers.identifiers) {
+          const createdVoucher = await this.vouchersRepository.findOne({
+            where: { id: identifier.id },
+          });
+
+          await this.createVoucherQueue(createdVoucher);
+        }
       }
     } else {
       // AUTO GENERATE
@@ -435,6 +422,21 @@ export class VoucherService {
       });
 
       if (vouchers.length > 0 && vouchers[0]?.target != TargetVoucherEnum.ALL) {
+        if (vouchers[0]?.target != target) {
+          throw new BadRequestException(
+            this.responseService.error(
+              HttpStatus.BAD_REQUEST,
+              {
+                value: data.code,
+                property: 'code',
+                constraint: [
+                  this.messageService.get('general.voucher.voucherCodeInvalid'),
+                ],
+              },
+              'Bad Request',
+            ),
+          );
+        }
         vouchers = await this.vouchersRepository.find({
           where: { code: data.code, customer_id: null, target: target },
         });
@@ -530,6 +532,15 @@ export class VoucherService {
       const page = data.page || 1;
       const limit = data.limit || 10;
       const offset = (page - 1) * limit;
+      const customer = data.customer || null;
+      const target = customer
+        ? await this.getCostumerTargetLoyalties({
+            customer_id: customer.id,
+            created_at: customer.created_at,
+          })
+        : null;
+      console.log(customer);
+      console.log(target);
 
       // const [items, count] = await this.vouchersRepository.findAndCount({
       //   take: limit,
@@ -544,9 +555,16 @@ export class VoucherService {
         .innerJoinAndSelect(
           'voucher_code.vouchers',
           'vouchers',
-          'vouchers.customer_id = :customer_id and vouchers.status = :status and vouchers.master_voucher_id = master_voucher.id',
-          { customer_id, status: StatusVoucherEnum.ACTIVE },
+          'vouchers.customer_id = :customer_id and vouchers.status = :status and vouchers.master_voucher_id = master_voucher.id ',
+          {
+            customer_id,
+            status: StatusVoucherEnum.ACTIVE,
+          },
         )
+        .where('vouchers.target = :target or vouchers.target = :allTarget', {
+          target: target,
+          allTarget: 'ALL',
+        })
         .take(limit);
 
       const [items, count] = await query.skip(offset).getManyAndCount();
@@ -575,9 +593,16 @@ export class VoucherService {
           .innerJoinAndSelect(
             'voucher_package.vouchers',
             'vouchers',
-            'vouchers.customer_id = :customer_id and vouchers.status = :status and vouchers.master_voucher_id = master_voucher.id',
-            { customer_id, status: StatusVoucherEnum.ACTIVE },
+            'vouchers.customer_id = :customer_id and vouchers.status = :status and vouchers.master_voucher_id = master_voucher.id ',
+            {
+              customer_id,
+              status: StatusVoucherEnum.ACTIVE,
+            },
           )
+          .where('vouchers.target = :target or vouchers.target = :allTarget', {
+            target: target,
+            allTarget: 'ALL',
+          })
           .take(limitPackage)
           .skip(offsetPackage);
 
@@ -599,6 +624,9 @@ export class VoucherService {
 
       return listItems;
     } catch (error) {
+      this.logger.log(error);
+      console.log(error);
+
       throw new BadRequestException(
         this.responseService.error(
           HttpStatus.BAD_REQUEST,

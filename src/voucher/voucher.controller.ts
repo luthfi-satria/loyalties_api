@@ -48,9 +48,13 @@ export class VoucherController {
   async getMyVouchers(
     @Query() data: any,
     @Req() req: any,
+    @GetUser() user: User,
   ): Promise<RSuccessMessage> {
     try {
-      const result = await this.voucherService.getMyVouchers(data, req.user.id);
+      const result = await this.voucherService.getMyVouchers(
+        { ...data, customer: user },
+        req.user.id,
+      );
       return this.responseService.success(
         true,
         this.messageService.get('general.list.success'),
