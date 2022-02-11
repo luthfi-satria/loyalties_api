@@ -555,14 +555,16 @@ export class VoucherService {
         .innerJoinAndSelect(
           'voucher_code.vouchers',
           'vouchers',
-          'vouchers.customer_id = :customer_id and vouchers.status = :status and vouchers.master_voucher_id = master_voucher.id and (vouchers.target == :target OR vouchers.target == :allTarget)',
+          'vouchers.customer_id = :customer_id and vouchers.status = :status and vouchers.master_voucher_id = master_voucher.id ',
           {
             customer_id,
             status: StatusVoucherEnum.ACTIVE,
-            target: target,
-            allTarget: TargetVoucherEnum.ALL,
           },
         )
+        .where('vouchers.target = :target or vouchers.target = :allTarget', {
+          target: target,
+          allTarget: 'ALL',
+        })
         .take(limit);
 
       const [items, count] = await query.skip(offset).getManyAndCount();
@@ -591,14 +593,16 @@ export class VoucherService {
           .innerJoinAndSelect(
             'voucher_package.vouchers',
             'vouchers',
-            'vouchers.customer_id = :customer_id and vouchers.status = :status and vouchers.master_voucher_id = master_voucher.id and (vouchers.target == :target OR vouchers.target == :allTarget)',
+            'vouchers.customer_id = :customer_id and vouchers.status = :status and vouchers.master_voucher_id = master_voucher.id ',
             {
               customer_id,
               status: StatusVoucherEnum.ACTIVE,
-              target: target,
-              allTarget: TargetVoucherEnum.ALL,
             },
           )
+          .where('vouchers.target = :target or vouchers.target = :allTarget', {
+            target: target,
+            allTarget: 'ALL',
+          })
           .take(limitPackage)
           .skip(offsetPackage);
 
@@ -621,6 +625,7 @@ export class VoucherService {
       return listItems;
     } catch (error) {
       this.logger.log(error);
+      console.log(error);
 
       throw new BadRequestException(
         this.responseService.error(
