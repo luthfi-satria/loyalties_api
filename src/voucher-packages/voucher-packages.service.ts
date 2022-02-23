@@ -11,6 +11,7 @@ import {
   CreateAutoStartVoucherPackageDto,
 } from 'src/common/redis/dto/redis-voucher-package.dto';
 import { RedisVoucherPackageService } from 'src/common/redis/voucher_package/redis-voucher_package.service';
+import { CommonStorageService } from 'src/common/storage/storage.service';
 import { MasterVoucherService } from 'src/master_vouchers/master_voucher.service';
 import { MessageService } from 'src/message/message.service';
 import { RMessage } from 'src/response/response.interface';
@@ -19,6 +20,7 @@ import { DateTimeUtils } from 'src/utils/date-time-utils';
 import { VoucherPackageOrderDocument } from 'src/voucher-packages-customers/entities/voucher-packages-order.entity';
 import { StatusVoucherEnum } from 'src/voucher/entities/voucher.entity';
 import { VoucherService } from 'src/voucher/voucher.service';
+import { Readable } from 'stream';
 import {
   ILike,
   In,
@@ -52,6 +54,7 @@ export class VoucherPackagesService {
     private readonly voucherPackagesMasterVouchersRepository: VoucherPackagesMasterVouchersRepository,
     private readonly redisVoucherPackageService: RedisVoucherPackageService,
     private readonly voucherService: VoucherService,
+    private readonly storage: CommonStorageService,
   ) {}
   private readonly logger = new Logger(VoucherPackagesService.name);
 
@@ -724,6 +727,79 @@ export class VoucherPackagesService {
           'Bad Request',
         ),
       );
+    }
+  }
+
+  async getBufferS3(data: any) {
+    let url = null;
+
+    try {
+      const voucherPackage = await this.voucherPackageRepository.findOne({
+        id: data.id,
+      });
+      url = voucherPackage.photo;
+
+      if (!voucherPackage) {
+        const errors: RMessage = {
+          value: data.id,
+          property: 'id',
+          constraint: [this.messageService.get('general.general.dataNotFound')],
+        };
+        throw new BadRequestException(
+          this.responseService.error(
+            HttpStatus.BAD_REQUEST,
+            errors,
+            'Bad Request',
+          ),
+        );
+      }
+      const buffer = await this.storage.getBuff(url);
+      // }
+
+      // async getReadableStream(buffer: Buffer) {
+      const stream = new Readable();
+
+      // stream._read = () => {};;;
+      stream.push(buffer);
+      stream.push(null);
+
+      // return stream;
+      // }
+
+      // async getExt(data) {
+      // let ext = null;
+      let type = null;
+      // const resultOnBoarding = await this.onboardingsRepository
+      //   .findOne(data.id)
+      //   .catch(() => {
+      //     throw new BadRequestException(
+      //       this.responseService.error(
+      //         HttpStatus.BAD_REQUEST,
+      //         {
+      //           value: data.id,
+      //           property: 'onboarding_id',
+      //           constraint: [
+      //             this.messageService.get('general.general.dataNotFound'),
+      //           ],
+      //         },
+      //         'Bad Request',
+      //       ),
+      //     );
+      //   });
+
+      // if (resultOnBoarding) {
+      const ext =
+        voucherPackage.photo.split('.')[
+          voucherPackage.photo.split('.').length - 1
+        ];
+      if (ext == 'png' || ext == 'jpg' || ext == 'jpeg' || ext == 'gif') {
+        type = 'image';
+      }
+      // }
+
+      return { buffer, stream, ext, type };
+    } catch (error) {
+      this.logger.log(error);
     }
   }
 }

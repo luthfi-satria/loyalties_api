@@ -161,9 +161,9 @@ export class VoucherCodeService {
   }
 
   async generateUniqueCode(len, code) {
-    var arr = [];
+    const arr = [];
     while (arr.length < len) {
-      var r = code + Math.floor(Math.random() * len) + 1;
+      const r = code + Math.floor(Math.random() * len) + 1;
       if (arr.indexOf(r) === -1) arr.push(r);
     }
     return arr;

@@ -9,6 +9,7 @@ import {
   Req,
   UploadedFile,
   Query,
+  Res,
 } from '@nestjs/common';
 import { VoucherPackagesService } from './voucher-packages.service';
 import { CreateVoucherPackageDto } from './dto/create-voucher-package.dto';
@@ -27,6 +28,7 @@ import {
   CancelVoucherPackageDto,
   StopVoucherPackageDto,
 } from './dto/update-voucher-package.dto';
+import { Response } from 'express';
 
 @Controller('api/v1/loyalties/admins/voucher-packages')
 export class VoucherPackagesController {
@@ -180,6 +182,31 @@ export class VoucherPackagesController {
     } catch (error) {
       console.error(error);
       throw error;
+    }
+  }
+
+  @Get(':id/image')
+  async streamFile(@Param('id') id: string, @Res() res: Response) {
+    // let buffer = null;
+    // let stream = null;
+    // let format = null;
+    const data = { id };
+    try {
+      const { buffer, stream, type, ext } =
+        await this.voucherPackagesService.getBufferS3(data);
+
+      //   buffer = await this.onboardingService.getBufferS3(data);
+      //   stream = await this.onboardingService.getReadableStream(buffer);
+      //   format = await this.onboardingService.getExt(data);
+
+      res.set({
+        'Content-Type': type + '/' + ext,
+        'Content-Length': buffer.length,
+      });
+
+      stream.pipe(res);
+    } catch (error) {
+      console.error(error);
     }
   }
 }
