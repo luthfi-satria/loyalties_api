@@ -10,6 +10,8 @@ import {
   UploadedFile,
   Query,
   Res,
+  HttpStatus,
+  HttpException,
 } from '@nestjs/common';
 import { VoucherPackagesService } from './voucher-packages.service';
 import { CreateVoucherPackageDto } from './dto/create-voucher-package.dto';
@@ -29,7 +31,7 @@ import {
   StopVoucherPackageDto,
 } from './dto/update-voucher-package.dto';
 import { Response } from 'express';
-
+import etag from 'etag';
 @Controller('api/v1/loyalties/admins/voucher-packages')
 export class VoucherPackagesController {
   constructor(
@@ -74,7 +76,12 @@ export class VoucherPackagesController {
       );
 
       if (createVoucherPackageDto.photo_url) {
-        createVoucherPackageDto.photo = createVoucherPackageDto.photo_url;
+        // createVoucherPackageDto.photo = createVoucherPackageDto.photo_url;
+        const voucherPackage = await this.voucherPackagesService.findOne(
+          createVoucherPackageDto.photo_url,
+        );
+        if (!voucherPackage) delete createVoucherPackageDto.photo;
+        createVoucherPackageDto.photo = voucherPackage.photo;
       } else {
         this.imageValidationService.setFilter('photo', 'required');
         await this.imageValidationService.validate(req);
@@ -85,6 +92,9 @@ export class VoucherPackagesController {
       const result = await this.voucherPackagesService.create(
         createVoucherPackageDto,
       );
+
+      result.photo = `${process.env.BASEURL_API}/api/v1/loyalties/admins/voucher-packages/${result.id}/image`;
+
       return this.responseService.success(
         true,
         this.messageService.get('general.create.success'),
@@ -109,6 +119,9 @@ export class VoucherPackagesController {
         query.periode_end = new Date(`${query.periode_end} +${gmt_offset}`);
       }
       const result = await this.voucherPackagesService.getList(query);
+      for (const voucherPackage of result.items) {
+        voucherPackage.photo = `${process.env.BASEURL_API}/api/v1/loyalties/admins/voucher-packages/${voucherPackage.id}/image`;
+      }
       return this.responseService.success(
         true,
         this.messageService.get('general.list.success'),
@@ -128,6 +141,9 @@ export class VoucherPackagesController {
       const result = await this.voucherPackagesService.getDetail(
         voucherPackageId,
       );
+
+      result.photo = `${process.env.BASEURL_API}/api/v1/loyalties/admins/voucher-packages/${result.id}/image`;
+
       return this.responseService.success(
         true,
         this.messageService.get('general.get.success'),
@@ -151,6 +167,9 @@ export class VoucherPackagesController {
       const result = await this.voucherPackagesService.cancel(
         cancelVoucherPackageDto,
       );
+
+      result.photo = `${process.env.BASEURL_API}/api/v1/loyalties/admins/voucher-packages/${result.id}/image`;
+
       return this.responseService.success(
         true,
         this.messageService.get('general.get.success'),
@@ -174,6 +193,9 @@ export class VoucherPackagesController {
       const result = await this.voucherPackagesService.stop(
         stopVoucherPackageDto,
       );
+
+      result.photo = `${process.env.BASEURL_API}/api/v1/loyalties/admins/voucher-packages/${result.id}/image`;
+
       return this.responseService.success(
         true,
         this.messageService.get('general.get.success'),
@@ -186,22 +208,27 @@ export class VoucherPackagesController {
   }
 
   @Get(':id/image')
-  async streamFile(@Param('id') id: string, @Res() res: Response) {
-    // let buffer = null;
-    // let stream = null;
-    // let format = null;
+  async streamFile(
+    @Param('id') id: string,
+    @Res() res: Response,
+    @Req() req: any,
+  ) {
     const data = { id };
     try {
       const { buffer, stream, type, ext } =
         await this.voucherPackagesService.getBufferS3(data);
-
-      //   buffer = await this.onboardingService.getBufferS3(data);
-      //   stream = await this.onboardingService.getReadableStream(buffer);
-      //   format = await this.onboardingService.getExt(data);
+      const tag = etag(buffer);
+      if (
+        req.headers['if-none-match'] &&
+        req.headers['if-none-match'] === tag
+      ) {
+        throw new HttpException('Not Modified', HttpStatus.NOT_MODIFIED);
+      }
 
       res.set({
         'Content-Type': type + '/' + ext,
         'Content-Length': buffer.length,
+        ETag: tag,
       });
 
       stream.pipe(res);

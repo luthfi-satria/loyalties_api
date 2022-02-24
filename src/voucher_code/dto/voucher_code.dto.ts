@@ -12,7 +12,7 @@ import {
   IsString,
   ValidateIf,
 } from 'class-validator';
-import { MasterVouchersDocument } from 'src/master_vouchers/entities/master_voucher.entity';
+// import { MasterVouchersDocument } from 'src/master_vouchers/entities/master_voucher.entity';
 
 export class CreateVoucherCodeDto {
   @IsString()

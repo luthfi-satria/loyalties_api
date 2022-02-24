@@ -1,5 +1,4 @@
 import {
-  AfterLoad,
   Column,
   CreateDateColumn,
   DeleteDateColumn,
@@ -98,9 +97,4 @@ export class VoucherPackageDocument {
 
   @DeleteDateColumn({ nullable: true })
   deleted_at: Date;
-
-  // @AfterLoad()
-  // manipulatePhoto() {
-  //   this.photo = `${process.env.HTTP_ADDRESS}/api/v1/loyalties/admins/voucher-packages/${this.id}/image`;
-  // }
 }

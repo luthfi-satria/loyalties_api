@@ -268,6 +268,30 @@ export class VoucherPackagesService {
     }
   }
 
+  async findOne(voucherPackageId: string) {
+    try {
+      return await this.voucherPackageRepository.findOneOrFail(
+        voucherPackageId,
+      );
+    } catch (error) {
+      this.logger.log(error);
+      throw new BadRequestException(
+        this.responseService.error(
+          HttpStatus.BAD_REQUEST,
+          {
+            value: '',
+            property: '',
+            constraint: [
+              this.messageService.get('general.get.fail'),
+              error.message,
+            ],
+          },
+          'Bad Request',
+        ),
+      );
+    }
+  }
+
   async cancel(params: CancelVoucherPackageDto) {
     const findVoucherPackage = await this.getAndValidateVoucherPackageById(
       params.id,
@@ -737,7 +761,6 @@ export class VoucherPackagesService {
       const voucherPackage = await this.voucherPackageRepository.findOne({
         id: data.id,
       });
-      url = voucherPackage.photo;
 
       if (!voucherPackage) {
         const errors: RMessage = {
@@ -753,49 +776,21 @@ export class VoucherPackagesService {
           ),
         );
       }
+      url = voucherPackage.photo;
       const buffer = await this.storage.getBuff(url);
-      // }
 
       // async getReadableStream(buffer: Buffer) {
       const stream = new Readable();
-
-      // stream._read = () => {};;;
       stream.push(buffer);
       stream.push(null);
 
-      // return stream;
-      // }
-
-      // async getExt(data) {
-      // let ext = null;
       let type = null;
-      // const resultOnBoarding = await this.onboardingsRepository
-      //   .findOne(data.id)
-      //   .catch(() => {
-      //     throw new BadRequestException(
-      //       this.responseService.error(
-      //         HttpStatus.BAD_REQUEST,
-      //         {
-      //           value: data.id,
-      //           property: 'onboarding_id',
-      //           constraint: [
-      //             this.messageService.get('general.general.dataNotFound'),
-      //           ],
-      //         },
-      //         'Bad Request',
-      //       ),
-      //     );
-      //   });
-
-      // if (resultOnBoarding) {
-      const ext =
-        voucherPackage.photo.split('.')[
-          voucherPackage.photo.split('.').length - 1
-        ];
+      const ext = voucherPackage.photo
+        .split('.')
+        [voucherPackage.photo.split('.').length - 1].toLowerCase();
       if (ext == 'png' || ext == 'jpg' || ext == 'jpeg' || ext == 'gif') {
         type = 'image';
       }
-      // }
 
       return { buffer, stream, ext, type };
     } catch (error) {
