@@ -144,6 +144,9 @@ export class VoucherPackagesService {
               'COUNT(voucher_package_order_quota.id) AS used_count, voucher_package_order_quota.voucher_package_id AS order_voucher_package_id',
             )
             .from(VoucherPackageOrderDocument, 'voucher_package_order_quota')
+            .where('voucher_package_order_quota.status in(:...statuses)', {
+              statuses: ['WAITING', 'PAID'],
+            })
             .groupBy('voucher_package_order_quota.voucher_package_id'),
         'voucher_package_order_quota',
         'voucher_package.id = voucher_package_order_quota.order_voucher_package_id',
@@ -792,7 +795,7 @@ export class VoucherPackagesService {
         type = 'image';
       }
 
-      return { buffer, stream, ext, type };
+      return { buffer: buffer, stream: stream, ext: ext, type: type };
     } catch (error) {
       this.logger.log(error);
     }

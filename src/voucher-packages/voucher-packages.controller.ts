@@ -214,26 +214,26 @@ export class VoucherPackagesController {
     @Req() req: any,
   ) {
     const data = { id };
+    let images = null;
+
     try {
-      const { buffer, stream, type, ext } =
-        await this.voucherPackagesService.getBufferS3(data);
-      const tag = etag(buffer);
-      if (
-        req.headers['if-none-match'] &&
-        req.headers['if-none-match'] === tag
-      ) {
-        throw new HttpException('Not Modified', HttpStatus.NOT_MODIFIED);
-      }
-
-      res.set({
-        'Content-Type': type + '/' + ext,
-        'Content-Length': buffer.length,
-        ETag: tag,
-      });
-
-      stream.pipe(res);
+      images = await this.voucherPackagesService.getBufferS3(data);
     } catch (error) {
       console.error(error);
+      throw error;
     }
+
+    const tag = etag(images.buffer);
+    if (req.headers['if-none-match'] && req.headers['if-none-match'] === tag) {
+      throw new HttpException('Not Modified', HttpStatus.NOT_MODIFIED);
+    }
+
+    res.set({
+      'Content-Type': images.type + '/' + images.ext,
+      'Content-Length': images.buffer.length,
+      ETag: tag,
+    });
+
+    images.stream.pipe(res);
   }
 }
