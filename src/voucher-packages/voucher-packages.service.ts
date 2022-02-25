@@ -144,7 +144,7 @@ export class VoucherPackagesService {
               'COUNT(voucher_package_order_quota.id) AS used_count, voucher_package_order_quota.voucher_package_id AS order_voucher_package_id',
             )
             .from(VoucherPackageOrderDocument, 'voucher_package_order_quota')
-            .where('voucher_package_order_quota.status in(:...statuses)', {
+            .where('voucher_package_order_quota.status in (:...statuses)', {
               statuses: ['WAITING', 'PAID'],
             })
             .groupBy('voucher_package_order_quota.voucher_package_id'),
