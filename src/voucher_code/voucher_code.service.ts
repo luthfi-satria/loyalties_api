@@ -53,9 +53,8 @@ export class VoucherCodeService {
     @Inject(forwardRef(() => VoucherService))
     private readonly voucherService: VoucherService,
     private readonly masterVoucherVoucherCodeRepository: MasterVoucherVoucherCodeRepository,
-    private readonly storage: CommonStorageService,
-  ) // private readonly httpService: HttpService,
-  {}
+    private readonly storage: CommonStorageService, // private readonly httpService: HttpService,
+  ) {}
   private readonly logger = new Logger(VoucherCodeService.name);
 
   // CRUD
@@ -680,7 +679,7 @@ export class VoucherCodeService {
       const resultVoucherCode = await this.voucherCodesRepository.save(
         voucher_codes,
       );
-      url = `${process.env.BASEURL_API}/api/v1/loyalties/admins/voucher-codes/${resultVoucherCode.id}/stream-file`;
+      url = `${process.env.BASEURL_API}/api/v1/loyalties/voucher-codes/${resultVoucherCode.id}/stream-file`;
     }
 
     return { url };
