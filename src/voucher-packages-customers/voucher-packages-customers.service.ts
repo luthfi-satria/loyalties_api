@@ -137,12 +137,12 @@ export class VoucherPackagesCustomersService {
       const payment = await this.paymentService
         .createVoucherPayment(item)
         .catch(async (error) => {
-          console.error(error);
+          // console.error(error);
 
-          //Rollback Voucher Package
-          await this.voucherPackageOrderRepository.softDelete(
-            voucherPackageOrder.id,
-          );
+          // //Rollback Voucher Package
+          // await this.voucherPackageOrderRepository.softDelete(
+          //   voucherPackageOrder.id,
+          // );
 
           const errors: RMessage = {
             value: '',
