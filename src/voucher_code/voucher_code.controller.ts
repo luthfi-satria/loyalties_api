@@ -1,5 +1,15 @@
 import { VoucherCodeService } from './voucher_code.service';
-import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+  Res,
+} from '@nestjs/common';
+import { Response } from 'express';
 import { AuthJwtGuard } from 'src/auth/auth.decorators';
 import { UserType } from 'src/auth/guard/user-type.decorator';
 import { MessageService } from 'src/message/message.service';
@@ -20,6 +30,28 @@ export class VoucherCodeController {
     private readonly messageService: MessageService,
     private readonly responseService: ResponseService,
   ) {}
+
+  @Get(':id/stream-file')
+  async streamFile(@Param('id') id: string, @Res() res: Response) {
+    const data: any = { id };
+
+    let buffer = null;
+    let stream = null;
+    try {
+      buffer = await this.voucherCodeService.getBufferS3(data);
+      stream = await this.voucherCodeService.getReadableStream(buffer);
+    } catch (error) {
+      console.log(error);
+    }
+
+    res.set({
+      'Content-Type':
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Length': buffer.length,
+    });
+
+    stream.pipe(res);
+  }
 
   @Get('')
   @UserType('admin')
