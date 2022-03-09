@@ -93,7 +93,11 @@ export class VoucherPackagesController {
         createVoucherPackageDto,
       );
 
-      result.photo = `${process.env.BASEURL_API}/api/v1/loyalties/admins/voucher-packages/${result.id}/image`;
+      if (result.photo) {
+        const fileName =
+          result.photo.split('/')[result.photo.split('/').length - 1];
+        result.photo = `${process.env.BASEURL_API}/api/v1/loyalties/admins/voucher-packages/${result.id}/image/${fileName}`;
+      }
 
       return this.responseService.success(
         true,
@@ -120,7 +124,13 @@ export class VoucherPackagesController {
       }
       const result = await this.voucherPackagesService.getList(query);
       for (const voucherPackage of result.items) {
-        voucherPackage.photo = `${process.env.BASEURL_API}/api/v1/loyalties/admins/voucher-packages/${voucherPackage.id}/image`;
+        if (voucherPackage.photo) {
+          const fileName =
+            voucherPackage.photo.split('/')[
+              voucherPackage.photo.split('/').length - 1
+            ];
+          voucherPackage.photo = `${process.env.BASEURL_API}/api/v1/loyalties/admins/voucher-packages/${voucherPackage.id}/image/${fileName}`;
+        }
       }
       return this.responseService.success(
         true,
@@ -142,7 +152,11 @@ export class VoucherPackagesController {
         voucherPackageId,
       );
 
-      result.photo = `${process.env.BASEURL_API}/api/v1/loyalties/admins/voucher-packages/${result.id}/image`;
+      if (result.photo) {
+        const fileName =
+          result.photo.split('/')[result.photo.split('/').length - 1];
+        result.photo = `${process.env.BASEURL_API}/api/v1/loyalties/admins/voucher-packages/${result.id}/image/${fileName}`;
+      }
 
       return this.responseService.success(
         true,
@@ -168,7 +182,11 @@ export class VoucherPackagesController {
         cancelVoucherPackageDto,
       );
 
-      result.photo = `${process.env.BASEURL_API}/api/v1/loyalties/admins/voucher-packages/${result.id}/image`;
+      if (result.photo) {
+        const fileName =
+          result.photo.split('/')[result.photo.split('/').length - 1];
+        result.photo = `${process.env.BASEURL_API}/api/v1/loyalties/admins/voucher-packages/${result.id}/image/${fileName}`;
+      }
 
       return this.responseService.success(
         true,
@@ -194,7 +212,11 @@ export class VoucherPackagesController {
         stopVoucherPackageDto,
       );
 
-      result.photo = `${process.env.BASEURL_API}/api/v1/loyalties/admins/voucher-packages/${result.id}/image`;
+      if (result.photo) {
+        const fileName =
+          result.photo.split('/')[result.photo.split('/').length - 1];
+        result.photo = `${process.env.BASEURL_API}/api/v1/loyalties/admins/voucher-packages/${result.id}/image/${fileName}`;
+      }
 
       return this.responseService.success(
         true,
@@ -207,13 +229,14 @@ export class VoucherPackagesController {
     }
   }
 
-  @Get(':id/image')
+  @Get(':id/image/:image')
   async streamFile(
     @Param('id') id: string,
+    @Param('image') fileName: string,
     @Res() res: Response,
     @Req() req: any,
   ) {
-    const data = { id };
+    const data = { id, fileName };
     let images = null;
 
     try {

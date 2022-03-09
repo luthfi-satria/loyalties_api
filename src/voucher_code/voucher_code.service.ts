@@ -14,6 +14,7 @@ import {
   Injectable,
   Logger,
 } from '@nestjs/common';
+// import { HttpService } from '@nestjs/axios';
 import { MessageService } from 'src/message/message.service';
 import { ResponseService } from 'src/response/response.service';
 import { ILike, LessThan, MoreThan } from 'typeorm';
@@ -37,6 +38,9 @@ import {
   CreateAutoStartVoucherCodeDto,
 } from 'src/common/redis/dto/redis-voucher-code.dto';
 import { VoucherDocument } from 'src/voucher/entities/voucher.entity';
+// import { firstValueFrom, map } from 'rxjs';
+import { RMessage } from 'src/response/response.interface';
+import { Readable } from 'stream';
 
 @Injectable()
 export class VoucherCodeService {
@@ -50,7 +54,8 @@ export class VoucherCodeService {
     private readonly voucherService: VoucherService,
     private readonly masterVoucherVoucherCodeRepository: MasterVoucherVoucherCodeRepository,
     private readonly storage: CommonStorageService,
-  ) {}
+  ) // private readonly httpService: HttpService,
+  {}
   private readonly logger = new Logger(VoucherCodeService.name);
 
   // CRUD
@@ -672,9 +677,59 @@ export class VoucherCodeService {
       await workbook.xlsx.writeFile(fileName);
       url = await this.storage.store(fileName);
       voucher_codes.excel_file = url;
-      await this.voucherCodesRepository.save(voucher_codes);
+      const resultVoucherCode = await this.voucherCodesRepository.save(
+        voucher_codes,
+      );
+      url = `${process.env.BASEURL_API}/api/v1/loyalties/admins/voucher-codes/${resultVoucherCode.id}/stream-file`;
     }
 
     return { url };
+  }
+
+  async getBufferS3(data: any) {
+    let url = null;
+    try {
+      const voucherCode = await this.voucherCodesRepository.findOne({
+        id: data.id,
+      });
+
+      if (voucherCode) {
+        url = voucherCode.excel_file;
+      } else {
+        const errors: RMessage = {
+          value: data.voucherCode_id,
+          property: 'id',
+          constraint: [this.messageService.get('general.general.dataNotFound')],
+        };
+        throw new BadRequestException(
+          this.responseService.error(
+            HttpStatus.BAD_REQUEST,
+            errors,
+            'Bad Request',
+          ),
+        );
+      }
+    } catch (error) {}
+
+    const bufferurl = this.storage.getBuff(url);
+    // await firstValueFrom(
+    //   this.httpService
+    //     .get(url, {
+    //       responseType: 'arraybuffer',
+    //     })
+    //     .pipe(map((resp) => Buffer.from(resp.data, 'base64'))),
+    // );
+
+    return bufferurl;
+  }
+
+  async getReadableStream(buffer: Buffer) {
+    const stream = new Readable();
+
+    // stream._read = () => {};;;
+    stream.push(buffer);
+    stream.push(null);
+
+    return stream;
   }
 }
