@@ -31,7 +31,13 @@ export class VoucherPackagesCustomersController {
         user,
         createVoucherPackageCustomerDto,
       );
-      result.voucher_package.photo = `${process.env.BASEURL_API}/api/v1/loyalties/admins/voucher-packages/${result.voucher_package.id}/image`;
+      if (result.voucher_package.photo) {
+        const fileName =
+          result.voucher_package.photo.split('/')[
+            result.voucher_package.photo.split('/').length - 1
+          ];
+        result.voucher_package.photo = `${process.env.BASEURL_API}/api/v1/loyalties/admins/voucher-packages/${result.voucher_package.id}/image/${fileName}`;
+      }
       return this.responseService.success(
         true,
         this.messageService.get('general.create.success'),
@@ -55,7 +61,11 @@ export class VoucherPackagesCustomersController {
         voucherPackageId,
         user,
       );
-      result.photo = `${process.env.BASEURL_API}/api/v1/loyalties/admins/voucher-packages/${result.id}/image`;
+      if (result.photo) {
+        const fileName =
+          result.photo.split('/')[result.photo.split('/').length - 1];
+        result.photo = `${process.env.BASEURL_API}/api/v1/loyalties/admins/voucher-packages/${result.id}/image/${fileName}`;
+      }
       return this.responseService.success(
         true,
         this.messageService.get('general.update.success'),
@@ -89,7 +99,11 @@ export class VoucherPackagesCustomersController {
 
       for (let i = 0; i < result.items.length; i++) {
         const res = result.items[i];
-        res.photo = `${process.env.BASEURL_API}/api/v1/loyalties/admins/voucher-packages/${res.id}/image`;
+        if (res.photo) {
+          const fileName =
+            res.photo.split('/')[res.photo.split('/').length - 1];
+          res.photo = `${process.env.BASEURL_API}/api/v1/loyalties/admins/voucher-packages/${res.id}/image/${fileName}`;
+        }
       }
 
       return this.responseService.success(
@@ -116,7 +130,11 @@ export class VoucherPackagesCustomersController {
         user,
       );
 
-      result.photo = `${process.env.BASEURL_API}/api/v1/loyalties/admins/voucher-packages/${result.id}/image`;
+      if (result.photo) {
+        const fileName =
+          result.photo.split('/')[result.photo.split('/').length - 1];
+        result.photo = `${process.env.BASEURL_API}/api/v1/loyalties/admins/voucher-packages/${result.id}/image/${fileName}`;
+      }
 
       return this.responseService.success(
         true,
