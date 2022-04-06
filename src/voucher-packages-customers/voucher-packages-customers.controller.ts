@@ -31,6 +31,7 @@ export class VoucherPackagesCustomersController {
         user,
         createVoucherPackageCustomerDto,
       );
+      result.voucher_package.photo = `${process.env.BASEURL_API}/api/v1/loyalties/admins/voucher-packages/${result.voucher_package.id}/image`;
       return this.responseService.success(
         true,
         this.messageService.get('general.create.success'),
@@ -54,6 +55,7 @@ export class VoucherPackagesCustomersController {
         voucherPackageId,
         user,
       );
+      result.photo = `${process.env.BASEURL_API}/api/v1/loyalties/admins/voucher-packages/${result.id}/image`;
       return this.responseService.success(
         true,
         this.messageService.get('general.update.success'),
@@ -84,6 +86,12 @@ export class VoucherPackagesCustomersController {
         query,
         user,
       );
+
+      for (let i = 0; i < result.items.length; i++) {
+        const res = result.items[i];
+        res.photo = `${process.env.BASEURL_API}/api/v1/loyalties/admins/voucher-packages/${res.id}/image`;
+      }
+
       return this.responseService.success(
         true,
         this.messageService.get('general.list.success'),
@@ -107,6 +115,9 @@ export class VoucherPackagesCustomersController {
         voucherPackageOrderId,
         user,
       );
+
+      result.photo = `${process.env.BASEURL_API}/api/v1/loyalties/admins/voucher-packages/${result.id}/image`;
+
       return this.responseService.success(
         true,
         this.messageService.get('general.get.success'),
