@@ -23,7 +23,8 @@ export class PaymentService {
       return await firstValueFrom(
         this.httpService
           .post(
-            `${process.env.BASEURL_PAYMENTS_SERVICE}/api/v1/payments/internal/payments`,
+            // `${process.env.BASEURL_PAYMENTS_SERVICE}/api/v1/payments/internal/payments`,
+            `${process.env.BASEURL_PAYMENTS_SERVICE}/api/v1/internal/payments`,
             data,
             { headers: headerRequest },
           )
@@ -31,7 +32,8 @@ export class PaymentService {
       );
     } catch (e) {
       this.logger.error(
-        `${process.env.BASEURL_PAYMENTS_SERVICE}/api/v1/payments/internal/payments ${e.message}`,
+        // `${process.env.BASEURL_PAYMENTS_SERVICE}/api/v1/payments/internal/payments ${e.message}`,
+        `${process.env.BASEURL_PAYMENTS_SERVICE}/api/v1/internal/payments ${e.message}`,
       );
       if (e.response) {
         throw new HttpException(
@@ -52,7 +54,8 @@ export class PaymentService {
       return await firstValueFrom(
         this.httpService
           .post(
-            `${process.env.BASEURL_PAYMENTS_SERVICE}/api/v1/payments/internal/voucher-payments`,
+            // `${process.env.BASEURL_PAYMENTS_SERVICE}/api/v1/payments/internal/voucher-payments`,
+            `${process.env.BASEURL_PAYMENTS_SERVICE}/api/v1/internal/payments/voucher-payments`,
             data,
             { headers: headerRequest },
           )
@@ -60,7 +63,8 @@ export class PaymentService {
       );
     } catch (e) {
       this.logger.error(
-        `${process.env.BASEURL_PAYMENTS_SERVICE}/api/v1/payments/internal/voucher-payments ${e.message}`,
+        // `${process.env.BASEURL_PAYMENTS_SERVICE}/api/v1/payments/internal/voucher-payments ${e.message}`,
+        `${process.env.BASEURL_PAYMENTS_SERVICE}/api/v1/internal/payments/voucher-payments ${e.message}`,
       );
       if (e.response) {
         throw new HttpException(
@@ -81,7 +85,8 @@ export class PaymentService {
       const payments: { payments: PaymentMethodDTO[] } = await firstValueFrom(
         this.httpService
           .get(
-            `${process.env.BASEURL_PAYMENTS_SERVICE}/api/v1/payments/internal/payments/bulk`,
+            // `${process.env.BASEURL_PAYMENTS_SERVICE}/api/v1/payments/internal/payments/bulk`,
+            `${process.env.BASEURL_PAYMENTS_SERVICE}/api/v1/internal/payments/bulk`,
             { headers: headerRequest, params: data },
           )
           .pipe(map((resp) => resp.data)),
@@ -89,7 +94,8 @@ export class PaymentService {
       return payments.payments;
     } catch (e) {
       this.logger.error(
-        `${process.env.BASEURL_PAYMENTS_SERVICE}/api/v1/payments/internal/payments/bulk ${e.message}`,
+        // `${process.env.BASEURL_PAYMENTS_SERVICE}/api/v1/payments/internal/payments/bulk ${e.message}`,
+        `${process.env.BASEURL_PAYMENTS_SERVICE}/api/v1/internal/payments/bulk ${e.message}`,
       );
       if (e.response) {
         throw new HttpException(

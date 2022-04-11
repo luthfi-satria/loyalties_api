@@ -25,6 +25,7 @@ import {
   ILike,
   In,
   LessThanOrEqual,
+  Like,
   MoreThanOrEqual,
   SelectQueryBuilder,
 } from 'typeorm';
@@ -763,6 +764,7 @@ export class VoucherPackagesService {
     try {
       const voucherPackage = await this.voucherPackageRepository.findOne({
         id: data.id,
+        photo: Like(`%${data.fileName}%`),
       });
 
       if (!voucherPackage) {
