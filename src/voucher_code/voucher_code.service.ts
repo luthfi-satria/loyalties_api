@@ -652,7 +652,8 @@ export class VoucherCodeService {
     let url = null;
 
     if (voucher_codes.excel_file) {
-      url = voucher_codes.excel_file;
+      // url = voucher_codes.excel_file;
+      url = `${process.env.BASEURL_API}/api/v1/loyalties/voucher-codes/${voucher_codes.id}/stream-file`;
     } else {
       const workbook = new ExcelJS.Workbook();
       workbook.creator = 'Efood';
