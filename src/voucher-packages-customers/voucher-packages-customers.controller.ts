@@ -31,7 +31,7 @@ export class VoucherPackagesCustomersController {
         user,
         createVoucherPackageCustomerDto,
       );
-      if (result.voucher_package.photo) {
+      if (result?.voucher_package?.photo) {
         const fileName =
           result.voucher_package.photo.split('/')[
             result.voucher_package.photo.split('/').length - 1
