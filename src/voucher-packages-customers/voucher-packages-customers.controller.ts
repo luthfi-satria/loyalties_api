@@ -95,6 +95,38 @@ export class VoucherPackagesCustomersController {
     }
   }
 
+  @Get('/customer/:id')
+  @UserType('admin')
+  @AuthJwtGuard()
+  async getListCustomerById(
+    @Param('id') id: string,
+    @Query() query: ListVoucherPackageOrderDto,
+  ): Promise<RSuccessMessage> {
+    try {
+      const user = {} as User;
+      user.id = id;
+      const gmt_offset = '7';
+      if (query.periode_start) {
+        query.periode_start = new Date(`${query.periode_start} +${gmt_offset}`);
+      }
+      if (query.periode_end) {
+        query.periode_end = new Date(`${query.periode_end} +${gmt_offset}`);
+      }
+      const result = await this.voucherPackagesCustomersService.getList(
+        query,
+        user,
+      );
+      return this.responseService.success(
+        true,
+        this.messageService.get('general.list.success'),
+        result,
+      );
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+
   @Get(':voucher_package_order_id')
   @UserType('customer')
   @AuthJwtGuard()
