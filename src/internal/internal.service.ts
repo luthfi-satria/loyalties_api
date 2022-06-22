@@ -76,9 +76,20 @@ export class InternalService {
     getVoucherPackageBulkDto: GetVoucherPackageBulkDto,
   ) {
     try {
-      return this.voucherPackagesService.getDetailBulk(
+      const result = await this.voucherPackagesService.getDetailBulk(
         getVoucherPackageBulkDto.voucher_package_ids,
       );
+
+      if (
+        getVoucherPackageBulkDto.is_remove_voucher_package_master_vouchers &&
+        result
+      ) {
+        result.forEach((item) => {
+          delete item.voucher_package_master_vouchers;
+        });
+      }
+
+      return result;
     } catch (error) {
       this.errorReport(error, 'general.general.fail');
     }
