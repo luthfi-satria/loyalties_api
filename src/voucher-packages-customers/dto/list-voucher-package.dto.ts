@@ -35,4 +35,7 @@ export class ListVoucherPackageOrderDto {
   @IsOptional()
   @IsNumberString()
   price_max: string;
+
+  @IsOptional()
+  is_available_for_ticket: boolean;
 }

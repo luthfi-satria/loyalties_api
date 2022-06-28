@@ -134,10 +134,11 @@ export class VoucherPackagesCustomersController {
       if (query.periode_end) {
         query.periode_end = new Date(`${query.periode_end} +${gmt_offset}`);
       }
-      const result = await this.voucherPackagesCustomersService.getList(
-        query,
-        user,
-      );
+      const result =
+        await this.voucherPackagesCustomersService.getListByCustomerId(
+          query,
+          user,
+        );
       return this.responseService.success(
         true,
         this.messageService.get('general.list.success'),

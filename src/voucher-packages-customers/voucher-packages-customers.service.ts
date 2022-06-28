@@ -5,7 +5,9 @@ import {
   Logger,
 } from '@nestjs/common';
 import _ from 'lodash';
+import moment from 'moment';
 import { User } from 'src/auth/guard/interface/user.interface';
+import { AdminService } from 'src/common/admins/admin.service';
 import { OrderService } from 'src/common/order/order.service';
 import { CreatePayment } from 'src/common/payment/interfaces/payment.interface';
 import { PaymentService } from 'src/common/payment/payment.service';
@@ -47,6 +49,7 @@ export class VoucherPackagesCustomersService {
     private readonly voucherPackageService: VoucherPackagesService,
     private readonly paymentService: PaymentService,
     private readonly orderService: OrderService,
+    private readonly adminService: AdminService,
   ) {}
   private readonly logger = new Logger(VoucherPackagesCustomersService.name);
 
@@ -323,6 +326,141 @@ export class VoucherPackagesCustomersService {
 
       query.take(limit).skip(offset);
 
+      // let items = await query.getMany();
+      const count = await query.getCount();
+      const { entities, raw } = await query.getRawAndEntities();
+      let items = this.voucherPackageService.assignQuotaLeft(entities, raw);
+
+      items = await this.assignObjectPaymentMethod(items);
+
+      const listItems = {
+        current_page: +page,
+        total_item: count,
+        limit: +limit,
+        items: items,
+      };
+
+      return listItems;
+    } catch (error) {
+      this.logger.log(error);
+      throw new BadRequestException(
+        this.responseService.error(
+          HttpStatus.BAD_REQUEST,
+          {
+            value: '',
+            property: '',
+            constraint: [
+              this.messageService.get('general.list.fail'),
+              error.message,
+            ],
+          },
+          'Bad Request',
+        ),
+      );
+    }
+  }
+
+  async getListByCustomerId(
+    params: ListVoucherPackageOrderDto,
+    user: User,
+  ): Promise<{
+    current_page: number;
+    total_item: number;
+    limit: number;
+    items: VoucherPackageDocument[];
+  }> {
+    try {
+      const page = params.page || 1;
+      const limit = params.limit || 10;
+      const offset = (page - 1) * limit;
+
+      let where = {};
+
+      if (params.target) where = { ...where, target: params.target };
+      if (params.search) where = { ...where, name: Like(`%${params.search}%`) };
+      if (params.periode_start) {
+        where = { ...where, created_at: MoreThanOrEqual(params.periode_start) };
+      }
+      if (params.periode_end) {
+        where = { ...where, created_at: LessThanOrEqual(params.periode_end) };
+      }
+      if (params.price_min) {
+        where = { ...where, price: MoreThanOrEqual(params.price_min) };
+      }
+      if (params.price_min) {
+        where = { ...where, price: LessThanOrEqual(params.price_max) };
+      }
+
+      const query = this.mainQuery(user)
+        .leftJoinAndSelect('voucher_package.vouchers', 'vouchers')
+        .where(where);
+      if (params.status == StatusVoucherPackage.ACTIVE) {
+        query.andWhere(
+          new Brackets((qb) => {
+            qb.where('voucher_package.status = :status', {
+              status: StatusVoucherPackage.ACTIVE,
+            });
+            qb.orWhere(
+              new Brackets((qb2) => {
+                qb2
+                  .where('voucher_package.status IN (:...status_end)', {
+                    status_end: [
+                      StatusVoucherPackage.FINISHED,
+                      StatusVoucherPackage.STOPPED,
+                    ],
+                  })
+                  .andWhere(
+                    'voucher_package_orders.status = :order_status_waiting',
+                    {
+                      order_status_waiting: StatusVoucherPackageOrder.WAITING,
+                    },
+                  );
+              }),
+            );
+          }),
+        );
+      } else if (params.status) {
+        query.andWhere('voucher_package.status = :status', {
+          status: params.status,
+        });
+      }
+      const limitTicket = await this.adminService.getTicketSetting();
+
+      if (params.is_available_for_ticket) {
+        query.andWhere(
+          new Brackets((qb) => {
+            qb.where(
+              new Brackets((qb1) => {
+                qb1
+                  .where(
+                    'voucher_package_orders.created_at between :date and :now',
+                    {
+                      date: moment().subtract(
+                        -limitTicket.limit_create_order_ticket,
+                        'second',
+                      ),
+                      now: new Date(),
+                    },
+                  )
+                  .andWhere('voucher_package_orders.status IN (:...status)', {
+                    status: [
+                      StatusVoucherPackageOrder.PAID,
+                      StatusVoucherPackageOrder.CANCELLED,
+                      StatusVoucherPackageOrder.EXPIRED,
+                      StatusVoucherPackageOrder.REFUND,
+                    ],
+                  });
+              }),
+            ).orWhere('voucher_package_orders.status = :status', {
+              status: StatusVoucherPackageOrder.WAITING,
+            });
+          }),
+        );
+      }
+      query.andWhere('vouchers.customer_id = :customer_id', {
+        customer_id: user.id,
+      });
+      query.take(limit).skip(offset);
       // let items = await query.getMany();
       const count = await query.getCount();
       const { entities, raw } = await query.getRawAndEntities();
