@@ -391,9 +391,7 @@ export class VoucherPackagesCustomersService {
         where = { ...where, price: LessThanOrEqual(params.price_max) };
       }
 
-      const query = this.mainQuery(user)
-        .leftJoinAndSelect('voucher_package.vouchers', 'vouchers')
-        .where(where);
+      const query = this.mainQuery(user).where(where);
       if (params.status == StatusVoucherPackage.ACTIVE) {
         query.andWhere(
           new Brackets((qb) => {
