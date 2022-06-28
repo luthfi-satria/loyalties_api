@@ -391,7 +391,13 @@ export class VoucherPackagesCustomersService {
         where = { ...where, price: LessThanOrEqual(params.price_max) };
       }
 
-      const query = this.mainQuery(user).where(where);
+      const query = this.voucherPackageService
+        .mainQuery()
+        .leftJoinAndSelect(
+          'voucher_package.voucher_package_orders',
+          'voucher_package_orders',
+        )
+        .where(where);
       if (params.status == StatusVoucherPackage.ACTIVE) {
         query.andWhere(
           new Brackets((qb) => {
@@ -490,6 +496,9 @@ export class VoucherPackagesCustomersService {
           }),
         );
       }
+      query.andWhere('voucher_package_orders.customer_id = :customer_id', {
+        customer_id: user.id,
+      });
       query.take(limit).skip(offset);
       // let items = await query.getMany();
       const count = await query.getCount();
