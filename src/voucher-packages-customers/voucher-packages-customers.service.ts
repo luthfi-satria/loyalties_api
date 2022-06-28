@@ -464,17 +464,32 @@ export class VoucherPackagesCustomersService {
                       now: new Date(),
                     },
                   )
-                  .andWhere('voucher_package_orders.status IN (:...status)', {
-                    status: [
-                      StatusVoucherPackageOrder.EXPIRED,
-                      StatusVoucherPackageOrder.REFUND,
-                    ],
+                  .andWhere('voucher_package_orders.status = :status', {
+                    status: StatusVoucherPackageOrder.EXPIRED,
                   });
               }),
             );
             qb.orWhere(
               new Brackets((qb3) => {
                 qb3
+                  .where(
+                    'voucher_package_orders.payment_expired_at between :date and :now',
+                    {
+                      date: moment(Date.now()).subtract(
+                        -limitTicket.data.value,
+                        'second',
+                      ),
+                      now: new Date(),
+                    },
+                  )
+                  .andWhere('voucher_package_orders.status = :status', {
+                    status: StatusVoucherPackageOrder.REFUND,
+                  });
+              }),
+            );
+            qb.orWhere(
+              new Brackets((qb4) => {
+                qb4
                   .where(
                     'voucher_package_orders.updated_at between :date and :now',
                     {
