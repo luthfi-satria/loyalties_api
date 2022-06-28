@@ -430,7 +430,7 @@ export class VoucherPackagesCustomersService {
       }
       const limitTicket = await this.adminService.getTicketSetting();
 
-      if (Boolean(params.is_available_for_ticket)) {
+      if (params.is_available_for_ticket === 'true') {
         query.andWhere(
           new Brackets((qb) => {
             qb.where(
@@ -450,49 +450,48 @@ export class VoucherPackagesCustomersService {
                     status: StatusVoucherPackageOrder.PAID,
                   });
               }),
-            )
-              // .orWhere(
-              //   new Brackets((qb2) => {
-              //     qb2
-              //       .where(
-              //         'voucher_package_orders.payment_expired_at between :date and :now',
-              //         {
-              //           date: moment(Date.now()).subtract(
-              //             -limitTicket.data.value,
-              //             'second',
-              //           ),
-              //           now: new Date(),
-              //         },
-              //       )
-              //       .andWhere('voucher_package_orders.status IN (:...status)', {
-              //         status: [
-              //           StatusVoucherPackageOrder.EXPIRED,
-              //           StatusVoucherPackageOrder.REFUND,
-              //         ],
-              //       });
-              //   }),
-              // )
-              // .orWhere(
-              //   new Brackets((qb2) => {
-              //     qb2
-              //       .where(
-              //         'voucher_package_orders.updated_at between :date and :now',
-              //         {
-              //           date: moment(Date.now()).subtract(
-              //             -limitTicket.data.value,
-              //             'second',
-              //           ),
-              //           now: new Date(),
-              //         },
-              //       )
-              //       .andWhere('voucher_package_orders.status = :status', {
-              //         status: StatusVoucherPackageOrder.CANCELLED,
-              //       });
-              //   }),
-              // )
-              .orWhere('voucher_package_orders.status = :status', {
-                status: StatusVoucherPackageOrder.WAITING,
-              });
+            );
+            // qb.orWhere(
+            //   new Brackets((qb2) => {
+            //     qb2
+            //       .where(
+            //         'voucher_package_orders.payment_expired_at between :date and :now',
+            //         {
+            //           date: moment(Date.now()).subtract(
+            //             -limitTicket.data.value,
+            //             'second',
+            //           ),
+            //           now: new Date(),
+            //         },
+            //       )
+            //       .andWhere('voucher_package_orders.status IN (:...status)', {
+            //         status: [
+            //           StatusVoucherPackageOrder.EXPIRED,
+            //           StatusVoucherPackageOrder.REFUND,
+            //         ],
+            //       });
+            //   }),
+            // );
+            qb.orWhere(
+              new Brackets((qb3) => {
+                qb3
+                  .where(
+                    'voucher_package_orders.updated_at between :date and :now',
+                    {
+                      date: moment(Date.now()).subtract(
+                        -limitTicket.data.value,
+                        'second',
+                      ),
+                      now: new Date(),
+                    },
+                  )
+                  .andWhere('voucher_package_orders.status = :status', {
+                    status: StatusVoucherPackageOrder.CANCELLED,
+                  });
+              }),
+            ).orWhere('voucher_package_orders.status = :status', {
+              status: StatusVoucherPackageOrder.WAITING,
+            });
           }),
         );
       }
