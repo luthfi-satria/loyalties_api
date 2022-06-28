@@ -436,7 +436,7 @@ export class VoucherPackagesCustomersService {
                     'voucher_package_orders.paid_at between :date and :now',
                     {
                       date: moment().subtract(
-                        -limitTicket.limit_create_order_ticket,
+                        -limitTicket.data.value,
                         'second',
                       ),
                       now: new Date(),
