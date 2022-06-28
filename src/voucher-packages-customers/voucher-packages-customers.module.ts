@@ -14,6 +14,7 @@ import { VoucherModule } from 'src/voucher/voucher.module';
 import { MasterVoucherVoucherCodeModule } from 'src/master_voucher_voucher_code/master_voucher_voucher_code.module';
 import { MasterVoucherVoucherCodeService } from 'src/master_voucher_voucher_code/master_voucher_voucher_code.service';
 import { AdminService } from 'src/common/admins/admin.service';
+import { HttpService } from '@nestjs/axios';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { AdminService } from 'src/common/admins/admin.service';
     ResponseService,
     VoucherPackagesService,
     DateTimeUtils,
+    HttpService,
     MasterVoucherVoucherCodeService,
     AdminService,
   ],
