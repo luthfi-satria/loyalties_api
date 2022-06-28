@@ -442,13 +442,8 @@ export class VoucherPackagesCustomersService {
                       now: new Date(),
                     },
                   )
-                  .andWhere('voucher_package_orders.status IN (:...status)', {
-                    status: [
-                      StatusVoucherPackageOrder.PAID,
-                      StatusVoucherPackageOrder.CANCELLED,
-                      StatusVoucherPackageOrder.EXPIRED,
-                      StatusVoucherPackageOrder.REFUND,
-                    ],
+                  .andWhere('voucher_package_orders.status = :status', {
+                    status: StatusVoucherPackageOrder.PAID,
                   });
               }),
             ).orWhere('voucher_package_orders.status = :status', {

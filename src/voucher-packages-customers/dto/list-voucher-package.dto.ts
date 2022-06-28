@@ -38,4 +38,7 @@ export class ListVoucherPackageOrderDto {
 
   @IsOptional()
   is_available_for_ticket: boolean;
+
+  @IsOptional()
+  customer_id: string;
 }
