@@ -34,9 +34,7 @@ import { HttpService } from '@nestjs/axios';
     ResponseService,
     VoucherPackagesService,
     DateTimeUtils,
-    HttpService,
     MasterVoucherVoucherCodeService,
-    AdminService,
   ],
   exports: [VoucherPackagesCustomersService],
 })
