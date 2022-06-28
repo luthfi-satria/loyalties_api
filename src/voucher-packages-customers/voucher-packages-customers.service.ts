@@ -490,9 +490,6 @@ export class VoucherPackagesCustomersService {
           }),
         );
       }
-      query.andWhere('vouchers.customer_id = :customer_id', {
-        customer_id: user.id,
-      });
       query.take(limit).skip(offset);
       // let items = await query.getMany();
       const count = await query.getCount();
