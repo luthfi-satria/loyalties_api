@@ -433,7 +433,7 @@ export class VoucherPackagesCustomersService {
                   .where(
                     'voucher_package_orders.paid_at between :date and :now',
                     {
-                      date: moment().subtract(
+                      date: moment(Date.now()).subtract(
                         -limitTicket.data.value,
                         'second',
                       ),
@@ -444,9 +444,49 @@ export class VoucherPackagesCustomersService {
                     status: StatusVoucherPackageOrder.PAID,
                   });
               }),
-            ).orWhere('voucher_package_orders.status = :status', {
-              status: StatusVoucherPackageOrder.WAITING,
-            });
+            )
+              .orWhere(
+                new Brackets((qb2) => {
+                  qb2
+                    .where(
+                      'voucher_package_orders.payment_expired_at between :date and :now',
+                      {
+                        date: moment(Date.now()).subtract(
+                          -limitTicket.data.value,
+                          'second',
+                        ),
+                        now: new Date(),
+                      },
+                    )
+                    .andWhere('voucher_package_orders.status IN (:...status)', {
+                      status: [
+                        StatusVoucherPackageOrder.EXPIRED,
+                        StatusVoucherPackageOrder.REFUND,
+                      ],
+                    });
+                }),
+              )
+              .orWhere(
+                new Brackets((qb2) => {
+                  qb2
+                    .where(
+                      'voucher_package_orders.updated_at between :date and :now',
+                      {
+                        date: moment(Date.now()).subtract(
+                          -limitTicket.data.value,
+                          'second',
+                        ),
+                        now: new Date(),
+                      },
+                    )
+                    .andWhere('voucher_package_orders.status = :status', {
+                      status: StatusVoucherPackageOrder.CANCELLED,
+                    });
+                }),
+              )
+              .orWhere('voucher_package_orders.status = :status', {
+                status: StatusVoucherPackageOrder.WAITING,
+              });
           }),
         );
       }
