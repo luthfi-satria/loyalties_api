@@ -117,16 +117,20 @@ export class VoucherPackagesCustomersController {
     }
   }
 
-  @Get('/customer/:id')
-  @UserType('admin')
+  @Get('/customer')
+  @UserType('admin', 'customer')
   @AuthJwtGuard()
   async getListCustomerById(
-    @Param('id') id: string,
     @Query() query: ListVoucherPackageOrderDto,
+    @GetUser() user: User,
   ): Promise<RSuccessMessage> {
     try {
-      const user = {} as User;
-      user.id = id;
+      const userData = {} as User;
+      if (user.user_type === 'customer') {
+        userData.id = user.id;
+      } else {
+        userData.id = query.customer_id;
+      }
       const gmt_offset = '7';
       if (query.periode_start) {
         query.periode_start = new Date(`${query.periode_start} +${gmt_offset}`);
@@ -134,10 +138,11 @@ export class VoucherPackagesCustomersController {
       if (query.periode_end) {
         query.periode_end = new Date(`${query.periode_end} +${gmt_offset}`);
       }
-      const result = await this.voucherPackagesCustomersService.getList(
-        query,
-        user,
-      );
+      const result =
+        await this.voucherPackagesCustomersService.getListByCustomerId(
+          query,
+          userData,
+        );
       return this.responseService.success(
         true,
         this.messageService.get('general.list.success'),
