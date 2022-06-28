@@ -433,7 +433,7 @@ export class VoucherPackagesCustomersService {
               new Brackets((qb1) => {
                 qb1
                   .where(
-                    'voucher_package_orders.created_at between :date and :now',
+                    'voucher_package_orders.paid_at between :date and :now',
                     {
                       date: moment().subtract(
                         -limitTicket.limit_create_order_ticket,
