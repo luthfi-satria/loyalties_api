@@ -30,6 +30,7 @@ import { PromoBrandUsageModule } from 'src/promo-brand-usage/promo-brand-usage.m
 import { OrderService } from './order/order.service';
 import { RedisVoucherService } from './redis/voucher/redis-voucher.service';
 import { RedisVoucherProcessor } from './redis/voucher/redis-voucher.processor';
+import { AdminService } from './admins/admin.service';
 
 @Global()
 @Module({
@@ -87,6 +88,7 @@ import { RedisVoucherProcessor } from './redis/voucher/redis-voucher.processor';
     VoucherPackagesService,
     MasterVoucherService,
     PaymentService,
+    AdminService,
     OrderService,
   ],
   exports: [
@@ -102,6 +104,7 @@ import { RedisVoucherProcessor } from './redis/voucher/redis-voucher.processor';
     RedisPromoBrandProcessor,
     CommonStorageService,
     PaymentService,
+    AdminService,
     OrderService,
   ],
   controllers: [NatsController],
