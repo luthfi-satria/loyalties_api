@@ -548,6 +548,32 @@ export class VoucherPackagesCustomersService {
     }
   }
 
+  async getVoucherPackageById(voucherPackageOrderId: string) {
+    try {
+      const query = this.voucherPackageService.mainQuery();
+      query
+        .leftJoinAndSelect(
+          'voucher_package.voucher_package_orders',
+          'voucher_package_orders',
+        )
+        .where('voucher_package_orders.id = :voucher_package_order_id', {
+          voucher_package_order_id: voucherPackageOrderId,
+        });
+      let voucherPackage = await query.getOne();
+      const voucherPackages = await this.assignObjectPaymentMethod([
+        voucherPackage,
+      ]);
+      const raw = await query.getRawOne();
+      voucherPackage = this.voucherPackageService.assignQuotaLeft(
+        voucherPackages,
+        [raw],
+      )[0];
+      return voucherPackage;
+    } catch (e) {
+      throw e;
+    }
+  }
+
   async getDetail(
     voucherPackageid: string,
     user: User,

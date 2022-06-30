@@ -107,4 +107,19 @@ export class InternalController {
       throw error;
     }
   }
+
+  @Get('voucher-package-order/:id')
+  @ResponseStatusCode()
+  async getVoucherPackageOrderById(@Param('id') id: string) {
+    try {
+      const result = await this.internalService.getVoucherPackageOrder(id);
+      return this.responseService.success(
+        true,
+        this.messageService.get('general.general.success'),
+        result,
+      );
+    } catch (error) {
+      throw error;
+    }
+  }
 }
