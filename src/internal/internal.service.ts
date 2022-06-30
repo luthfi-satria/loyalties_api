@@ -32,6 +32,16 @@ export class InternalService {
 
   private readonly logger = new Logger(InternalService.name);
 
+  async getVoucherPackageOrder(voucher_package_order_id: string) {
+    try {
+      return this.voucherPackagesCustomersService.getVoucherPackageById(
+        voucher_package_order_id,
+      );
+    } catch (e) {
+      throw e;
+    }
+  }
+
   async getPromoVouchers(data: GetPromoVouchersDto): Promise<any> {
     try {
       return this.promoProviderService.getPromoVouchers(data);
