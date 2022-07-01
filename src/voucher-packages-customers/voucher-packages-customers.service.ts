@@ -367,7 +367,7 @@ export class VoucherPackagesCustomersService {
     current_page: number;
     total_item: number;
     limit: number;
-    items: VoucherPackageDocument[];
+    items: VoucherPackageOrderDocument[];
   }> {
     try {
       const page = params.page || 1;
@@ -376,58 +376,16 @@ export class VoucherPackagesCustomersService {
 
       let where = {};
 
-      if (params.target) where = { ...where, target: params.target };
       if (params.search) where = { ...where, name: Like(`%${params.search}%`) };
-      if (params.periode_start) {
-        where = { ...where, created_at: MoreThanOrEqual(params.periode_start) };
-      }
-      if (params.periode_end) {
-        where = { ...where, created_at: LessThanOrEqual(params.periode_end) };
-      }
-      if (params.price_min) {
-        where = { ...where, price: MoreThanOrEqual(params.price_min) };
-      }
-      if (params.price_min) {
-        where = { ...where, price: LessThanOrEqual(params.price_max) };
-      }
 
-      const query = this.voucherPackageService
-        .mainQuery()
+      const query = this.voucherPackageOrderRepository
+        .createQueryBuilder('voucher_package_orders')
         .leftJoinAndSelect(
-          'voucher_package.voucher_package_orders',
-          'voucher_package_orders',
+          'voucher_package_orders.voucher_package',
+          'voucher_package',
         )
         .where(where);
-      if (params.status == StatusVoucherPackage.ACTIVE) {
-        query.andWhere(
-          new Brackets((qb) => {
-            qb.where('voucher_package.status = :status', {
-              status: StatusVoucherPackage.ACTIVE,
-            });
-            qb.orWhere(
-              new Brackets((qb2) => {
-                qb2
-                  .where('voucher_package.status IN (:...status_end)', {
-                    status_end: [
-                      StatusVoucherPackage.FINISHED,
-                      StatusVoucherPackage.STOPPED,
-                    ],
-                  })
-                  .andWhere(
-                    'voucher_package_orders.status = :order_status_waiting',
-                    {
-                      order_status_waiting: StatusVoucherPackageOrder.WAITING,
-                    },
-                  );
-              }),
-            );
-          }),
-        );
-      } else if (params.status) {
-        query.andWhere('voucher_package.status = :status', {
-          status: params.status,
-        });
-      }
+
       const limitTicket = await this.adminService.getTicketSetting();
 
       if (params.is_available_for_ticket === 'true') {
@@ -516,10 +474,7 @@ export class VoucherPackagesCustomersService {
       query.take(limit).skip(offset);
       // let items = await query.getMany();
       const count = await query.getCount();
-      const { entities, raw } = await query.getRawAndEntities();
-      let items = this.voucherPackageService.assignQuotaLeft(entities, raw);
-
-      items = await this.assignObjectPaymentMethod(items);
+      const items = await query.getMany();
 
       const listItems = {
         current_page: +page,
