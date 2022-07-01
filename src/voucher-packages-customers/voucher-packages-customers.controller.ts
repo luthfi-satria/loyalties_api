@@ -118,19 +118,19 @@ export class VoucherPackagesCustomersController {
   }
 
   @Get('/customer')
-  // @UserType('admin', 'customer')
-  // @AuthJwtGuard()
+  @UserType('admin', 'customer')
+  @AuthJwtGuard()
   async getListCustomerById(
     @Query() query: ListVoucherPackageOrderDto,
     @GetUser() user: User,
   ): Promise<RSuccessMessage> {
     try {
       const userData = {} as User;
-      // if (user.user_type === 'customer') {
-      // userData.id = user.id;
-      // } else {
-      userData.id = query.customer_id;
-      // }
+      if (user.user_type === 'customer') {
+        userData.id = user.id;
+      } else {
+        userData.id = query.customer_id;
+      }
       const gmt_offset = '7';
       if (query.periode_start) {
         query.periode_start = new Date(`${query.periode_start} +${gmt_offset}`);
