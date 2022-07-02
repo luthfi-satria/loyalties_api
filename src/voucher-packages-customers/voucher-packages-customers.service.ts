@@ -505,24 +505,16 @@ export class VoucherPackagesCustomersService {
 
   async getVoucherPackageById(voucherPackageOrderId: string) {
     try {
-      const query = this.voucherPackageService.mainQuery();
-      query
+      const query = this.voucherPackageOrderRepository
+        .createQueryBuilder('voucher_package_orders')
         .leftJoinAndSelect(
-          'voucher_package.voucher_package_orders',
-          'voucher_package_orders',
+          'voucher_package_orders.voucher_package',
+          'voucher_package',
         )
         .where('voucher_package_orders.id = :voucher_package_order_id', {
           voucher_package_order_id: voucherPackageOrderId,
         });
-      let voucherPackage = await query.getOne();
-      const voucherPackages = await this.assignObjectPaymentMethod([
-        voucherPackage,
-      ]);
-      const raw = await query.getRawOne();
-      voucherPackage = this.voucherPackageService.assignQuotaLeft(
-        voucherPackages,
-        [raw],
-      )[0];
+      const voucherPackage = await query.getOne();
       return voucherPackage;
     } catch (e) {
       throw e;
