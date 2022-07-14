@@ -42,6 +42,14 @@ export class InternalService {
     }
   }
 
+  async getVoucherPackageOrderBulk(voucher_package_order_ids: string[]) {
+    try {
+      return this.voucherPackagesCustomersService.getVoucherPackageBulk(voucher_package_order_ids);
+    } catch (error) {
+      throw error; 
+    }
+  }
+
   async getPromoVouchers(data: GetPromoVouchersDto): Promise<any> {
     try {
       return this.promoProviderService.getPromoVouchers(data);
