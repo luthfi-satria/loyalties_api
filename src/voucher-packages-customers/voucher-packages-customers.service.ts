@@ -521,6 +521,25 @@ export class VoucherPackagesCustomersService {
     }
   }
 
+  async getVoucherPackageBulk(voucherPackageOrderIds: string[]) {
+    try {
+      const result = await this.voucherPackageOrderRepository
+        .createQueryBuilder('voucher_package_orders')
+        .leftJoinAndSelect(
+          'voucher_package_orders.voucher_package',
+          'voucher_package',
+        )
+        .where('voucher_package_orders.id IN (:...voucher_package_order_ids)', {
+          voucher_package_order_ids: voucherPackageOrderIds,
+        })
+        .getMany();
+      
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async getDetail(
     voucherPackageid: string,
     user: User,

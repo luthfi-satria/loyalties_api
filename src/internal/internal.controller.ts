@@ -4,7 +4,7 @@ import { ResponseStatusCode } from 'src/response/response.decorator';
 import { ResponseService } from 'src/response/response.service';
 import { GetPromoVouchersDto } from './dto/get-promo-vouchers.dto';
 import { GetRecommendedPromosDto } from './dto/get-recommended-promos.dto';
-import { GetVoucherPackageBulkDto } from './dto/get-voucher-package.dto';
+import { GetVoucherPackageBulkDto, GetVoucherPackageOrderBulkDto } from './dto/get-voucher-package.dto';
 import { InternalService } from './internal.service';
 
 @Controller('api/v1/internal/loyalties')
@@ -113,6 +113,21 @@ export class InternalController {
   async getVoucherPackageOrderById(@Param('id') id: string) {
     try {
       const result = await this.internalService.getVoucherPackageOrder(id);
+      return this.responseService.success(
+        true,
+        this.messageService.get('general.general.success'),
+        result,
+      );
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Post('voucher-package-order-bulk')
+  @ResponseStatusCode()
+  async getVoucherPackageOrderBulk(@Body() body: GetVoucherPackageOrderBulkDto) {
+    try {
+      const result = await this.internalService.getVoucherPackageOrderBulk(body.ids)
       return this.responseService.success(
         true,
         this.messageService.get('general.general.success'),
