@@ -52,7 +52,7 @@ export class VoucherPackagesController {
         filename: editFileName,
       }),
       limits: {
-        fileSize: 20000000,
+        fileSize: 50000000,//5MB
       },
       fileFilter: imageFileFilter,
     }),
