@@ -7,3 +7,7 @@ export class GetVoucherPackageBulkDto {
   @IsOptional()
   is_remove_voucher_package_master_vouchers?: boolean;
 }
+
+export class GetVoucherPackageOrderBulkDto {
+  ids: string[];
+}
