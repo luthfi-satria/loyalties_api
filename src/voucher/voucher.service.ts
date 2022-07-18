@@ -236,14 +236,6 @@ export class VoucherService {
         );
       }
     }
-    console.log(
-      '===========================Start Debug voucherCode, voucher=================================\n',
-      new Date(Date.now()).toLocaleString(),
-      '\n',
-      voucherCode,
-      voucher,
-      '\n============================End Debug voucherCode, voucher==================================',
-    );
     if (!voucherCode && !voucher) {
       throw new BadRequestException(
         this.responseService.error(
@@ -263,14 +255,6 @@ export class VoucherService {
 
   async redeemVoucher(data, customer_id): Promise<any[]> {
     const customer = data.customer || null;
-    console.log(
-      '===========================Start Debug customer=================================\n',
-      new Date(Date.now()).toLocaleString(),
-      '\n',
-      customer,
-      '\n============================End Debug customer==================================',
-    );
-
     const target = customer
       ? await this.getCostumerTargetLoyalties({
           customer_id: customer.id,
@@ -280,6 +264,8 @@ export class VoucherService {
     console.log(
       '===========================Start Debug target=================================\n',
       new Date(Date.now()).toLocaleString(),
+      '\n',
+      customer,
       '\n',
       target,
       '\n============================End Debug target==================================',
@@ -299,20 +285,8 @@ export class VoucherService {
         is_prepopulated: false,
         // target: target,
       },
-      // relations: [
-      // 'master_voucher_voucher_code',
-      // 'vouchers',
-      // 'master_voucher_voucher_code.master_voucher',
-      // ],
     });
 
-    console.log(
-      '===========================Start Debug voucherCode 2=================================\n',
-      new Date(Date.now()).toLocaleString(),
-      '\n',
-      voucherCode,
-      '\n============================End Debug voucherCode 2==================================',
-    );
     if (voucherCode && voucherCode.target != TargetGroup.ALL) {
       if (voucherCode.target != target) {
         throw new BadRequestException(
@@ -365,13 +339,7 @@ export class VoucherService {
           loyaltiesVoucherCodeId: voucherCodeId,
           loyaltiesMasterVoucherId: null,
         });
-        console.log(
-          '===========================Start Debug mvvcs=================================\n',
-          new Date(Date.now()).toLocaleString(),
-          '\n',
-          mvvcs,
-          '\n============================End Debug mvvcs==================================',
-        );
+
         // if (count < voucherCode.quota) {
         const postVoucherDatas = [];
         // for (let i = 0; i < voucherCode.master_vouchers.length; i++) {
@@ -462,14 +430,8 @@ export class VoucherService {
             postVoucherDatas.push(postVoucherData);
           }
         }
+
         const createdVouchers = await this.createVoucherBulk(postVoucherDatas);
-        console.log(
-          '===========================Start Debug createdVouchers=================================\n',
-          new Date(Date.now()).toLocaleString(),
-          '\n',
-          createdVouchers,
-          '\n============================End Debug createdVouchers==================================',
-        );
         for (const identifier of createdVouchers.identifiers) {
           const createdVoucher = await this.vouchersRepository.findOne({
             where: { id: identifier.id },
@@ -508,13 +470,6 @@ export class VoucherService {
           where: { code: data.code, customer_id: null, target: target },
         });
       }
-      console.log(
-        '===========================Start Debug vouchers=================================\n',
-        new Date(Date.now()).toLocaleString(),
-        '\n',
-        vouchers,
-        '\n============================End Debug vouchers==================================',
-      );
       if (vouchers.length > 0) {
         // for (const voucher of vouchers) {
         // voucherCodeId = voucher?.voucher_code_id;
@@ -776,13 +731,6 @@ export class VoucherService {
         }),
       )
       .getMany();
-    console.log(
-      '===========================Start Debug voucherCustomer=================================\n',
-      new Date(Date.now()).toLocaleString(),
-      '\n',
-      voucherCustomer,
-      '\n============================End Debug voucherCustomer==================================',
-    );
     if (voucherCustomer?.length) {
       throw new BadRequestException(
         this.responseService.error(
