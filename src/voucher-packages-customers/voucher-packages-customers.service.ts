@@ -1,3 +1,4 @@
+import { NatsClient } from '@alexy4744/nestjs-nats-jetstream-transporter';
 import {
   BadRequestException,
   HttpStatus,
@@ -51,6 +52,13 @@ export class VoucherPackagesCustomersService {
     private readonly orderService: OrderService,
     private readonly adminService: AdminService,
   ) {}
+
+  private readonly client = new NatsClient({
+    connection: {
+      servers: process.env.NATS_SERVERS.split(','),
+    },
+  });
+
   private readonly logger = new Logger(VoucherPackagesCustomersService.name);
 
   //CRUD
@@ -533,7 +541,7 @@ export class VoucherPackagesCustomersService {
           voucher_package_order_ids: voucherPackageOrderIds,
         })
         .getMany();
-      
+
       return result;
     } catch (error) {
       throw error;
@@ -784,5 +792,30 @@ export class VoucherPackagesCustomersService {
     }
 
     return voucherPackage;
+  }
+
+  async ticketCanceled(voucherPackageOrderId: string) {
+    const voucherPackageOrder =
+      await this.voucherPackageOrderRepository.findOneOrFail(
+        voucherPackageOrderId,
+      );
+    voucherPackageOrder.status = StatusVoucherPackageOrder.REFUND;
+    const result = await this.voucherPackageOrderRepository.save(
+      voucherPackageOrder,
+    );
+    this.client.emit<VoucherPackageOrderDocument>(
+      'orders.order.cancelled_by_admin',
+      { ...result, id: null, voucher_package_order_id: result.id },
+    );
+    return result;
+  }
+
+  async ticketCompleted(voucherPackageOrderId: string) {
+    const voucherPackageOrder =
+      await this.voucherPackageOrderRepository.findOneOrFail(
+        voucherPackageOrderId,
+      );
+    voucherPackageOrder.status = StatusVoucherPackageOrder.PAID;
+    return this.voucherPackageOrderRepository.save(voucherPackageOrder);
   }
 }
