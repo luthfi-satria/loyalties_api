@@ -44,9 +44,11 @@ export class InternalService {
 
   async getVoucherPackageOrderBulk(voucher_package_order_ids: string[]) {
     try {
-      return this.voucherPackagesCustomersService.getVoucherPackageBulk(voucher_package_order_ids);
+      return this.voucherPackagesCustomersService.getVoucherPackageBulk(
+        voucher_package_order_ids,
+      );
     } catch (error) {
-      throw error; 
+      throw error;
     }
   }
 
@@ -162,5 +164,17 @@ export class InternalService {
         ),
       );
     }
+  }
+
+  ticketCanceled(voucher_package_order_id: string) {
+    return this.voucherPackagesCustomersService.ticketCanceled(
+      voucher_package_order_id,
+    );
+  }
+
+  ticketCompleted(voucher_package_order_id: string) {
+    return this.voucherPackagesCustomersService.ticketCompleted(
+      voucher_package_order_id,
+    );
   }
 }
