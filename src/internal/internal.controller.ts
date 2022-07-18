@@ -149,7 +149,9 @@ export class InternalController {
   @ResponseStatusCode()
   async ticketCanceled(@Body() body: any) {
     try {
-      const result = await this.internalService.ticketCanceled(body);
+      const result = await this.internalService.ticketCanceled(
+        body.voucher_package_order_id,
+      );
       return this.responseService.success(
         true,
         this.messageService.get('general.general.success'),
@@ -164,7 +166,9 @@ export class InternalController {
   @ResponseStatusCode()
   async ticketCompleted(@Body() body: any) {
     try {
-      const result = await this.internalService.ticketCompleted(body);
+      const result = await this.internalService.ticketCompleted(
+        body.voucher_package_order_id,
+      );
       return this.responseService.success(
         true,
         this.messageService.get('general.general.success'),
