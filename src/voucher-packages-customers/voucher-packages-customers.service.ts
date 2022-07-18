@@ -805,7 +805,13 @@ export class VoucherPackagesCustomersService {
     );
     this.client.emit<VoucherPackageOrderDocument>(
       'orders.order.cancelled_by_admin',
-      { ...result, id: null, voucher_package_order_id: result.id },
+      {
+        ...result,
+        id: null,
+        voucher_package_order_id: result.id,
+        platform: 'ONLINE',
+        transaction_date: result.created_at,
+      },
     );
     return result;
   }
