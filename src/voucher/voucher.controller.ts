@@ -32,7 +32,7 @@ export class VoucherController {
       );
       return this.responseService.success(
         true,
-        this.messageService.get('general.list.success'),
+        this.messageService.get('general.create.success'),
         result,
       );
     } catch (error) {
