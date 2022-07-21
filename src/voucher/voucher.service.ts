@@ -228,7 +228,7 @@ export class VoucherService {
               value: code,
               property: 'code',
               constraint: [
-                this.messageService.get('general.voucher.voucherCodeInvalid'),
+                this.messageService.get('general.voucher.quotaReached'),
               ],
             },
             'Bad Request',
