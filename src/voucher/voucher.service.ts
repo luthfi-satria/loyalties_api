@@ -721,13 +721,21 @@ export class VoucherService {
     //=> Validasi voucher belum digunakan oleh customer
     const voucherCustomer = await this.vouchersRepository
       .createQueryBuilder('voucher')
-      .innerJoin('voucher.vouchers', 'vouchers') //VoucherCodeDocument
+      .innerJoin('voucher.vouchers', 'voucher_code') //VoucherCodeDocument
       .where('voucher.customer_id = :customer_id', { customer_id: customerId })
       .andWhere(
         new Brackets((qb) => {
-          qb.where('voucher.code = :voucher_code', {
-            voucher_code: voucherCode,
-          }).orWhere('vouchers.code = :voucher_code');
+          qb.where(
+            "voucher_code.status = 'ACTIVE' and voucher_code.code = :voucher_code",
+            {
+              voucher_code: voucherCode,
+            },
+          ).orWhere(
+            "voucher.status = 'ACTIVE' and voucher.code = :voucher_code",
+            {
+              voucher_code: voucherCode,
+            },
+          );
         }),
       )
       .getMany();
