@@ -395,6 +395,7 @@ export class VoucherPackagesCustomersService {
         .where(where);
 
       const limitTicket = await this.adminService.getTicketSetting();
+      // console.log(limitTicket)
 
       if (params.is_available_for_ticket === 'true') {
         query.andWhere(
@@ -405,10 +406,10 @@ export class VoucherPackagesCustomersService {
                   .where(
                     'voucher_package_orders.paid_at between :date and :now',
                     {
-                      date: moment(Date.now()).subtract(
-                        -limitTicket.data.value,
-                        'second',
-                      ),
+                      date: moment().subtract(
+                        Number(limitTicket.data[0].value),
+                        'seconds',
+                      ).format(),
                       now: new Date(),
                     },
                   )
@@ -421,17 +422,17 @@ export class VoucherPackagesCustomersService {
               new Brackets((qb2) => {
                 qb2
                   .where(
-                    'voucher_package_orders.payment_expired_at between :date and :now',
+                    'voucher_package_orders.payment_expired_at between :date2 and :now2',
                     {
-                      date: moment(Date.now()).subtract(
-                        -limitTicket.data.value,
-                        'second',
-                      ),
-                      now: new Date(),
+                      date2: moment().subtract(
+                        Number(limitTicket.data[0].value),
+                        'seconds',
+                      ).format(),
+                      now2: new Date(),
                     },
                   )
-                  .andWhere('voucher_package_orders.status = :status', {
-                    status: StatusVoucherPackageOrder.EXPIRED,
+                  .andWhere('voucher_package_orders.status = :status2', {
+                    status2: StatusVoucherPackageOrder.EXPIRED,
                   });
               }),
             );
@@ -439,17 +440,17 @@ export class VoucherPackagesCustomersService {
               new Brackets((qb3) => {
                 qb3
                   .where(
-                    'voucher_package_orders.payment_expired_at between :date and :now',
+                    'voucher_package_orders.payment_expired_at between :date3 and :now3',
                     {
-                      date: moment(Date.now()).subtract(
-                        -limitTicket.data.value,
-                        'second',
-                      ),
-                      now: new Date(),
+                      date3: moment().subtract(
+                        Number(limitTicket.data[0].value),
+                        'seconds',
+                      ).format(),
+                      now3: new Date(),
                     },
                   )
-                  .andWhere('voucher_package_orders.status = :status', {
-                    status: StatusVoucherPackageOrder.REFUND,
+                  .andWhere('voucher_package_orders.status = :status3', {
+                    status3: StatusVoucherPackageOrder.REFUND,
                   });
               }),
             );
@@ -457,21 +458,21 @@ export class VoucherPackagesCustomersService {
               new Brackets((qb4) => {
                 qb4
                   .where(
-                    'voucher_package_orders.updated_at between :date and :now',
+                    'voucher_package_orders.updated_at between :date4 and :now4',
                     {
-                      date: moment(Date.now()).subtract(
-                        -limitTicket.data.value,
-                        'second',
-                      ),
-                      now: new Date(),
+                      date4: moment().subtract(
+                        Number(limitTicket.data[0].value),
+                        'seconds',
+                      ).format(),
+                      now4: new Date(),
                     },
                   )
-                  .andWhere('voucher_package_orders.status = :status', {
-                    status: StatusVoucherPackageOrder.CANCELLED,
+                  .andWhere('voucher_package_orders.status = :statusCancel', {
+                    statusCancel: StatusVoucherPackageOrder.CANCELLED,
                   });
               }),
-            ).orWhere('voucher_package_orders.status = :status', {
-              status: StatusVoucherPackageOrder.WAITING,
+            ).orWhere('voucher_package_orders.status = :statuswaiting', {
+              statuswaiting: StatusVoucherPackageOrder.WAITING,
             });
           }),
         );
