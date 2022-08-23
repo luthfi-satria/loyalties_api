@@ -19,6 +19,8 @@ import { VoucherPackagesCustomersModule } from './voucher-packages-customers/vou
 import { PromoProviderUsageModule } from './promo-provider-usage/promo-provider-usage.module';
 import { PromoBrandUsageModule } from './promo-brand-usage/promo-brand-usage.module';
 import { PromoVoucherModule } from './promo-voucher/promo-voucher.module';
+import { VoucherPosController } from './voucher-pos/voucher-pos.controller';
+import { VoucherPosModule } from './voucher-pos/voucher-pos.module';
 
 @Module({
   imports: [
@@ -47,6 +49,7 @@ import { PromoVoucherModule } from './promo-voucher/promo-voucher.module';
     VoucherPackagesCustomersModule,
     PromoProviderUsageModule,
     PromoBrandUsageModule,
+    VoucherPosModule,
   ],
   controllers: [AppController],
   providers: [AppService],
