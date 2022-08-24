@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpStatus, Param, Post, Put, Query } from '@nestjs/common';
 import { AuthJwtGuard } from 'src/auth/auth.decorators';
 import { UserType } from 'src/auth/guard/user-type.decorator';
 import { MessageService } from 'src/message/message.service';
@@ -56,7 +56,17 @@ export class VoucherPosController {
     @AuthJwtGuard()
     @ResponseStatusCode()
     async getDetailVoucherPos(@Param('id') id: string): Promise<RSuccessMessage>{
-        return
+        try {
+            const result = await this.voucherPosService.getVoucherPosDetail(id);
+            return this.responseService.success(
+              true,
+              this.messageService.get('general.list.success'),
+              result,
+            );
+          } catch (error) {
+            console.error(error);
+            throw error;
+          }
     }
 
 
@@ -107,4 +117,50 @@ export class VoucherPosController {
             throw error;
         }
     }
+
+    /**
+     * 
+     * @param body 
+     * @returns 
+     */
+    @Delete(':id/delete')
+    @UserType('admin')
+    @AuthJwtGuard()
+    @ResponseStatusCode()    
+    async deleteVoucherPos(@Param('id') id: string ){ 
+        try {
+            const result = await this.voucherPosService.deleteVoucherPos(id);
+            return this.responseService.success(
+              true,
+              this.messageService.get('general.delete.success'),
+              result,
+            );
+          } catch (error) {
+            console.error(error);
+            throw error;
+          }        
+    }
+
+    /**
+     * 
+     * @param body 
+     * @returns 
+     */
+     @Put(':id/restore')
+     @UserType('admin')
+     @AuthJwtGuard()
+     @ResponseStatusCode()    
+     async restoreVoucherPos(@Param('id') id: string ){
+         try {
+             const result = await this.voucherPosService.restoreVoucherPos(id);
+             return this.responseService.success(
+               true,
+               this.messageService.get('general.update.success'),
+               result,
+             );
+           } catch (error) {
+             console.error(error);
+             throw error;
+           }        
+     }    
 }

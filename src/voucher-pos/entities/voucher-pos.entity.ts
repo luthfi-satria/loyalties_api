@@ -60,9 +60,10 @@ export class VoucherPosDocument{
     brand_name: string;
 
     @Column({
-        nullable: true,
+        type: 'jsonb',
+        nullable: true
     })
-    sales_mode: string;
+    sales_mode: string[]
 
     @Column({
         type: 'enum',
