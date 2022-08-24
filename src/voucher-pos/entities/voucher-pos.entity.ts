@@ -134,7 +134,7 @@ export class VoucherPosDocument{
     @CreateDateColumn({ type: 'timestamptz', default: () => 'LOCALTIMESTAMP' })
     created_at: Date | string;
   
-    @UpdateDateColumn({ type: 'timestamptz', default: () => 'LOCALTIMESTAMP' })
+    @UpdateDateColumn({ type: 'timestamptz', default: () => 'LOCALTIMESTAMP', onUpdate: "LOCALTIMESTAMP" })
     updated_at: Date | string;
   
     @DeleteDateColumn({ nullable: true })

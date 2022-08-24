@@ -93,7 +93,18 @@ export class VoucherPosController {
     @UserType('admin')
     @AuthJwtGuard()
     @ResponseStatusCode()
-    async updateVoucherPos(@Body() body: UpdateVoucherPosDto): Promise<RSuccessMessage>{
-        return
+    async updateVoucherPos( @Body() body: UpdateVoucherPosDto): Promise<RSuccessMessage>{
+        try{
+            const result = await this.voucherPosService.updateVoucherPos(body);
+            return this.responseService.success(
+                true,
+                this.messageService.get('general.update.success'),
+                result,
+            );
+        }
+        catch(error){
+            console.error(error);
+            throw error;
+        }
     }
 }
