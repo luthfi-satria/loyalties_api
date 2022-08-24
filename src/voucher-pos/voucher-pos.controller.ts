@@ -12,6 +12,7 @@ import {
     ListVoucherPosDto,
     UpdateVoucherPosDto,
 } from './dto/voucher-pos.dto';
+import { UserTypeAndLevel } from 'src/auth/guard/user-type-and-level.decorator';
 
 @Controller('api/v1/loyalties/voucher-pos')
 export class VoucherPosController {
@@ -28,7 +29,7 @@ export class VoucherPosController {
      */
 
     @Get('')
-    @UserType('admin')
+    @UserTypeAndLevel('admin.*', 'merchant.group', 'merchant.merchant')
     @AuthJwtGuard()
     @ResponseStatusCode()
     async getListVoucherPos(@Query() data: ListVoucherPosDto): Promise<RSuccessMessage>{
@@ -52,7 +53,7 @@ export class VoucherPosController {
      */
 
     @Get(':id')
-    @UserType('admin')
+    @UserTypeAndLevel('admin.*', 'merchant.group', 'merchant.merchant')
     @AuthJwtGuard()
     @ResponseStatusCode()
     async getDetailVoucherPos(@Param('id') id: string): Promise<RSuccessMessage>{
@@ -76,7 +77,7 @@ export class VoucherPosController {
      * @returns 
      */
     @Post('')
-    @UserType('admin')
+    @UserTypeAndLevel('admin.*', 'merchant.group', 'merchant.merchant')
     @AuthJwtGuard()
     @ResponseStatusCode()
     async createVoucherPos(@Body() body: CreateVoucherPosDto): Promise<RSuccessMessage>{
@@ -100,7 +101,7 @@ export class VoucherPosController {
      * @returns 
      */
     @Put('')
-    @UserType('admin')
+    @UserTypeAndLevel('admin.*', 'merchant.group', 'merchant.merchant')
     @AuthJwtGuard()
     @ResponseStatusCode()
     async updateVoucherPos( @Body() body: UpdateVoucherPosDto): Promise<RSuccessMessage>{
@@ -124,7 +125,7 @@ export class VoucherPosController {
      * @returns 
      */
     @Delete(':id/delete')
-    @UserType('admin')
+    @UserTypeAndLevel('admin.*', 'merchant.group', 'merchant.merchant')
     @AuthJwtGuard()
     @ResponseStatusCode()    
     async deleteVoucherPos(@Param('id') id: string ){ 
@@ -147,7 +148,7 @@ export class VoucherPosController {
      * @returns 
      */
      @Put(':id/restore')
-     @UserType('admin')
+     @UserTypeAndLevel('admin.*', 'merchant.group', 'merchant.merchant')
      @AuthJwtGuard()
      @ResponseStatusCode()    
      async restoreVoucherPos(@Param('id') id: string ){
