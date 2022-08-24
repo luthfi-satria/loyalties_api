@@ -5,12 +5,18 @@ import { ResponseService } from 'src/response/response.service';
 import { VoucherCodeService } from 'src/voucher_code/voucher_code.service';
 import { ILike, LessThan, MoreThan } from 'typeorm';
 import { CreateVoucherPosDto, UpdateVoucherPosDto } from './dto/voucher-pos.dto';
-import { StatusVoucherPosGroup } from './entities/voucher-pos.entity';
+import { StatusVoucherPosGroup, VoucherPosDocument } from './entities/voucher-pos.entity';
 import { VoucherPosRepository } from './repository/voucher-pos.repository';
 
 @Injectable()
 export class VoucherPosService {
-
+  /**
+   * 
+   * @param responseService 
+   * @param messageService 
+   * @param voucherPosRepo 
+   * @param voucherCodeService 
+   */
     constructor(
         private readonly responseService: ResponseService,
         private readonly messageService: MessageService,
@@ -20,6 +26,11 @@ export class VoucherPosService {
     
     private readonly logger = new Logger(VoucherPosService.name);
 
+    /**
+     * 
+     * @param data 
+     * @returns 
+     */
     async getListVoucherPos(data) {
         try{
             const page = data.page || 1;
@@ -39,6 +50,7 @@ export class VoucherPosService {
             const query = this.voucherPosRepo
             .createQueryBuilder('vp')
             .where(qry)
+            .withDeleted()
             .orderBy('vp.created_at','DESC')
             .take(limit)
             .skip(offset);
@@ -75,6 +87,11 @@ export class VoucherPosService {
         return {test:true}
     }
 
+    /**
+     * 
+     * @param data 
+     * @returns 
+     */
     async createVoucherPos(data: CreateVoucherPosDto){
       const gmt_offset = '7';
       const timeStart = new Date(`${data.date_start} +${gmt_offset}`);
@@ -102,6 +119,11 @@ export class VoucherPosService {
       return createdVoucher;
     }
 
+    /**
+     * 
+     * @param data 
+     * @returns 
+     */
     async updateVoucherPos(data: UpdateVoucherPosDto){
       try{
         const findVoucher = await this.voucherPosRepo.findOneOrFail({
@@ -164,5 +186,133 @@ export class VoucherPosService {
           ),        
         );
       }
+    }
+
+    /**
+     * 
+     * @param id 
+     * @returns 
+     */
+    async getVoucherPosDetail(id){
+      try{
+        const result = await this.voucherPosRepo.findOneOrFail({id : id})
+        return result;
+      }
+      catch(error){
+        this.logger.log(error);
+        throw new BadRequestException(
+          this.responseService.error(
+            HttpStatus.BAD_REQUEST,
+            {
+              value: '',
+              property: '',
+              constraint: [
+                this.messageService.get('general.list.fail'),
+                error.message,
+              ],
+            },
+            'Bad Request',
+          ),
+        );        
+      }
+    }
+
+    /**
+     * SOFT DELETES
+     * @param id 
+     * @returns 
+     */
+    async deleteVoucherPos(id){
+      try{
+        const query = await this.voucherPosRepo
+        .createQueryBuilder('loyalties_voucher_pos')
+        .where('id = :id', { id : id })
+        .getOne();
+
+        // return error if data is not found
+        if(!query){
+          return this.responseService.error(
+            HttpStatus.BAD_REQUEST,
+            {
+              value: id,
+              property: 'id',
+              constraint: [
+                this.messageService.get('general.general.dataNotFound')
+              ]
+            }
+          );
+        }
+
+        // SOFT DELETE voucher pos
+        const result = await this.voucherPosRepo.softDelete({id: id})
+        return result;
+      }
+      catch(error){
+        this.logger.log(error);
+        throw new BadRequestException(
+          this.responseService.error(
+            HttpStatus.BAD_REQUEST,
+            {
+              value: '',
+              property: '',
+              constraint: [
+                this.messageService.get('general.delete.fail'),
+                error.message,
+              ],
+            },
+            'Bad Request',
+          ),
+        );        
+      }
+    }
+
+    /**
+     * 
+     * @param id 
+     * @returns 
+     */
+    async restoreVoucherPos(id){
+      try{
+        const query = await this.voucherPosRepo
+        .createQueryBuilder('loyalties_voucher_pos')
+        .where('id = :id', { id : id })
+        .withDeleted()
+        .getOne();
+
+        // return error if data is not found
+        if(!query){
+          return this.responseService.error(
+            HttpStatus.BAD_REQUEST,
+            {
+              value: id,
+              property: 'id',
+              constraint: [
+                this.messageService.get('general.general.dataNotFound')
+              ]
+            }
+          );
+        }
+
+        // Restore voucher pos
+        const result = await this.voucherPosRepo.restore({id: id})
+        return result;
+      }
+      catch(error){
+        this.logger.log(error);
+        throw new BadRequestException(
+          this.responseService.error(
+            HttpStatus.BAD_REQUEST,
+            {
+              value: '',
+              property: '',
+              constraint: [
+                this.messageService.get('general.general.dataNotFound'),
+                error.message,
+              ],
+            },
+            'Bad Request',
+          ),
+        );        
+      }      
     }
 }

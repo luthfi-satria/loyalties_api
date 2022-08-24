@@ -8,6 +8,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  IsUUID,
   Length,
 } from 'class-validator';
 import {
@@ -169,3 +170,4 @@ export class UpdateVoucherPosDto {
   @IsBoolean()
   is_combined: boolean;
 }
+
