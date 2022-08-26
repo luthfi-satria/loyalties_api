@@ -77,6 +77,9 @@ export class CreateVoucherPosDto {
   @IsOptional()
   @IsBoolean()
   is_combined: boolean;
+
+  @IsOptional()
+  abort_reason: string;
 }
 
 export class ListVoucherPosDto {
@@ -169,5 +172,7 @@ export class UpdateVoucherPosDto {
   @IsOptional()
   @IsBoolean()
   is_combined: boolean;
-}
 
+  @IsOptional()
+  abort_reason: string;
+}
