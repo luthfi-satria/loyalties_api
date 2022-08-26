@@ -21,6 +21,7 @@ import { PromoBrandUsageModule } from './promo-brand-usage/promo-brand-usage.mod
 import { PromoVoucherModule } from './promo-voucher/promo-voucher.module';
 import { VoucherPosController } from './voucher-pos/voucher-pos.controller';
 import { VoucherPosModule } from './voucher-pos/voucher-pos.module';
+import { VoucherPosStoreModule } from './voucher-pos-store/voucher-pos-store.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { VoucherPosModule } from './voucher-pos/voucher-pos.module';
     PromoProviderUsageModule,
     PromoBrandUsageModule,
     VoucherPosModule,
+    VoucherPosStoreModule,
   ],
   controllers: [AppController],
   providers: [AppService],
