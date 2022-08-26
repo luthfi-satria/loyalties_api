@@ -1,7 +1,5 @@
+import { VoucherPosStoreDocument } from 'src/voucher-pos/entities/voucher-pos.entity';
 import { EntityRepository, Repository } from 'typeorm';
-import {
-  VoucherPosStoreDocument,
-} from '../entities/voucher-pos-store.entity';
 
 @EntityRepository(VoucherPosStoreDocument)
 export class VoucherPosStoreRepository extends Repository<VoucherPosStoreDocument> {

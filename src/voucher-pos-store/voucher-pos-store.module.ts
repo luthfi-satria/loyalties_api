@@ -4,9 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { MessageService } from 'src/message/message.service';
 import { ResponseService } from 'src/response/response.service';
 import { VoucherCodeModule } from 'src/voucher_code/voucher_code.module';
-import {
-  VoucherPosStoreRepository,
-} from './repository/voucher-pos-store.repository';
+import { VoucherPosStoreRepository } from './repository/voucher-pos-store.repository';
 import { VoucherPosStoreController } from './voucher-pos-store.controller';
 import { VoucherPosStoreService } from './voucher-pos-store.service';
 
