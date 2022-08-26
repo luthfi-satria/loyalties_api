@@ -106,6 +106,10 @@ export class VoucherPosDocument{
     })
     status: StatusVoucherPosGroup;
 
+    @Column({
+        nullable: true,
+    })
+    abort_reason: string;
 
     @Column({
         type: 'enum',
