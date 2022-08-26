@@ -56,14 +56,33 @@ export class VoucherPosStoreController {
             console.error(error);
             throw error;
         }
-        return
     }
+    
+    /**
+     * 
+     * @param data 
+     * @returns 
+     */
 
     @Delete('')
     @UserType('admin')
     @AuthJwtGuard()
     @ResponseStatusCode()
-    async unassignStoreByVoucherPos(@Body() data:AssignVoucherPosStoreDto) : Promise<RSuccessMessage>{
-        return
+    async unassignStoreByVoucherPos(
+        @Body() data:AssignVoucherPosStoreDto
+    ) : Promise<RSuccessMessage>{
+        try{
+            const hardDelete = await this.voucherPosStoreService
+            .unassignVoucherFromStore(data);
+            return this.responseService.success(
+                true,
+                this.messageService.get('general.delete.success'),
+                hardDelete
+            );
+        }
+        catch(error){
+            console.error(error);
+            throw error;
+        }
     }
 }

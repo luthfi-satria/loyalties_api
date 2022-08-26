@@ -16,10 +16,19 @@ export class VoucherPosStoreService {
     
     private readonly logger = new Logger(VoucherPosStoreService.name);
 
+    /**
+     * 
+     * @param data 
+     * @returns 
+     */
       async getListStoreByVoucherAndBrand(data){
         return
       }
-
+      /**
+       * 
+       * @param data 
+       * @returns 
+       */
       async assignVoucherToStore(data){
         try{
           const bulkInsert = [];
@@ -40,7 +49,7 @@ export class VoucherPosStoreService {
             .values(bulkInsert)
             .execute();
 
-            return query;
+            return query.raw;
           }
         }
         catch(error){
@@ -61,7 +70,26 @@ export class VoucherPosStoreService {
         }
       }
 
+    /**
+     * 
+     * @param data 
+     * @returns 
+     */
       async unassignVoucherFromStore(data){
-        return 
+        try{
+          const query = await this.voucherPosStoreRepo
+          .createQueryBuilder()
+          .delete()
+          .from('loyalties_voucher_pos_store')
+          .where("voucher_pos_id = :voucher_pos_id", {voucher_pos_id : data.voucher_pos_id})
+          .andWhere("store_id IN (:...ids)",{ ids : data.store_id })
+          .execute()
+
+          return query;
+        } 
+        catch(error){
+          console.error(error);
+          throw error;
+        }
       }
 }
