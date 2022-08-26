@@ -43,6 +43,19 @@ export class VoucherPosStoreController {
     @AuthJwtGuard()
     @ResponseStatusCode()
     async assignStoreByVoucherPos(@Body() data:AssignVoucherPosStoreDto): Promise<RSuccessMessage>{
+        try{
+            const bulkInsert = await this.voucherPosStoreService
+            .assignVoucherToStore(data);
+            return this.responseService.success(
+                true,
+                this.messageService.get('general.create.success'),
+                bulkInsert
+            );
+        }
+        catch(error){
+            console.error(error);
+            throw error;
+        }
         return
     }
 

@@ -150,12 +150,12 @@ export class VoucherPosStoreDocument{
     @PrimaryGeneratedColumn('uuid')
     id: string;
     
-    @ManyToOne(() => VoucherPosDocument, { orphanedRowAction: 'delete'})
+    @ManyToOne(() => VoucherPosDocument, (voucher_pos) => voucher_pos.id, { orphanedRowAction: 'delete'})
     @JoinColumn({
         name: 'voucher_pos_id',
         referencedColumnName: 'id'
     })
-    voucher_pos: VoucherPosDocument;
+    voucher_pos_id: VoucherPosDocument;
 
     @Column({
         length: 40,

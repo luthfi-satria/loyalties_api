@@ -1,11 +1,12 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { ArrayNotEmpty, IsNotEmpty, IsString, IsUUID } from 'class-validator';
 
 export class AssignVoucherPosStoreDto {
   @IsNotEmpty()
-  @IsString()
+  @IsUUID()
   voucher_pos_id: string;
 
   @IsNotEmpty()
-  @IsString()
-  store_id: string;
+  @ArrayNotEmpty()
+  @IsString({ each: true })
+  store_id: string[];
 }
