@@ -7,7 +7,7 @@ import { MessageService } from "src/message/message.service";
 import { ResponseStatusCode } from "src/response/response.decorator";
 import { RSuccessMessage } from "src/response/response.interface";
 import { ResponseService } from "src/response/response.service";
-import { AssignVoucherPosStoreDto } from "./dto/voucher-pos-store.dto";
+import { AssignVoucherPosStoreDto, GetListVoucherPosStoreDto } from "./dto/voucher-pos-store.dto";
 import { VoucherPosStoreService } from "./voucher-pos-store.service";
 
 @Controller('api/v1/loyalties/voucher-pos-store')
@@ -28,7 +28,7 @@ export class VoucherPosStoreController {
     @UserTypeAndLevel('admin.*', 'merchant.group', 'merchant.merchant')
     @AuthJwtGuard()
     @ResponseStatusCode()
-    async getListStoreByVoucherPosAndBrand(@Query() data: AssignVoucherPosStoreDto): Promise<RSuccessMessage>{
+    async getListStoreByVoucherPosAndBrand(@Body() data: GetListVoucherPosStoreDto): Promise<RSuccessMessage>{
         try {
             const result = await this.voucherPosStoreService.getListStoreByVoucherAndBrand(data);
             return this.responseService.success(
@@ -36,9 +36,9 @@ export class VoucherPosStoreController {
               this.messageService.get('general.list.success'),
               result,
             );
-        } catch (error) {
-        console.error(error);
-        throw error;
+        } catch(error){
+            console.error(error);
+            throw error;
         }
     }
 

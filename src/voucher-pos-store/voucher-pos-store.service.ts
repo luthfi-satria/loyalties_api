@@ -1,9 +1,9 @@
 /* eslint-disable prettier/prettier */
-
 import { BadRequestException, HttpStatus, Injectable, Logger } from "@nestjs/common";
 import { MessageService } from "src/message/message.service";
 import { ResponseService } from "src/response/response.service";
 import { ILike, LessThan, MoreThan } from "typeorm";
+import { GetListVoucherPosStoreDto } from "./dto/voucher-pos-store.dto";
 import { VoucherPosStoreRepository } from "./repository/voucher-pos-store.repository";
 
 @Injectable()
@@ -22,7 +22,7 @@ export class VoucherPosStoreService {
      * @param data 
      * @returns 
      */
-      async getListStoreByVoucherAndBrand(data){
+      async getListStoreByVoucherAndBrand(data: GetListVoucherPosStoreDto){
         try{
           const page = data.page || 1;
           const limit = data.limit || 10;
@@ -40,7 +40,7 @@ export class VoucherPosStoreService {
           .createQueryBuilder('vps')
           .where(qry)
           .withDeleted()
-          .orderBy('vps.created_by','DESC')
+          .orderBy('vps.created_at','DESC')
           .take(limit)
           .skip(offset)
 
@@ -48,9 +48,7 @@ export class VoucherPosStoreService {
           const count = await query.getCount();
 
           const listItems = {
-            current_page: parseInt(page),
             total_items: count,
-            limit: parseInt(limit),
             items: items,
           };
 

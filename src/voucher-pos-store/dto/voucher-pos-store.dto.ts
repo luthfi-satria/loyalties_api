@@ -1,4 +1,4 @@
-import { ArrayNotEmpty, IsNotEmpty, IsString, IsUUID } from 'class-validator';
+import { ArrayNotEmpty, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class AssignVoucherPosStoreDto {
   @IsNotEmpty()
@@ -9,4 +9,30 @@ export class AssignVoucherPosStoreDto {
   @ArrayNotEmpty()
   @IsString({ each: true })
   store_id: string[];
+}
+
+export class GetListVoucherPosStoreDto {
+  @IsString()
+  @IsOptional()
+  search: string;
+
+  page: number;
+
+  limit: number;
+
+  @IsOptional()
+  @IsString()
+  voucher_pos_id: string;
+
+  @IsOptional()
+  @IsString()
+  store_id: string;
+
+  @IsOptional()
+  @IsString()
+  date_start: string;
+
+  @IsOptional()
+  @IsString()
+  date_end: string;
 }
