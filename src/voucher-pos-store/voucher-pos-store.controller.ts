@@ -2,12 +2,12 @@
 
 import { Body, Controller, Delete, Get, Param, Post, Put, Query } from "@nestjs/common";
 import { AuthJwtGuard } from "src/auth/auth.decorators";
-import { UserType } from "src/auth/guard/user-type.decorator";
+import { UserTypeAndLevel } from "src/auth/guard/user-type-and-level.decorator";
 import { MessageService } from "src/message/message.service";
 import { ResponseStatusCode } from "src/response/response.decorator";
 import { RSuccessMessage } from "src/response/response.interface";
 import { ResponseService } from "src/response/response.service";
-import { AssignVoucherPosStoreDto } from "./dto/voucher-pos-store.dto";
+import { AssignVoucherPosStoreDto, GetListVoucherPosStoreDto } from "./dto/voucher-pos-store.dto";
 import { VoucherPosStoreService } from "./voucher-pos-store.service";
 
 @Controller('api/v1/loyalties/voucher-pos-store')
@@ -25,11 +25,21 @@ export class VoucherPosStoreController {
      */
 
     @Get('')
-    @UserType('admin')
+    @UserTypeAndLevel('admin.*', 'merchant.group', 'merchant.merchant')
     @AuthJwtGuard()
     @ResponseStatusCode()
-    async getListStoreByVoucherPosAndBrand(@Query() data: AssignVoucherPosStoreDto): Promise<RSuccessMessage>{
-        return 
+    async getListStoreByVoucherPosAndBrand(@Body() data: GetListVoucherPosStoreDto): Promise<RSuccessMessage>{
+        try {
+            const result = await this.voucherPosStoreService.getListStoreByVoucherAndBrand(data);
+            return this.responseService.success(
+              true,
+              this.messageService.get('general.list.success'),
+              result,
+            );
+        } catch(error){
+            console.error(error);
+            throw error;
+        }
     }
 
     /**
@@ -39,7 +49,7 @@ export class VoucherPosStoreController {
      */
 
     @Post('')
-    @UserType('admin')
+    @UserTypeAndLevel('admin.*', 'merchant.group', 'merchant.merchant')
     @AuthJwtGuard()
     @ResponseStatusCode()
     async assignStoreByVoucherPos(@Body() data:AssignVoucherPosStoreDto): Promise<RSuccessMessage>{
@@ -65,7 +75,7 @@ export class VoucherPosStoreController {
      */
 
     @Delete('')
-    @UserType('admin')
+    @UserTypeAndLevel('admin.*', 'merchant.group', 'merchant.merchant')
     @AuthJwtGuard()
     @ResponseStatusCode()
     async unassignStoreByVoucherPos(

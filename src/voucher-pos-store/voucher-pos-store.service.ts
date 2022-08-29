@@ -1,8 +1,9 @@
 /* eslint-disable prettier/prettier */
-
 import { BadRequestException, HttpStatus, Injectable, Logger } from "@nestjs/common";
 import { MessageService } from "src/message/message.service";
 import { ResponseService } from "src/response/response.service";
+import { ILike, LessThan, MoreThan } from "typeorm";
+import { GetListVoucherPosStoreDto } from "./dto/voucher-pos-store.dto";
 import { VoucherPosStoreRepository } from "./repository/voucher-pos-store.repository";
 
 @Injectable()
@@ -21,8 +22,55 @@ export class VoucherPosStoreService {
      * @param data 
      * @returns 
      */
-      async getListStoreByVoucherAndBrand(data){
-        return
+      async getListStoreByVoucherAndBrand(data: GetListVoucherPosStoreDto){
+        try{
+          const page = data.page || 1;
+          const limit = data.limit || 10;
+          const offset = (page - 1) * limit;
+
+          let qry = {};
+
+          if (data.voucher_pos_id) qry = { ...qry, voucher_pos_id: data.voucher_pos_id };
+          if (data.store_id) qry = { ...qry, store_id: data.store_id };
+          if (data.search) qry = { ...qry, store_id: ILike(`%${data.search}%`) };
+          if (data.date_start) qry = { ...qry, date_start: MoreThan(data.date_start) };
+          if (data.date_end) qry = { ...qry, date_end: LessThan(data.date_end) };
+
+          const query = this.voucherPosStoreRepo
+          .createQueryBuilder('vps')
+          .where(qry)
+          .withDeleted()
+          .orderBy('vps.created_at','DESC')
+          .take(limit)
+          .skip(offset)
+
+          const items = await query.getMany();
+          const count = await query.getCount();
+
+          const listItems = {
+            total_items: count,
+            items: items,
+          };
+
+          return listItems;
+        }
+        catch(error){
+          throw new BadRequestException(
+            this.responseService.error(
+              HttpStatus.BAD_REQUEST,
+              {
+                value: 'status',
+                property: 'status',
+                constraint: [
+                  this.messageService.get('general.list.fail'),
+                  error.message,
+                ],
+              },
+              'Bad Request',
+            ),
+          );
+        }
+        return {test:true}
       }
       /**
        * 
