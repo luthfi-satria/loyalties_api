@@ -2,7 +2,7 @@
 import { BadRequestException, HttpStatus, Injectable, Logger } from "@nestjs/common";
 import { MessageService } from "src/message/message.service";
 import { ResponseService } from "src/response/response.service";
-import { ILike, LessThan, MoreThan } from "typeorm";
+import { ILike, In, LessThan, MoreThan } from "typeorm";
 import { GetListVoucherPosStoreDto } from "./dto/voucher-pos-store.dto";
 import { VoucherPosStoreRepository } from "./repository/voucher-pos-store.repository";
 
@@ -22,7 +22,7 @@ export class VoucherPosStoreService {
      * @param data 
      * @returns 
      */
-      async getListStoreByVoucherAndBrand(data: GetListVoucherPosStoreDto){
+      async getListStoreByVoucherPosId(id, data: GetListVoucherPosStoreDto){
         try{
           const page = data.page || 1;
           const limit = data.limit || 10;
@@ -30,15 +30,12 @@ export class VoucherPosStoreService {
 
           let qry = {};
 
-          if (data.voucher_pos_id) qry = { ...qry, voucher_pos_id: data.voucher_pos_id };
-          if (data.store_id) qry = { ...qry, store_id: data.store_id };
-          if (data.search) qry = { ...qry, store_id: ILike(`%${data.search}%`) };
-          if (data.date_start) qry = { ...qry, date_start: MoreThan(data.date_start) };
-          if (data.date_end) qry = { ...qry, date_end: LessThan(data.date_end) };
+          if (data.store_id) qry = { ...qry, store_id: In([...data.store_id]) };
 
           const query = this.voucherPosStoreRepo
           .createQueryBuilder('vps')
-          .where(qry)
+          .where('voucher_pos_id = :voucher_pos_id', {voucher_pos_id : id})
+          .andWhere(qry)
           .withDeleted()
           .orderBy('vps.created_at','DESC')
           .take(limit)
