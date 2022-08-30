@@ -1,4 +1,10 @@
-import { ArrayNotEmpty, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
+import {
+  ArrayNotEmpty,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator';
 
 export class AssignVoucherPosStoreDto {
   @IsNotEmpty()
