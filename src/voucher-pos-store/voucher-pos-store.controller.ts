@@ -24,13 +24,16 @@ export class VoucherPosStoreController {
      * @returns 
      */
 
-    @Get('')
+    @Post(':voucher_pos_id')
     @UserTypeAndLevel('admin.*', 'merchant.group', 'merchant.merchant')
     @AuthJwtGuard()
     @ResponseStatusCode()
-    async getListStoreByVoucherPosAndBrand(@Body() data: GetListVoucherPosStoreDto): Promise<RSuccessMessage>{
+    async getListStoreByVoucherPosId(
+        @Param('voucher_pos_id') id: string, 
+        @Body() data: GetListVoucherPosStoreDto
+    ): Promise<RSuccessMessage>{
         try {
-            const result = await this.voucherPosStoreService.getListStoreByVoucherAndBrand(data);
+            const result = await this.voucherPosStoreService.getListStoreByVoucherPosId(id, data);
             return this.responseService.success(
               true,
               this.messageService.get('general.list.success'),

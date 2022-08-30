@@ -25,8 +25,8 @@ export class GetListVoucherPosStoreDto {
   voucher_pos_id: string;
 
   @IsOptional()
-  @IsString()
-  store_id: string;
+  @IsString({ each: true })
+  store_id: string[];
 
   @IsOptional()
   @IsString()
