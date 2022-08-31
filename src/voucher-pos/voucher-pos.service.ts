@@ -12,10 +12,7 @@ import {
   CreateVoucherPosDto,
   UpdateVoucherPosDto,
 } from './dto/voucher-pos.dto';
-import {
-  StatusVoucherPosGroup,
-  VoucherPosDocument,
-} from './entities/voucher-pos.entity';
+import { StatusVoucherPosGroup } from './entities/voucher-pos.entity';
 import { VoucherPosRepository } from './repository/voucher-pos.repository';
 
 @Injectable()
