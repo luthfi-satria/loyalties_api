@@ -218,7 +218,14 @@ export class VoucherPosService {
    */
   async getVoucherPosDetail(id) {
     try {
-      const result = await this.voucherPosRepo.findOneOrFail({ id: id });
+      // const result = await this.voucherPosRepo.findOneOrFail({ id: id });
+      const result = await this.voucherPosRepo
+        .createQueryBuilder('vp')
+        .addSelect('assigned_store.store_id')
+        .leftJoin('vp.assigned_store', 'assigned_store')
+        .where({ id: id })
+        .getOneOrFail();
+
       return result;
     } catch (error) {
       this.logger.log(error);

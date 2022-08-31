@@ -5,6 +5,7 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -144,6 +145,13 @@ export class VoucherPosDocument{
   
     @DeleteDateColumn({ nullable: true })
     deleted_at: Date | string;
+    
+    @OneToMany(
+        () => VoucherPosStoreDocument,
+        (assigned_store) => assigned_store.voucher_pos_id,
+        { eager: true },
+      )
+    assigned_store: VoucherPosStoreDocument[];
     
     constructor(init?: Partial<VoucherPosDocument>) {
         Object.assign(this, init);
