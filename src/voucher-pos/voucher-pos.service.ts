@@ -58,12 +58,23 @@ export class VoucherPosService {
 
       const query = this.voucherPosRepo
         .createQueryBuilder('vp')
+        .innerJoin(
+          'loyalties_voucher_pos_store',
+          'vps',
+          'vps.voucher_pos_id = vp.id',
+        )
         .where(qry)
         .withDeleted()
+        .groupBy('vp.id')
         .orderBy('vp.created_at', 'DESC')
         .take(limit)
         .skip(offset);
 
+      if (data.store_id) {
+        query.andWhere('vps.store_id = :store_id', { store_id: data.store_id });
+      }
+
+      // this.logger.warn(query.getQuery());
       const items = await query.getMany();
       const count = await query.getCount();
 

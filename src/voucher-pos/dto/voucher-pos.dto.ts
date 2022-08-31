@@ -8,6 +8,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  IsUUID,
   Length,
 } from 'class-validator';
 import {
@@ -95,7 +96,7 @@ export class ListVoucherPosDto {
   brand_id: string;
 
   @IsOptional()
-  @IsString()
+  @IsUUID()
   store_id: string;
 
   @IsOptional()
