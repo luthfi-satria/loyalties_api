@@ -1,11 +1,14 @@
+import { HttpService } from '@nestjs/axios';
 import {
   BadRequestException,
   HttpStatus,
   Injectable,
   Logger,
 } from '@nestjs/common';
+import { firstValueFrom, map } from 'rxjs';
 import { MessageService } from 'src/message/message.service';
 import { ResponseService } from 'src/response/response.service';
+import { VoucherPosRepository } from 'src/voucher-pos/repository/voucher-pos.repository';
 import { In } from 'typeorm';
 import { GetListVoucherPosStoreDto } from './dto/voucher-pos-store.dto';
 import { VoucherPosStoreRepository } from './repository/voucher-pos-store.repository';
@@ -15,7 +18,9 @@ export class VoucherPosStoreService {
   constructor(
     private readonly responseService: ResponseService,
     private readonly messageService: MessageService,
+    private readonly voucherPosRepo: VoucherPosRepository,
     private readonly voucherPosStoreRepo: VoucherPosStoreRepository,
+    private readonly httpservice: HttpService,
   ) {}
 
   private readonly logger = new Logger(VoucherPosStoreService.name);
@@ -27,33 +32,21 @@ export class VoucherPosStoreService {
    */
   async getListStoreByVoucherPosId(id, data: GetListVoucherPosStoreDto) {
     try {
-      const page = data.page || 1;
-      const limit = data.limit || 10;
-      const offset = (page - 1) * limit;
+      // get detail voucher pos
+      const voucherPosDetail = await this.voucherPosRepo.findOneOrFail({
+        id: id,
+      });
 
-      let qry = {};
+      // get list assigned stores
+      const listStores = await this.getListStoresByVoucherPosId(id);
+      data.merchant_id = voucherPosDetail.brand_id;
+      data.store_id = listStores;
 
-      if (data.store_id) qry = { ...qry, store_id: In([...data.store_id]) };
-
-      const query = this.voucherPosStoreRepo
-        .createQueryBuilder('vps')
-        .where('voucher_pos_id = :voucher_pos_id', { voucher_pos_id: id })
-        .andWhere(qry)
-        .withDeleted()
-        .orderBy('vps.created_at', 'DESC')
-        .take(limit)
-        .skip(offset);
-
-      const items = await query.getMany();
-      const count = await query.getCount();
-
-      const listItems = {
-        total_items: count,
-        items: items,
-      };
-
-      return listItems;
+      // call api to merchant services
+      const result = await this.callInternalMerchantsStores(data);
+      return result;
     } catch (error) {
+      this.logger.log(error);
       throw new BadRequestException(
         this.responseService.error(
           HttpStatus.BAD_REQUEST,
@@ -69,7 +62,6 @@ export class VoucherPosStoreService {
         ),
       );
     }
-    return { test: true };
   }
   /**
    *
@@ -136,6 +128,49 @@ export class VoucherPosStoreService {
       return query;
     } catch (error) {
       console.error(error);
+      throw error;
+    }
+  }
+
+  async getListStoresByVoucherPosId(voucher_pos_id: string) {
+    // get list stores
+    const query = await this.voucherPosStoreRepo
+      .createQueryBuilder('vps')
+      .where('voucher_pos_id = :voucher_pos_id', {
+        voucher_pos_id: voucher_pos_id,
+      });
+
+    const result = await query.withDeleted().getMany();
+
+    const listStores = [];
+
+    if (result.length > 0) {
+      result.forEach((res) => {
+        listStores.push(res.store_id);
+      });
+    }
+
+    // this.logger.warn(listStores);
+    return listStores;
+  }
+
+  async callInternalMerchantsStores(data) {
+    // Communicate with merchants service
+    try {
+      const headerRequest = {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      };
+      const url = `${process.env.BASEURL_MERCHANTS_SERVICE}/api/v1/internal/merchants/stores/multi_criteria`;
+
+      const targetStatus = await firstValueFrom(
+        this.httpservice
+          .post(url, data, headerRequest)
+          .pipe(map((resp) => resp.data)),
+      );
+      return targetStatus;
+    } catch (error) {
       throw error;
     }
   }

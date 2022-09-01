@@ -36,9 +36,9 @@ export class GetListVoucherPosStoreDto {
 
   @IsOptional()
   @IsString()
-  date_start: string;
+  merchant_id: string;
 
   @IsOptional()
   @IsString()
-  date_end: string;
+  target: string;
 }
