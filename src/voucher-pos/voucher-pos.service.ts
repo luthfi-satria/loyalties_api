@@ -1,9 +1,11 @@
+import { HttpService } from '@nestjs/axios';
 import {
   BadRequestException,
   HttpStatus,
   Injectable,
   Logger,
 } from '@nestjs/common';
+import { firstValueFrom, map } from 'rxjs';
 import { MessageService } from 'src/message/message.service';
 import { ResponseService } from 'src/response/response.service';
 import { VoucherCodeService } from 'src/voucher_code/voucher_code.service';
@@ -29,6 +31,7 @@ export class VoucherPosService {
     private readonly messageService: MessageService,
     private readonly voucherPosRepo: VoucherPosRepository,
     private readonly voucherCodeService: VoucherCodeService,
+    private readonly httpservice: HttpService,
   ) {}
 
   private readonly logger = new Logger(VoucherPosService.name);
@@ -226,6 +229,34 @@ export class VoucherPosService {
         .where({ id: id })
         .getOneOrFail();
 
+      if (result) {
+        const store_ids = [];
+        const assigned_store = result.assigned_store;
+        for (let index = 0; index < assigned_store.length; index++) {
+          store_ids.push(assigned_store[index].store_id);
+        }
+        const callMerchantService = await this.callInternalMerchantsStores(
+          store_ids,
+        );
+
+        console.log(Object.keys(callMerchantService).length);
+        const listStore = [];
+        for (
+          let index = 0;
+          index < Object.keys(callMerchantService).length;
+          index++
+        ) {
+          listStore[index] = {
+            id: callMerchantService[index].id,
+            name: callMerchantService[index].name,
+            phone: callMerchantService[index].phone,
+            is_store_open: callMerchantService[index].is_store_open,
+            is_open: callMerchantService[index].is_open_24h,
+          };
+        }
+        result.assigned_store = listStore;
+      }
+
       return result;
     } catch (error) {
       this.logger.log(error);
@@ -330,6 +361,32 @@ export class VoucherPosService {
           'Bad Request',
         ),
       );
+    }
+  }
+
+  /**
+   *
+   * @param store_ids
+   * @returns
+   */
+  async callInternalMerchantsStores(store_ids: string[]) {
+    // Communicate with merchants service
+    try {
+      const headerRequest = {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      };
+      const url = `${process.env.BASEURL_MERCHANTS_SERVICE}/api/v1/internal/merchants/stores/byids`;
+
+      const targetStatus = await firstValueFrom(
+        this.httpservice
+          .post(url, { store_ids: store_ids }, headerRequest)
+          .pipe(map((resp) => resp.data)),
+      );
+      return targetStatus;
+    } catch (error) {
+      throw error;
     }
   }
 }

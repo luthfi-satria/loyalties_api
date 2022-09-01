@@ -1,3 +1,4 @@
+import { HttpModule, HttpService } from '@nestjs/axios';
 import { Logger, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -16,6 +17,7 @@ import { VoucherPosService } from './voucher-pos.service';
     ConfigModule.forRoot(),
     TypeOrmModule.forFeature([VoucherPosRepository, VoucherPosStoreRepository]),
     VoucherCodeModule,
+    HttpModule,
   ],
   controllers: [VoucherPosController],
   providers: [VoucherPosService, MessageService, ResponseService, Logger],
