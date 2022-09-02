@@ -162,7 +162,7 @@ export class VoucherPosStoreService {
           'Content-Type': 'application/json',
         },
       };
-      const url = `${process.env.BASEURL_MERCHANTS_SERVICE}/api/v1/internal/merchants/stores/multi_criteria`;
+      const url = `${process.env.BASEURL_MERCHANTS_SERVICE}/api/v1/internal/merchants/stores/multi-criteria`;
 
       const targetStatus = await firstValueFrom(
         this.httpservice
