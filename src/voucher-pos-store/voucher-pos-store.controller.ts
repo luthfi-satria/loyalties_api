@@ -1,13 +1,4 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Post,
-  Put,
-  Query,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Param, Post } from '@nestjs/common';
 import { AuthJwtGuard } from 'src/auth/auth.decorators';
 import { UserTypeAndLevel } from 'src/auth/guard/user-type-and-level.decorator';
 import { MessageService } from 'src/message/message.service';
@@ -35,7 +26,12 @@ export class VoucherPosStoreController {
    */
 
   @Post(':voucher_pos_id')
-  @UserTypeAndLevel('admin.*', 'merchant.group', 'merchant.merchant', 'merchant.store')
+  @UserTypeAndLevel(
+    'admin.*',
+    'merchant.group',
+    'merchant.merchant',
+    'merchant.store',
+  )
   @AuthJwtGuard()
   @ResponseStatusCode()
   async getListStoreByVoucherPosId(
@@ -63,7 +59,12 @@ export class VoucherPosStoreController {
    */
 
   @Post('')
-  @UserTypeAndLevel('admin.*', 'merchant.group', 'merchant.merchant', 'merchant.store')
+  @UserTypeAndLevel(
+    'admin.*',
+    'merchant.group',
+    'merchant.merchant',
+    'merchant.store',
+  )
   @AuthJwtGuard()
   @ResponseStatusCode()
   async assignStoreByVoucherPos(
@@ -91,7 +92,12 @@ export class VoucherPosStoreController {
    */
 
   @Delete('')
-  @UserTypeAndLevel('admin.*', 'merchant.group', 'merchant.merchant', 'merchant.store')
+  @UserTypeAndLevel(
+    'admin.*',
+    'merchant.group',
+    'merchant.merchant',
+    'merchant.store',
+  )
   @AuthJwtGuard()
   @ResponseStatusCode()
   async unassignStoreByVoucherPos(
