@@ -36,7 +36,7 @@ export class VoucherPosController {
    */
 
   @Get('')
-  @UserTypeAndLevel('admin.*', 'merchant.group', 'merchant.merchant')
+  @UserTypeAndLevel('admin.*', 'merchant.group', 'merchant.merchant', 'merchant.store')
   @AuthJwtGuard()
   @ResponseStatusCode()
   async getListVoucherPos(
@@ -62,7 +62,7 @@ export class VoucherPosController {
    */
 
   @Get(':id')
-  @UserTypeAndLevel('admin.*', 'merchant.group', 'merchant.merchant')
+  @UserTypeAndLevel('admin.*', 'merchant.group', 'merchant.merchant', 'merchant.store')
   @AuthJwtGuard()
   @ResponseStatusCode()
   async getDetailVoucherPos(@Param('id') id: string): Promise<RSuccessMessage> {
@@ -85,7 +85,7 @@ export class VoucherPosController {
    * @returns
    */
   @Post('')
-  @UserTypeAndLevel('admin.*', 'merchant.group', 'merchant.merchant')
+  @UserTypeAndLevel('admin.*', 'merchant.group', 'merchant.merchant', 'merchant.store')
   @AuthJwtGuard()
   @ResponseStatusCode()
   async createVoucherPos(
@@ -110,7 +110,7 @@ export class VoucherPosController {
    * @returns
    */
   @Put('')
-  @UserTypeAndLevel('admin.*', 'merchant.group', 'merchant.merchant')
+  @UserTypeAndLevel('admin.*', 'merchant.group', 'merchant.merchant', 'merchant.store')
   @AuthJwtGuard()
   @ResponseStatusCode()
   async updateVoucherPos(
@@ -135,7 +135,7 @@ export class VoucherPosController {
    * @returns
    */
   @Delete(':id/delete')
-  @UserTypeAndLevel('admin.*', 'merchant.group', 'merchant.merchant')
+  @UserTypeAndLevel('admin.*', 'merchant.group', 'merchant.merchant', 'merchant.store')
   @AuthJwtGuard()
   @ResponseStatusCode()
   async deleteVoucherPos(@Param('id') id: string) {
@@ -158,7 +158,7 @@ export class VoucherPosController {
    * @returns
    */
   @Put(':id/restore')
-  @UserTypeAndLevel('admin.*', 'merchant.group', 'merchant.merchant')
+  @UserTypeAndLevel('admin.*', 'merchant.group', 'merchant.merchant', 'merchant.store')
   @AuthJwtGuard()
   @ResponseStatusCode()
   async restoreVoucherPos(@Param('id') id: string) {

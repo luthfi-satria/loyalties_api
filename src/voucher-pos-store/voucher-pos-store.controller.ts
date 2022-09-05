@@ -35,7 +35,7 @@ export class VoucherPosStoreController {
    */
 
   @Post(':voucher_pos_id')
-  @UserTypeAndLevel('admin.*', 'merchant.group', 'merchant.merchant')
+  @UserTypeAndLevel('admin.*', 'merchant.group', 'merchant.merchant', 'merchant.store')
   @AuthJwtGuard()
   @ResponseStatusCode()
   async getListStoreByVoucherPosId(
@@ -63,7 +63,7 @@ export class VoucherPosStoreController {
    */
 
   @Post('')
-  @UserTypeAndLevel('admin.*', 'merchant.group', 'merchant.merchant')
+  @UserTypeAndLevel('admin.*', 'merchant.group', 'merchant.merchant', 'merchant.store')
   @AuthJwtGuard()
   @ResponseStatusCode()
   async assignStoreByVoucherPos(
@@ -91,7 +91,7 @@ export class VoucherPosStoreController {
    */
 
   @Delete('')
-  @UserTypeAndLevel('admin.*', 'merchant.group', 'merchant.merchant')
+  @UserTypeAndLevel('admin.*', 'merchant.group', 'merchant.merchant', 'merchant.store')
   @AuthJwtGuard()
   @ResponseStatusCode()
   async unassignStoreByVoucherPos(
