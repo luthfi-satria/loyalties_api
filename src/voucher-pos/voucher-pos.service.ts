@@ -239,7 +239,6 @@ export class VoucherPosService {
           store_ids,
         );
 
-        console.log(Object.keys(callMerchantService).length);
         const listStore = [];
         for (
           let index = 0;
@@ -252,6 +251,7 @@ export class VoucherPosService {
             phone: callMerchantService[index].phone,
             is_store_open: callMerchantService[index].is_store_open,
             is_open: callMerchantService[index].is_open_24h,
+            status: callMerchantService[index].status,
           };
         }
         result.assigned_store = listStore;
