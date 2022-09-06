@@ -58,7 +58,7 @@ export class VoucherPosService {
 
       const query = this.voucherPosRepo
         .createQueryBuilder('vp')
-        .innerJoin(
+        .leftJoin(
           'loyalties_voucher_pos_store',
           'vps',
           'vps.voucher_pos_id = vp.id',
@@ -70,7 +70,7 @@ export class VoucherPosService {
         .take(limit)
         .skip(offset);
 
-      if (data.store_id) {
+      if (typeof data.store_id != 'undefined' && data.store_id != '') {
         query.andWhere('vps.store_id = :store_id', { store_id: data.store_id });
       }
 
