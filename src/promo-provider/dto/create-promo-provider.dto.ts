@@ -59,6 +59,10 @@ export class BaseCreatePromoProviderDto {
   is_combinable: boolean;
 
   status: string;
+
+  @IsOptional()
+  @IsNumber()
+  multipickup_counter: number;
 }
 
 export class DbCreatePromoProviderDto extends BaseCreatePromoProviderDto {
