@@ -437,6 +437,7 @@ export class PromoProviderService {
       findPromoProvider.discount_type = data.discount_type;
       findPromoProvider.discount_value = data.discount_value;
       findPromoProvider.is_combinable = data.is_combinable;
+      findPromoProvider.multipickup_counter = data.multipickup_counter;
 
       const updatedPromoProvider = await this.insertPromoProviderToDb(
         findPromoProvider,
