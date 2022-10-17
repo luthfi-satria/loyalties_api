@@ -117,6 +117,14 @@ export class UpdateVoucherPosDto {
   id: string;
 
   @IsNotEmpty()
+  @IsUUID()
+  group_id: string;
+
+  @IsNotEmpty()
+  @IsUUID()
+  brand_id: string;
+
+  @IsNotEmpty()
   brand_name: string;
 
   @IsNotEmpty()

@@ -50,6 +50,12 @@ export class VoucherPosDocument {
 
   @Column({
     length: 40,
+    nullable: true,
+  })
+  group_id: string;
+
+  @Column({
+    length: 40,
     nullable: false,
   })
   brand_id: string;
@@ -168,6 +174,7 @@ export class VoucherPosStoreDocument {
 
   @ManyToOne(() => VoucherPosDocument, (voucher_pos) => voucher_pos.id, {
     orphanedRowAction: 'delete',
+    onDelete: 'CASCADE',
   })
   @JoinColumn({
     name: 'voucher_pos_id',
