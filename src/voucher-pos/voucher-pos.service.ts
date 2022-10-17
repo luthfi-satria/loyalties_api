@@ -49,6 +49,7 @@ export class VoucherPosService {
 
       let qry = {};
 
+      if (data.group_id) qry = { ...qry, group_id: data.group_id };
       if (data.brand_id) qry = { ...qry, brand_id: data.brand_id };
       if (data.status) qry = { ...qry, status: data.status };
       if (data.search) qry = { ...qry, code: ILike(`%${data.search}%`) };
