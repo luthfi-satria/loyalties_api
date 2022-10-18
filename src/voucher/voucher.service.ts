@@ -285,6 +285,10 @@ export class VoucherService {
         is_prepopulated: false,
         // target: target,
       },
+      relations: [
+        'master_voucher_voucher_code',
+        'master_voucher_voucher_code.master_voucher',
+      ],
     });
 
     if (voucherCode && voucherCode.target != TargetGroup.ALL) {
