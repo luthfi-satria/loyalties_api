@@ -52,7 +52,7 @@ export class VoucherPosService {
       if (data.group_id) qry = { ...qry, group_id: data.group_id };
       if (data.brand_id) qry = { ...qry, brand_id: data.brand_id };
       if (data.status) qry = { ...qry, status: data.status };
-      if (data.search) qry = { ...qry, code: ILike(`%${data.search}%`) };
+      if (data.search) qry = { ...qry, name: ILike(`%${data.search}%`) };
       if (data.date_start)
         qry = { ...qry, date_start: MoreThan(data.date_start) };
       if (data.date_end) qry = { ...qry, date_end: LessThan(data.date_end) };
