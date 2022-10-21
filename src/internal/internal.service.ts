@@ -11,6 +11,7 @@ import { RMessage } from 'src/response/response.interface';
 import { ResponseService } from 'src/response/response.service';
 import { VoucherPackagesCustomersService } from 'src/voucher-packages-customers/voucher-packages-customers.service';
 import { VoucherPackagesService } from 'src/voucher-packages/voucher-packages.service';
+import { VoucherPosService } from 'src/voucher-pos/voucher-pos.service';
 import { GetPromoVouchersDto } from './dto/get-promo-vouchers.dto';
 import { GetRecommendedPromosDto } from './dto/get-recommended-promos.dto';
 import { GetVoucherPackageBulkDto } from './dto/get-voucher-package.dto';
@@ -28,6 +29,7 @@ export class InternalService {
     private readonly promoBrandService: PromoBrandService,
     private readonly voucherPackagesCustomersService: VoucherPackagesCustomersService,
     private readonly voucherPackagesService: VoucherPackagesService,
+    private readonly voucherPosService: VoucherPosService,
   ) {}
 
   private readonly logger = new Logger(InternalService.name);
@@ -176,5 +178,13 @@ export class InternalService {
     return this.voucherPackagesCustomersService.ticketCompleted(
       voucher_package_order_id,
     );
+  }
+
+  async getVoucherPosDetail(id: string) {
+    try {
+      return this.voucherPosService.getVoucherPosDetail(id);
+    } catch (error) {
+      this.errorReport(error, 'general.general.fail');
+    }
   }
 }

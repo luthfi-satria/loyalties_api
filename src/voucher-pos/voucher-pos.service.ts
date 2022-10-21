@@ -160,7 +160,7 @@ export class VoucherPosService {
         const timeEnd = new Date(`${data.date_end} +${gmt_offset}`);
 
         // compare date_start & date_end
-        this.voucherCodeService.checkVoucherCodeInPast(timeEnd);
+        // this.voucherCodeService.checkVoucherCodeInPast(timeEnd);
 
         const now = new Date();
 
