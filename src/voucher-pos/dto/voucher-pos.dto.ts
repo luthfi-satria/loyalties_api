@@ -184,3 +184,11 @@ export class UpdateVoucherPosDto {
   @IsOptional()
   abort_reason: string;
 }
+
+export class UpdateVoucherPosStatusActiveDto {
+  voucher_pos_id: string;
+}
+
+export class UpdateVoucherPosStatusFinishDto {
+  voucher_pos_id: string;
+}
