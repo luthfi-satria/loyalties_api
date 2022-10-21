@@ -178,4 +178,20 @@ export class InternalController {
       throw error;
     }
   }
+
+  @Get('voucher-pos/:voucherPosId/detail')
+  @ResponseStatusCode()
+  async getVoucherPosDetail(@Param('voucherPosId') id: string) {
+    try {
+      const result = await this.internalService.getVoucherPosDetail(id);
+      return this.responseService.success(
+        true,
+        this.messageService.get('general.list.success'),
+        result,
+      );
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
 }
