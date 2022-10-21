@@ -1,7 +1,8 @@
 import { HttpModule } from '@nestjs/axios';
-import { Logger, Module } from '@nestjs/common';
+import { forwardRef, Logger, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { CommonModule } from 'src/common/common.module';
 import { MessageService } from 'src/message/message.service';
 import { ResponseService } from 'src/response/response.service';
 import { VoucherCodeModule } from 'src/voucher_code/voucher_code.module';
@@ -16,6 +17,7 @@ import { VoucherPosService } from './voucher-pos.service';
   imports: [
     ConfigModule.forRoot(),
     TypeOrmModule.forFeature([VoucherPosRepository, VoucherPosStoreRepository]),
+    forwardRef(() => CommonModule),
     VoucherCodeModule,
     HttpModule,
   ],
