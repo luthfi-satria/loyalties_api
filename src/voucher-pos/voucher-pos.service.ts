@@ -71,6 +71,12 @@ export class VoucherPosService {
         .take(limit)
         .skip(offset);
 
+      if (typeof data.period != 'undefined' && data.period != '') {
+        query.andWhere(':period between vp.date_start and vp.date_end', {
+          period: data.period,
+        });
+      }
+
       if (typeof data.store_id != 'undefined' && data.store_id != '') {
         query.andWhere('vps.store_id = :store_id', { store_id: data.store_id });
       }
