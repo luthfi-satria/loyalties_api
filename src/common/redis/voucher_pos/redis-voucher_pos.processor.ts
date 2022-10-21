@@ -26,7 +26,7 @@ export class RedisVoucherPosProcessor {
   async handleAutoFinishVoucherPos(job: Job) {
     try {
       this.logger.debug(
-        'AUTO FINISH VOUCHER CODE QUEUE EXECUTED. ID: ' +
+        'AUTO FINISH VOUCHER POS QUEUE EXECUTED. ID: ' +
           job.data.voucher_pos_id,
       );
       await this.voucherPosService.updateVoucherPosStatusFinished({
