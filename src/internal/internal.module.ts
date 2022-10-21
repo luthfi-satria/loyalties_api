@@ -9,6 +9,7 @@ import { ResponseService } from 'src/response/response.service';
 import { VoucherPackagesCustomersModule } from 'src/voucher-packages-customers/voucher-packages-customers.module';
 import { VoucherPackagesModule } from 'src/voucher-packages/voucher-packages.module';
 import { VoucherPackagesService } from 'src/voucher-packages/voucher-packages.service';
+import { VoucherPosModule } from 'src/voucher-pos/voucher-pos.module';
 import { VoucherModule } from 'src/voucher/voucher.module';
 import { InternalController } from './internal.controller';
 import { InternalService } from './internal.service';
@@ -23,6 +24,7 @@ import { InternalService } from './internal.service';
     VoucherPackagesModule,
     MasterVoucherModule,
     VoucherModule,
+    VoucherPosModule,
   ],
   controllers: [InternalController],
   providers: [
