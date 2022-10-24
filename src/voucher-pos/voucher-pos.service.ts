@@ -15,7 +15,7 @@ import { MessageService } from 'src/message/message.service';
 import { ResponseService } from 'src/response/response.service';
 import { DateTimeUtils } from 'src/utils/date-time-utils';
 import { VoucherCodeService } from 'src/voucher_code/voucher_code.service';
-import { ILike, LessThan, MoreThan } from 'typeorm';
+import { Brackets, ILike, LessThan, MoreThan } from 'typeorm';
 import {
   CreateVoucherPosDto,
   UpdateVoucherPosDto,
@@ -87,8 +87,51 @@ export class VoucherPosService {
         query.andWhere(':period between vp.date_start and vp.date_end', {
           period: data.period,
         });
+        query.andWhere('vp.status not in (:...trans_status)', {
+          trans_status: ['STOPPED', 'CANCELLED'],
+        });
+
+        const today = new Date();
+        const dd = String(today.getDate()).padStart(2, '0');
+        const weekOfDay = DateTimeUtils.getDayOfWeekInWIB();
+
+        const dayConverter = {
+          1: 'senin',
+          2: 'selasa',
+          3: 'rabu',
+          4: 'kamis',
+          5: 'jumat',
+          6: 'sabtu',
+          7: 'minggu',
+        };
+
+        query.andWhere(
+          new Brackets((qb) => {
+            qb.where(
+              'case ' +
+                'when vp.period_type = :none ' +
+                'then vp.daily_period::jsonb ? :empty_period ' +
+                'when vp.period_type = :monthy_period ' +
+                'then vp.daily_period::jsonb ? :dayNumber ' +
+                'else vp.daily_period::jsonb ? :weekOfDay ' +
+                'end',
+              {
+                none: 'NONE',
+                empty_period: '',
+                monthy_period: 'MONTHLY',
+                dayNumber: dd,
+                weekOfDay: dayConverter[weekOfDay],
+              },
+            );
+          }),
+        );
       }
 
+      if (typeof data.sales_mode != 'undefined') {
+        query.andWhere('vp.sales_mode::jsonb ? :sales_mode', {
+          sales_mode: data.sales_mode,
+        });
+      }
       if (typeof data.store_id != 'undefined' && data.store_id != '') {
         query.andWhere('vps.store_id = :store_id', { store_id: data.store_id });
       }
