@@ -38,11 +38,28 @@ export class VoucherPosStoreService {
 
       // get list assigned stores
       const listStores = await this.getListStoresByVoucherPosId(id);
-      data.merchant_id = voucherPosDetail.brand_id;
-      data.store_id = listStores;
+
+      const reqData = {
+        page: data.page,
+        limit: data.limit,
+        merchant_id: voucherPosDetail.brand_id,
+        store_id: listStores,
+        target:
+          typeof data.target != 'undefined' && data.target != ''
+            ? data.target
+            : null,
+      };
+
+      if (
+        typeof data.target != 'undefined' &&
+        data.target == 'assigned' &&
+        listStores.length == 0
+      ) {
+        return listStores;
+      }
 
       // call api to merchant services
-      const result = await this.callInternalMerchantsStores(data);
+      const result = await this.callInternalMerchantsStores(reqData);
       return result;
     } catch (error) {
       this.logger.log(error);
