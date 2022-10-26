@@ -6,11 +6,6 @@ import {
   Logger,
 } from '@nestjs/common';
 import { firstValueFrom, map } from 'rxjs';
-import {
-  CreateAutoFinishVoucherPosDto,
-  CreateAutoStartVoucherPosDto,
-} from 'src/common/redis/dto/redis-voucher-pos.dto';
-import { RedisVoucherPosService } from 'src/common/redis/voucher_pos/redis-voucher_pos.service';
 import { MessageService } from 'src/message/message.service';
 import { ResponseService } from 'src/response/response.service';
 import { DateTimeUtils } from 'src/utils/date-time-utils';
@@ -19,13 +14,8 @@ import { Brackets, ILike, LessThan, MoreThan } from 'typeorm';
 import {
   CreateVoucherPosDto,
   UpdateVoucherPosDto,
-  UpdateVoucherPosStatusActiveDto,
-  UpdateVoucherPosStatusFinishDto,
 } from './dto/voucher-pos.dto';
-import {
-  StatusVoucherPosGroup,
-  VoucherPosDocument,
-} from './entities/voucher-pos.entity';
+import { StatusVoucherPosGroup } from './entities/voucher-pos.entity';
 import {
   VoucherPosRepository,
   VoucherPosStoreRepository,
@@ -46,7 +36,6 @@ export class VoucherPosService {
     private readonly voucherPosRepo: VoucherPosRepository,
     private readonly voucherCodeService: VoucherCodeService,
     private readonly httpservice: HttpService,
-    private readonly redisVoucherPosService: RedisVoucherPosService,
     private readonly voucherPosStoreRepo: VoucherPosStoreRepository,
   ) {}
 
@@ -265,10 +254,6 @@ export class VoucherPosService {
       .values(data)
       .execute();
 
-    // const detailsVoucher = await this.voucherPosRepo.findOneOrFail(
-    //   createdVoucher.raw.id,
-    // );
-    // await this.createVoucherPosQueue(status, detailsVoucher);
     return createdVoucher;
   }
 
@@ -612,141 +597,6 @@ export class VoucherPosService {
       return targetStatus;
     } catch (error) {
       throw error;
-    }
-  }
-
-  /**
-   * REDIS PROCESS
-   * @param voucherPosStatus
-   * @param createdVoucherPos
-   */
-  async createVoucherPosQueue(
-    voucherPosStatus: string,
-    createdVoucherPos: VoucherPosDocument,
-  ) {
-    if (voucherPosStatus === StatusVoucherPosGroup.SCHEDULED) {
-      const payloadStart: CreateAutoStartVoucherPosDto = {
-        voucher_pos_id: createdVoucherPos.id,
-        delay: DateTimeUtils.nowToDatetimeMilis(createdVoucherPos.date_start),
-      };
-      await this.redisVoucherPosService.createAutoStartVoucherPosQueue(
-        payloadStart,
-      );
-    }
-    const payloadFinish: CreateAutoFinishVoucherPosDto = {
-      voucher_pos_id: createdVoucherPos.id,
-      delay: DateTimeUtils.nowToDatetimeMilis(createdVoucherPos.date_end),
-    };
-    await this.redisVoucherPosService.createAutoFinishVoucherPosQueue(
-      payloadFinish,
-    );
-  }
-
-  /**
-   * REDIS PROCESS
-   * @param data
-   * @returns
-   */
-  async updateVoucherPosStatusActive(
-    data: UpdateVoucherPosStatusActiveDto,
-  ): Promise<VoucherPosDocument> {
-    try {
-      const findVoucherCode = await this.voucherPosRepo.findOneOrFail({
-        where: { id: data.voucher_pos_id },
-      });
-
-      if (findVoucherCode.status !== StatusVoucherPosGroup.SCHEDULED) {
-        throw new BadRequestException(
-          this.responseService.error(
-            HttpStatus.BAD_REQUEST,
-            {
-              value: 'status',
-              property: 'status',
-              constraint: [
-                this.messageService.get('general.general.statusNotAllowed'),
-                '',
-              ],
-            },
-            'Bad Request',
-          ),
-        );
-      }
-
-      findVoucherCode.status = StatusVoucherPosGroup.ACTIVE;
-
-      const updatedVoucherCode = await this.voucherPosRepo.save(
-        findVoucherCode,
-      );
-      return updatedVoucherCode;
-    } catch (error) {
-      throw new BadRequestException(
-        this.responseService.error(
-          HttpStatus.BAD_REQUEST,
-          {
-            value: 'status',
-            property: 'status',
-            constraint: [
-              this.messageService.get('general.update.fail'),
-              error.message,
-            ],
-          },
-          'Bad Request',
-        ),
-      );
-    }
-  }
-
-  /**
-   * REDIS PROCESS
-   * @param data
-   * @returns
-   */
-  async updateVoucherPosStatusFinished(
-    data: UpdateVoucherPosStatusFinishDto,
-  ): Promise<VoucherPosDocument> {
-    try {
-      const findVoucherCode = await this.voucherPosRepo.findOneOrFail({
-        where: { id: data.voucher_pos_id },
-      });
-
-      if (findVoucherCode.status !== StatusVoucherPosGroup.ACTIVE) {
-        throw new BadRequestException(
-          this.responseService.error(
-            HttpStatus.BAD_REQUEST,
-            {
-              value: 'status',
-              property: 'status',
-              constraint: [
-                this.messageService.get('general.general.statusNotAllowed'),
-                '',
-              ],
-            },
-            'Bad Request',
-          ),
-        );
-      }
-
-      findVoucherCode.status = StatusVoucherPosGroup.FINISHED;
-
-      const updatedVoucherCode = await this.voucherPosRepo.save(
-        findVoucherCode,
-      );
-      return updatedVoucherCode;
-    } catch (error) {
-      throw new BadRequestException(
-        this.responseService.error(
-          HttpStatus.BAD_REQUEST,
-          {
-            value: 'status',
-            property: 'status',
-            constraint: [
-              this.messageService.get('general.update.fail'),
-              error.message,
-            ],
-          },
-          'Bad Request',
-        ),
-      );
     }
   }
 }
