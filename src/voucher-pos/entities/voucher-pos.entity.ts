@@ -155,6 +155,12 @@ export class VoucherPosDocument {
   @DeleteDateColumn({ nullable: true })
   deleted_at: Date | string;
 
+  @Column({
+    type: 'timestamptz',
+    default: null,
+  })
+  stopped_at: Date | string;
+
   @OneToMany(
     () => VoucherPosStoreDocument,
     (assigned_store) => assigned_store.voucher_pos_id,
