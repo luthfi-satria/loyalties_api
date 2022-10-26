@@ -104,13 +104,7 @@ export class VoucherPosDocument {
   })
   date_end: Date;
 
-  @Column({
-    type: 'enum',
-    enum: StatusVoucherPosGroup,
-    nullable: false,
-    default: StatusVoucherPosGroup.ACTIVE,
-  })
-  status: StatusVoucherPosGroup;
+  status?: string;
 
   @Column({
     nullable: true,
