@@ -31,9 +31,6 @@ import { OrderService } from './order/order.service';
 import { RedisVoucherService } from './redis/voucher/redis-voucher.service';
 import { RedisVoucherProcessor } from './redis/voucher/redis-voucher.processor';
 import { AdminService } from './admins/admin.service';
-import { RedisVoucherPosService } from './redis/voucher_pos/redis-voucher_pos.service';
-import { RedisVoucherPosProcessor } from './redis/voucher_pos/redis-voucher_pos.processor';
-import { VoucherPosModule } from 'src/voucher-pos/voucher-pos.module';
 
 @Global()
 @Module({
@@ -69,7 +66,6 @@ import { VoucherPosModule } from 'src/voucher-pos/voucher-pos.module';
     forwardRef(() => VoucherModule),
     forwardRef(() => PromoProviderUsageModule),
     forwardRef(() => PromoBrandUsageModule),
-    forwardRef(() => VoucherPosModule),
     TypeOrmModule.forFeature([
       VoucherPackagesRepository,
       VoucherPackagesMasterVouchersRepository,
@@ -94,8 +90,6 @@ import { VoucherPosModule } from 'src/voucher-pos/voucher-pos.module';
     PaymentService,
     AdminService,
     OrderService,
-    RedisVoucherPosService,
-    RedisVoucherPosProcessor,
   ],
   exports: [
     RedisPromoProviderService,
@@ -112,8 +106,6 @@ import { VoucherPosModule } from 'src/voucher-pos/voucher-pos.module';
     PaymentService,
     AdminService,
     OrderService,
-    RedisVoucherPosService,
-    RedisVoucherPosProcessor,
   ],
   controllers: [NatsController],
 })

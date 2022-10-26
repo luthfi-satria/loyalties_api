@@ -204,4 +204,60 @@ export class VoucherPosController {
       throw error;
     }
   }
+
+  /**
+   *
+   * @param body
+   * @returns
+   */
+  @Put(':id/stop')
+  @UserTypeAndLevel(
+    'admin.*',
+    'merchant.group',
+    'merchant.merchant',
+    'merchant.store',
+  )
+  @AuthJwtGuard()
+  @ResponseStatusCode()
+  async stopVoucherPos(@Param('id') id: string) {
+    try {
+      const result = await this.voucherPosService.stopVoucherPos(id);
+      return this.responseService.success(
+        true,
+        this.messageService.get('general.update.success'),
+        result,
+      );
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+
+  /**
+   *
+   * @param body
+   * @returns
+   */
+  @Put(':id/continue')
+  @UserTypeAndLevel(
+    'admin.*',
+    'merchant.group',
+    'merchant.merchant',
+    'merchant.store',
+  )
+  @AuthJwtGuard()
+  @ResponseStatusCode()
+  async continueVoucherPos(@Param('id') id: string) {
+    try {
+      const result = await this.voucherPosService.continueVoucherPos(id);
+      return this.responseService.success(
+        true,
+        this.messageService.get('general.update.success'),
+        result,
+      );
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
 }
