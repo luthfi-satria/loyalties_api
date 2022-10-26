@@ -63,14 +63,51 @@ export class VoucherPosService {
 
       if (data.group_id) qry = { ...qry, group_id: data.group_id };
       if (data.brand_id) qry = { ...qry, brand_id: data.brand_id };
-      if (data.status) qry = { ...qry, status: data.status };
+      // if (data.status) qry = { ...qry, status: data.status };
       if (data.search) qry = { ...qry, name: ILike(`%${data.search}%`) };
       if (data.date_start)
         qry = { ...qry, date_start: MoreThan(data.date_start) };
       if (data.date_end) qry = { ...qry, date_end: LessThan(data.date_end) };
-
+      const addSelectState = `
+      case
+        when (now() between vp.date_start AND vp.date_end) AND vp.stopped_at IS NULL AND vp.deleted_at IS NULL
+          then '${StatusVoucherPosGroup.ACTIVE}'
+        when (now() < vp.date_start) AND vp.stopped_at IS NULL AND vp.deleted_at IS NULL
+          then '${StatusVoucherPosGroup.SCHEDULED}'
+        when vp.deleted_at IS NOT NULL AND vp.stopped_at IS NULL
+          then '${StatusVoucherPosGroup.CANCELLED}'
+        when now() > vp.date_end AND vp.stopped_at IS NULL
+          then '${StatusVoucherPosGroup.FINISHED}'
+        when vp.stopped_at IS NOT NULL
+          then '${StatusVoucherPosGroup.STOPPED}'
+      end
+    `;
       const query = this.voucherPosRepo
         .createQueryBuilder('vp')
+        .select([
+          'vp.id as id',
+          'vp.name AS name ',
+          'vp.group_id AS group_id ',
+          'vp.brand_id AS brand_id ',
+          'vp.brand_name AS brand_name ',
+          'vp.sales_mode AS sales_mode ',
+          'vp.discount_type AS discount_type ',
+          'vp.nominal AS nominal ',
+          'vp.min_transaction AS min_transaction ',
+          'vp.discount_max AS discount_max ',
+          'vp.date_start AS date_start ',
+          'vp.date_end AS date_end ',
+          'vp.abort_reason AS abort_reason ',
+          'vp.period_type AS period_type ',
+          'vp.daily_period AS daily_period ',
+          'vp.is_validated AS is_validated ',
+          'vp.is_combined AS is_combined ',
+          'vp.created_at AS created_at ',
+          'vp.updated_at AS updated_at ',
+          'vp.deleted_at AS deleted_at ',
+          'vp.stopped_at AS stopped_at ',
+          addSelectState + ' AS status',
+        ])
         .leftJoin(
           'loyalties_voucher_pos_store',
           'vps',
@@ -83,13 +120,41 @@ export class VoucherPosService {
         .take(limit)
         .skip(offset);
 
+      if (data.status) {
+        switch (data.status) {
+          case StatusVoucherPosGroup.ACTIVE:
+            query.andWhere(
+              'now() BETWEEN vp.date_start AND vp.date_end AND vp.stopped_at IS NULL AND vp.deleted_at IS NULL',
+            );
+            break;
+          case StatusVoucherPosGroup.SCHEDULED:
+            query.andWhere(
+              'now() < vp.date_start AND vp.stopped_at IS NULL AND vp.deleted_at IS NULL',
+            );
+            break;
+          case StatusVoucherPosGroup.CANCELLED:
+            query.andWhere(
+              'vp.deleted_at IS NOT NULL AND vp.stopped_at IS NULL',
+            );
+            break;
+          case StatusVoucherPosGroup.FINISHED:
+            query.andWhere('now() > vp.date_end AND vp.stopped_at IS NULL');
+            break;
+          case StatusVoucherPosGroup.STOPPED:
+            query.andWhere('vp.stopped_at IS NOT NULL');
+            break;
+          default:
+            break;
+        }
+      }
+
       if (typeof data.period != 'undefined' && data.period != '') {
-        query.andWhere(':period between vp.date_start and vp.date_end', {
-          period: data.period,
-        });
-        query.andWhere('vp.status not in (:...trans_status)', {
-          trans_status: ['STOPPED', 'CANCELLED'],
-        });
+        query.andWhere(
+          ':period BETWEEN vp.date_start AND vp.date_end AND vp.deleted_at IS NULL AND vp.stopped_at IS NULL',
+          {
+            period: data.period,
+          },
+        );
 
         const today = new Date();
         const dd = String(today.getDate()).padStart(2, '0');
@@ -137,7 +202,7 @@ export class VoucherPosService {
       }
 
       // this.logger.warn(query.getQuery());
-      const items = await query.getMany();
+      const items = await query.getRawMany();
       const count = await query.getCount();
 
       const listItems = {
@@ -201,10 +266,10 @@ export class VoucherPosService {
       .values(data)
       .execute();
 
-    const detailsVoucher = await this.voucherPosRepo.findOneOrFail(
-      createdVoucher.raw.id,
-    );
-    await this.createVoucherPosQueue(status, detailsVoucher);
+    // const detailsVoucher = await this.voucherPosRepo.findOneOrFail(
+    //   createdVoucher.raw.id,
+    // );
+    // await this.createVoucherPosQueue(status, detailsVoucher);
     return createdVoucher;
   }
 
