@@ -33,10 +33,6 @@ export class CreateVoucherPosDto {
   @ArrayNotEmpty()
   sales_mode: string[];
 
-  @IsOptional()
-  @IsEnum(StatusVoucherPosGroup, { message: 'invalid status option' })
-  status: StatusVoucherPosGroup;
-
   @IsNotEmpty()
   @IsDateString()
   date_start: Date;
@@ -136,10 +132,6 @@ export class UpdateVoucherPosDto {
   @ArrayNotEmpty()
   sales_mode: string[];
 
-  @IsOptional()
-  @IsEnum(StatusVoucherPosGroup, { message: 'invalid status option' })
-  status: StatusVoucherPosGroup;
-
   @IsNotEmpty()
   @IsDateString()
   date_start: Date;
@@ -183,12 +175,4 @@ export class UpdateVoucherPosDto {
 
   @IsOptional()
   abort_reason: string;
-}
-
-export class UpdateVoucherPosStatusActiveDto {
-  voucher_pos_id: string;
-}
-
-export class UpdateVoucherPosStatusFinishDto {
-  voucher_pos_id: string;
 }
