@@ -26,7 +26,10 @@ import {
   StatusVoucherPosGroup,
   VoucherPosDocument,
 } from './entities/voucher-pos.entity';
-import { VoucherPosRepository } from './repository/voucher-pos.repository';
+import {
+  VoucherPosRepository,
+  VoucherPosStoreRepository,
+} from './repository/voucher-pos.repository';
 
 @Injectable()
 export class VoucherPosService {
@@ -44,10 +47,53 @@ export class VoucherPosService {
     private readonly voucherCodeService: VoucherCodeService,
     private readonly httpservice: HttpService,
     private readonly redisVoucherPosService: RedisVoucherPosService,
+    private readonly voucherPosStoreRepo: VoucherPosStoreRepository,
   ) {}
 
   private readonly logger = new Logger(VoucherPosService.name);
 
+  addSelectStatement() {
+    const addSelectState = `
+    (case
+      when (now() between vp.date_start AND vp.date_end) AND vp.stopped_at IS NULL AND vp.deleted_at IS NULL
+        then '${StatusVoucherPosGroup.ACTIVE}'
+      when (now() < vp.date_start) AND vp.stopped_at IS NULL AND vp.deleted_at IS NULL
+        then '${StatusVoucherPosGroup.SCHEDULED}'
+      when vp.deleted_at IS NOT NULL AND vp.stopped_at IS NULL
+        then '${StatusVoucherPosGroup.CANCELLED}'
+      when now() > vp.date_end AND vp.stopped_at IS NULL
+        then '${StatusVoucherPosGroup.FINISHED}'
+      when vp.stopped_at IS NOT NULL
+        then '${StatusVoucherPosGroup.STOPPED}'
+    end)
+  `;
+
+    const selectOptions = [
+      'vp.id as id',
+      'vp.name AS name ',
+      'vp.group_id AS group_id ',
+      'vp.brand_id AS brand_id ',
+      'vp.brand_name AS brand_name ',
+      'vp.sales_mode AS sales_mode ',
+      'vp.discount_type AS discount_type ',
+      'vp.nominal AS nominal ',
+      'vp.min_transaction AS min_transaction ',
+      'vp.discount_max AS discount_max ',
+      'vp.date_start AS date_start ',
+      'vp.date_end AS date_end ',
+      'vp.abort_reason AS abort_reason ',
+      'vp.period_type AS period_type ',
+      'vp.daily_period AS daily_period ',
+      'vp.is_validated AS is_validated ',
+      'vp.is_combined AS is_combined ',
+      'vp.created_at AS created_at ',
+      'vp.updated_at AS updated_at ',
+      'vp.deleted_at AS deleted_at ',
+      'vp.stopped_at AS stopped_at ',
+      addSelectState + ' AS status',
+    ];
+    return selectOptions;
+  }
   /**
    *
    * @param data
@@ -63,51 +109,14 @@ export class VoucherPosService {
 
       if (data.group_id) qry = { ...qry, group_id: data.group_id };
       if (data.brand_id) qry = { ...qry, brand_id: data.brand_id };
-      // if (data.status) qry = { ...qry, status: data.status };
       if (data.search) qry = { ...qry, name: ILike(`%${data.search}%`) };
       if (data.date_start)
         qry = { ...qry, date_start: MoreThan(data.date_start) };
       if (data.date_end) qry = { ...qry, date_end: LessThan(data.date_end) };
-      const addSelectState = `
-      case
-        when (now() between vp.date_start AND vp.date_end) AND vp.stopped_at IS NULL AND vp.deleted_at IS NULL
-          then '${StatusVoucherPosGroup.ACTIVE}'
-        when (now() < vp.date_start) AND vp.stopped_at IS NULL AND vp.deleted_at IS NULL
-          then '${StatusVoucherPosGroup.SCHEDULED}'
-        when vp.deleted_at IS NOT NULL AND vp.stopped_at IS NULL
-          then '${StatusVoucherPosGroup.CANCELLED}'
-        when now() > vp.date_end AND vp.stopped_at IS NULL
-          then '${StatusVoucherPosGroup.FINISHED}'
-        when vp.stopped_at IS NOT NULL
-          then '${StatusVoucherPosGroup.STOPPED}'
-      end
-    `;
+
       const query = this.voucherPosRepo
         .createQueryBuilder('vp')
-        .select([
-          'vp.id as id',
-          'vp.name AS name ',
-          'vp.group_id AS group_id ',
-          'vp.brand_id AS brand_id ',
-          'vp.brand_name AS brand_name ',
-          'vp.sales_mode AS sales_mode ',
-          'vp.discount_type AS discount_type ',
-          'vp.nominal AS nominal ',
-          'vp.min_transaction AS min_transaction ',
-          'vp.discount_max AS discount_max ',
-          'vp.date_start AS date_start ',
-          'vp.date_end AS date_end ',
-          'vp.abort_reason AS abort_reason ',
-          'vp.period_type AS period_type ',
-          'vp.daily_period AS daily_period ',
-          'vp.is_validated AS is_validated ',
-          'vp.is_combined AS is_combined ',
-          'vp.created_at AS created_at ',
-          'vp.updated_at AS updated_at ',
-          'vp.deleted_at AS deleted_at ',
-          'vp.stopped_at AS stopped_at ',
-          addSelectState + ' AS status',
-        ])
+        .select(this.addSelectStatement())
         .leftJoin(
           'loyalties_voucher_pos_store',
           'vps',
@@ -246,18 +255,8 @@ export class VoucherPosService {
     // compare date_start & date_end
     this.voucherCodeService.checkVoucherCodeInPast(timeEnd);
 
-    const now = new Date();
-
-    // voucher status
-    const status = !data.status
-      ? timeStart <= now
-        ? StatusVoucherPosGroup.ACTIVE
-        : StatusVoucherPosGroup.SCHEDULED
-      : data.status;
-
     data.date_start = timeStart;
     data.date_end = timeEnd;
-    data.status = status;
 
     const createdVoucher = await this.voucherPosRepo
       .createQueryBuilder()
@@ -289,21 +288,8 @@ export class VoucherPosService {
         const timeStart = new Date(`${data.date_start} +${gmt_offset}`);
         const timeEnd = new Date(`${data.date_end} +${gmt_offset}`);
 
-        // compare date_start & date_end
-        // this.voucherCodeService.checkVoucherCodeInPast(timeEnd);
-
-        const now = new Date();
-
-        // voucher status
-        const status = !data.status
-          ? timeStart <= now
-            ? StatusVoucherPosGroup.ACTIVE
-            : StatusVoucherPosGroup.SCHEDULED
-          : data.status;
-
         data.date_start = timeStart;
         data.date_end = timeEnd;
-        data.status = status;
 
         const updateVoucher = await this.voucherPosRepo
           .createQueryBuilder()
@@ -352,20 +338,27 @@ export class VoucherPosService {
    */
   async getVoucherPosDetail(id) {
     try {
-      // const result = await this.voucherPosRepo.findOneOrFail({ id: id });
       const result = await this.voucherPosRepo
         .createQueryBuilder('vp')
-        .addSelect('assigned_store.store_id')
-        .leftJoin('vp.assigned_store', 'assigned_store')
-        .where({ id: id })
-        .getOneOrFail();
+        .select(this.addSelectStatement())
+        // .addSelect('assigned_store.store_id')
+        // .leftJoin('vp.assigned_store', 'assigned_store')
+        .where('vp.id = :id', { id: id })
+        .getRawOne();
 
       if (result) {
         const store_ids = [];
-        const assigned_store = result.assigned_store;
-        for (let index = 0; index < assigned_store.length; index++) {
-          store_ids.push(assigned_store[index].store_id);
+        const assigned_store = await this.voucherPosStoreRepo
+          .createQueryBuilder()
+          .where('voucher_pos_id = :id', { id: id })
+          .getMany();
+
+        if (assigned_store) {
+          for (let index = 0; index < assigned_store.length; index++) {
+            store_ids.push(assigned_store[index].store_id);
+          }
         }
+
         const callMerchantService = await this.callInternalMerchantsStores(
           store_ids,
         );
@@ -387,7 +380,6 @@ export class VoucherPosService {
         }
         result.assigned_store = listStore;
       }
-
       return result;
     } catch (error) {
       this.logger.log(error);
@@ -475,6 +467,108 @@ export class VoucherPosService {
 
       // Restore voucher pos
       const result = await this.voucherPosRepo.restore({ id: id });
+      return result;
+    } catch (error) {
+      this.logger.log(error);
+      throw new BadRequestException(
+        this.responseService.error(
+          HttpStatus.BAD_REQUEST,
+          {
+            value: '',
+            property: '',
+            constraint: [
+              this.messageService.get('general.general.dataNotFound'),
+              error.message,
+            ],
+          },
+          'Bad Request',
+        ),
+      );
+    }
+  }
+
+  /**
+   *
+   * @param id
+   * @returns
+   */
+  async stopVoucherPos(id) {
+    try {
+      const query = await this.voucherPosRepo
+        .createQueryBuilder('loyalties_voucher_pos')
+        .where('id = :id', { id: id })
+        .withDeleted()
+        .getOne();
+
+      // return error if data is not found
+      if (!query) {
+        return this.responseService.error(HttpStatus.BAD_REQUEST, {
+          value: id,
+          property: 'id',
+          constraint: [this.messageService.get('general.general.dataNotFound')],
+        });
+      }
+
+      // Stop voucher pos
+      const result = await this.voucherPosRepo
+        .createQueryBuilder()
+        .update()
+        .set({
+          stopped_at: 'now()',
+        })
+        .where({ id: id })
+        .execute();
+      return result;
+    } catch (error) {
+      this.logger.log(error);
+      throw new BadRequestException(
+        this.responseService.error(
+          HttpStatus.BAD_REQUEST,
+          {
+            value: '',
+            property: '',
+            constraint: [
+              this.messageService.get('general.general.dataNotFound'),
+              error.message,
+            ],
+          },
+          'Bad Request',
+        ),
+      );
+    }
+  }
+
+  /**
+   *
+   * @param id
+   * @returns
+   */
+  async continueVoucherPos(id) {
+    try {
+      const query = await this.voucherPosRepo
+        .createQueryBuilder('loyalties_voucher_pos')
+        .where('id = :id', { id: id })
+        .withDeleted()
+        .getOne();
+
+      // return error if data is not found
+      if (!query) {
+        return this.responseService.error(HttpStatus.BAD_REQUEST, {
+          value: id,
+          property: 'id',
+          constraint: [this.messageService.get('general.general.dataNotFound')],
+        });
+      }
+
+      // continue voucher pos
+      const result = await this.voucherPosRepo
+        .createQueryBuilder()
+        .update()
+        .set({
+          stopped_at: null,
+        })
+        .where({ id: id })
+        .execute();
       return result;
     } catch (error) {
       this.logger.log(error);
