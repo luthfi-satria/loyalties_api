@@ -147,12 +147,12 @@ export class VoucherPosService {
       }
 
       if (typeof data.period != 'undefined' && data.period != '') {
-        query.andWhere(
-          ':period BETWEEN vp.date_start AND vp.date_end AND vp.deleted_at IS NULL AND vp.stopped_at IS NULL',
-          {
-            period: data.period,
-          },
-        );
+        // query.andWhere(
+        //   ':period BETWEEN vp.date_start AND vp.date_end AND vp.deleted_at IS NULL AND vp.stopped_at IS NULL',
+        //   {
+        //     period: data.period,
+        //   },
+        // );
 
         const today = new Date();
         const dd = String(today.getDate()).padStart(2, '0');
