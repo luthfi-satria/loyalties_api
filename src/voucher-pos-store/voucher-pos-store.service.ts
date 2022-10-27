@@ -45,6 +45,7 @@ export class VoucherPosStoreService {
         merchant_id: voucherPosDetail.brand_id,
         store_id: listStores,
         search: data?.search ? data.search : '',
+        status: data.status ? data.status : '',
         target:
           typeof data.target != 'undefined' && data.target != ''
             ? data.target

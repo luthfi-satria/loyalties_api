@@ -41,4 +41,7 @@ export class GetListVoucherPosStoreDto {
   @IsOptional()
   @IsString()
   target: string;
+
+  @IsOptional()
+  status: string;
 }
