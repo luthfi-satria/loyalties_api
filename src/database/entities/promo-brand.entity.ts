@@ -95,4 +95,10 @@ export class PromoBrandDocument {
   deleted_at: Date;
 
   quota_left?: number;
+
+  @Column({
+    default: 1,
+    nullable: false,
+  })
+  multipickup_counter: number;
 }
