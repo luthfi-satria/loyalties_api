@@ -453,6 +453,7 @@ export class VoucherService {
           code: data.code,
           customer_id: null,
           status: StatusVoucherEnum.CREATED,
+          codeStatus: StatusVoucherCodeGroup.ACTIVE,
         },
         '\n##########################################\n',
       );
