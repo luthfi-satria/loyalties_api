@@ -446,13 +446,33 @@ export class VoucherService {
       }
     } else {
       // AUTO GENERATE
-      let vouchers = await this.vouchersRepository.find({
-        where: {
+      console.log(
+        '\n###### FIND VOUCHER (loyalties_vouchers) ######\n',
+        '\nCONDITIONS\n',
+        {
           code: data.code,
           customer_id: null,
           status: StatusVoucherEnum.CREATED,
         },
-      });
+        '\n##########################################\n',
+      );
+      // let vouchers = await this.vouchersRepository.find({
+      //   where: {
+      //     code: data.code,
+      //     customer_id: null,
+      //     status: StatusVoucherEnum.CREATED,
+      //   },
+      // });
+      let vouchers = await this.vouchersRepository
+        .createQueryBuilder('vc')
+        .innerJoin('vc.vouchers', 'voucher_codes')
+        .where('vc.code = :code', { code: data.code })
+        .andWhere('vc.customer_id is null')
+        .andWhere('vc.status = :status', { status: StatusVoucherEnum.CREATED })
+        .andWhere('voucher_codes.status = :codeStatus', {
+          codeStatus: StatusVoucherCodeGroup.ACTIVE,
+        })
+        .getMany();
 
       if (vouchers.length > 0 && vouchers[0]?.target != TargetVoucherEnum.ALL) {
         if (vouchers[0]?.target != target) {
@@ -489,6 +509,16 @@ export class VoucherService {
           },
         });
 
+        console.log(
+          '\n ###### INITIAL VOUCHER DATA ###### \n',
+          voucher,
+          '\n ###### FIND VOUCHER CODES ###### \n',
+          {
+            id: voucher.voucher_code_id,
+            status: StatusVoucherCodeGroup.ACTIVE,
+          },
+          '\n ###### END FIND VOUCHER CODES ###### \n',
+        );
         if (!voucherCode) {
           throw new BadRequestException(
             this.responseService.error(
@@ -509,6 +539,17 @@ export class VoucherService {
           loyaltiesVoucherCodeId: voucherCodeId,
           loyaltiesMasterVoucherId: voucher.master_voucher_id,
         });
+
+        console.log(
+          '\n ###### FIND MASTER VOUCHER VOUCHER CODE ###### \n',
+          {
+            loyaltiesVoucherCodeId: voucherCodeId,
+            loyaltiesMasterVoucherId: voucher.master_voucher_id,
+          },
+          '\n ###### RESULT ###### \n',
+          mvvcs,
+          '\n ###### END FIND MASTER VOUCHER VOUCHER CODE ###### \n',
+        );
 
         masterVoucherId = voucher.master_voucher_id;
 
